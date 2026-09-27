@@ -3,7 +3,18 @@
 本文是 WorkDSH 桌面测试版打包的指南主体：用法、补丁用途表、快照重建、快照与仓库基线版本对照、Windows 说明与常见问题。
 脚本目录速查见 [scripts/desktop/README.md](../scripts/desktop/README.md)；决策背景见 [ADR-0025](adr/0025-desktop-packaging-via-official-pipeline.md)；历次执行证据见 [desktop-pack-test](evidence/desktop-pack-test.md)。
 
-**定位与边界**：基于官方 `deepseek-ai/deepseek-harness` 仓库 `apps/desktop` 的隔离快照（tag `dsh-v0.1.5-rc.1`），经 `WORKDSH TEST PATCH` 最小补丁产出 **WorkDSH.app 未签名本地测试版**（macOS arm64）。快照位于 `.artifacts/desktop-pack-test/upstream`（gitignored），**不作为 WorkDSH 的开发或运行依赖**，不参与 workspace、CI 与 Web 预览；不引入自建 Electron 壳与第二套插件加载器。产物仅本机自用、**不可分发**；正式发布需具备 Apple Developer ID 与公证凭据并停用未签名模式。
+**定位与边界**：基于官方 `deepseek-ai/deepseek-harness` 仓库 `apps/desktop` 的隔离快照（tag `dsh-v0.1.5-rc.1`），经 `WORKDSH TEST PATCH` 最小补丁产出 **AI融媒中心.app 未签名本地测试版**（macOS arm64）。快照位于 `.artifacts/desktop-pack-test/upstream`（gitignored），**不作为 WorkDSH 的开发或运行依赖**，不参与 workspace、CI 与 Web 预览；不引入自建 Electron 壳与第二套插件加载器。产物仅本机自用、**不可分发**；正式发布需具备 Apple Developer ID 与公证凭据并停用未签名模式。
+
+## 与官方桌面链的关系（先读这段再动手）
+
+仓库里有**两条**桌面打包路径，职责不同，不要混用：
+
+| 链 | 位置 | 定位 |
+| --- | --- | --- |
+| **官方链** | `dsh-plugin-desktop/`（仓库根，独立 yarn workspace） | **正式发行路径**：跨平台（mac / win / linux）、有签名与公证、有自动更新、有 Electron fuses。品牌资产由该包内 `generate-brand-app-icon.mjs` 等从 `workdsh-web/assets/brand/` 真源生成 |
+| **自建旁路**（本文档主体） | `workdsh-web/scripts/desktop/` | 仅 macOS **arm64** 本机未签名冒烟测试；依赖官方快照（tag `dsh-v0.1.5-rc.1`，与官方链的运行时版本不同步）；**产物不可分发**。其价值是在不依赖完整官方工具链时快速验证「窗口壳 + 7 层 bundle 装配」这一小段路径 |
+
+两条链的**品牌显示名与产物名已统一**（同为「AI融媒中心」/`ai-rongmei-center`），图形与色值同源于 `workdsh-web/scripts/build-brand-assets.mjs`。所以改品牌只改真源，两条链都跟随；一致性由 `workdsh-web/scripts/check-brand-consistency.mjs` 校验。
 
 ## 快速使用
 
@@ -13,11 +24,14 @@ node scripts/desktop/pack-desktop.mjs --restart      # 打包校验通过后重�
 node scripts/desktop/pack-desktop.mjs --skip-build   # 只重跑 electron-builder（未改 apps/desktop 源码时）
 node scripts/desktop/pack-desktop.mjs --check-only   # 只做前置检查（快照存在性 + 9 补丁 SHA-256 一致性）
 node scripts/desktop/pack-desktop.mjs --sync-patches # 快照补丁有改动时，同步到 scripts/desktop/patches/ 存档
+
+node scripts/desktop/build-desktop-icon.mjs          # 从品牌 SVG 重新生成 workdsh-icon.icns 并打印 SHA-256
+node scripts/desktop/build-desktop-icon.mjs --check  # 只校验现有 icns 与品牌 SVG 是否逐档一致（不写文件）
 ```
 
 退出码非 0 即失败，按日志定位。脚本自动处理：Node 22 自举（shell 默认低于 22.19 时切换 nvm 中 v22）、corepack 缓存中的 pnpm 直调、停止运行中的 WorkDSH 实例、注入未签名环境变量与 `ELECTRON_MIRROR` 镜像、产物断言。
 
-产物：`.artifacts/desktop-pack-test/upstream/apps/desktop/.desktop-build/targets/mac-arm64/artifacts/mac-arm64/WorkDSH.app`（约 1.0G）。
+产物：`.artifacts/desktop-pack-test/upstream/apps/desktop/.desktop-build/targets/mac-arm64/artifacts/mac-arm64/AI融媒中心.app`（约 1.0G）。
 
 ## 前置条件
 
@@ -50,10 +64,10 @@ electron-builder 经 `extraResources` 把快照内 `.desktop-build/targets/mac-a
 | 3 | `scripts/prepare-seed.ts` | `WORKDSH_DESKTOP_UNSIGNED=1` 时跳过 darwin 种子签名门槛（`resolveMacOSSigningEnvironment`）。 |
 | 4 | `scripts/desktop-build-paths.mjs` | 新增 `packedWorkdsh` 路径（`<build>/packed/workdsh`）。 |
 | 5 | `scripts/desktop-build-paths.d.mts` | 上述类型声明同步。 |
-| 6 | `electron-builder.config.mjs` | 品牌：`productName 'WorkDSH'`、`artifactName 'workdsh-${version}-…'`、`mac.icon` 指向 `workdsh-icon.icns`；unsigned 时跳过签名/公证导入校验（`mac.identity=null`、`forceCodeSigning/notarize=false`、`dmg.sign=false`、afterSign/artifactBuildCompleted 钩子守卫）。 |
+| 6 | `electron-builder.config.mjs` | 品牌：`productName 'AI融媒中心'`、`artifactName 'ai-rongmei-center-${version}-…'`、`mac.icon` 指向 `workdsh-icon.icns`；unsigned 时跳过签名/公证导入校验（`mac.identity=null`、`forceCodeSigning/notarize=false`、`dmg.sign=false`、afterSign/artifactBuildCompleted 钩子守卫）。显示名与产物名统一到品牌真源 `workdsh-web/assets/brand/brand.json`（与官方链 `dsh-plugin-desktop` 一致）；`appId` 仍为 `com.workdsh.app`（**未改**，以保留升级路径）。 |
 | 7 | `src/main.ts` | `createWindow(preload, shellFrame=false)` 新增参数；主窗口 darwin 下 `titleBarStyle: 'hiddenInset'`；管理窗口保持默认标题栏。 |
 | 8 | `src/preload-app.ts` | 注入 `style[data-workdsh-shell]` 适配样式（MutationObserver 先于首帧）：`_logoRow` 留白 48px/height:auto、logoRow 与 header 为 drag 区、交互控件 no-drag；`dataset.workdshShell='inset'` 可检测标记。选择器用 CSS-modules 类名后缀（如 `_logoRow`），官方 web UI 升级后若失效需重验。 |
-| 9 | `workdsh-icon.icns` | 品牌图标（由 `assets/brand/ai-rongmei-icon.svg` 经 sips + iconutil 生成）。**注**：快照内现存 icns 仍由更早的旧标识资产生成，桌面打包恢复前须用当前「AI融媒中心」应用图标重新生成并核对 SHA-256。 |
+| 9 | `workdsh-icon.icns` | 品牌图标，图形唯一来源是 `assets/brand/ai-rongmei-icon.svg`；用 `node scripts/desktop/build-desktop-icon.mjs` 生成（SVG → 10 档 iconset → icns，写入后逐档回读校验并打印 SHA-256），`--check` 只比对不写文件。**注一**：存档内现存 icns 仍由更早的旧标识资产生成（其源 `workdsh-logo-concept.png` 已不在仓库内），桌面打包恢复前须用当前「AI融媒中心」应用图标重新生成并核对 SHA-256。**注二**：icns 是 9 个补丁之一，受同一套 SHA-256 比对约束，所以重新生成后**必须让快照里的同名文件同步更新**（改快照 → `--sync-patches`），否则 `--check-only` 会以「快照与补丁存档不一致」直接失败。 |
 
 改动流程：改快照 → `--check-only` 核对差异 → `--sync-patches` 同步存档 → 存档随代码提交。补丁类别受 ADR-0025 约束（品牌 / 未签名模式 / 种子扩展 / 窗口壳融合），新增其他类别需先补 ADR。
 
@@ -61,7 +75,7 @@ electron-builder 经 `extraResources` 把快照内 `.desktop-build/targets/mac-a
 
 `pack-desktop.mjs` 产物校验（失败即退出非 0）：
 
-- `Info.plist`：`CFBundleIdentifier=com.workdsh.app`、`CFBundleDisplayName=WorkDSH`、`CFBundleIconFile=icon.icns`。
+- `Info.plist`：`CFBundleIdentifier=com.workdsh.app`、`CFBundleDisplayName=AI融媒中心`、`CFBundleIconFile=icon.icns`。
 - `Contents/Resources/icon.icns` 与快照 `workdsh-icon.icns` SHA-256 一致。
 - `app.asar` 补丁断言：`lib/main.js` 含 `hiddenInset`/`shellFrame`；`lib/preload-app.cjs` 含 `workdshShell`/`_logoRow`。
 

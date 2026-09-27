@@ -18,6 +18,15 @@ WorkDSH Web 是基于 DeepSeek Harness 公开插件接口的工作平台，参�
 9. 未实现模块不得声明 dsh.bundle、可加载 exports、假工具或假成功响应。脚手架不等于功能完成。
 10. 首期可提供本地单用户体验，但组织、主体、资源归属、授权、审计和运行隔离从 P0/P1 起实现和测试；不能把团队兼容留到 P3 重构。完整路线保留专家团、自动化、团队协作、在线表格、业务页面和发布能力。
 
+## 品牌资产单一真源（web ↔ 桌面）
+
+品牌图形、色值、中英文名只有一个来源：`scripts/build-brand-assets.mjs`。它产出 web 侧全部 SVG 与 `packages/ui/src/components/brand-shape.ts`，并额外产出跨端真源 `assets/brand/brand.json` 与桌面托盘图标源 `../dsh-plugin-desktop/build/tray-icon.svg`。
+
+- 桌面 workspace（`dsh-plugin-desktop`）的图标生成器**从 `brand.json` 取色**，不得自行硬编码品牌色；应用图标母版 `build/app-icon.png` 由 `generate-brand-app-icon.mjs` 从 `ai-rongmei-icon.svg` 生成，**不得手工替换为二进制**。
+- 两个 workspace 仍保持独立的运行与包管理边界（见第 7 条）：桌面只在**开发期**跨目录读真源，对外发布的产物（`build/*.png`、`*.ico`）是自包含的。
+- 显示名与产物名统一为「AI融媒中心」/`ai-rongmei-center`。`appId`（`io.techflag.dsh.ssh` / `com.workdsh.app`）**刻意保持不变**，因为改它会切断已安装用户的升级路径。
+- 改完品牌必须跑 `node scripts/check-brand-consistency.mjs`；它检出图形、色值、显示名在两端之间的漂移，非 0 退出即有漂移。
+
 ## 每次开始与结束
 
 开始前确认工作区变更；实现任务从 `docs/STATUS.md` 和 `docs/development-order.json` 核对当前阶段。按任务读取文档：架构/所有权变化读 `docs/ARCHITECTURE.md`，范围或顺序变化读 `docs/PLAN.md`，功能实现读模块 README，公开契约变化读 `docs/CONTRACTS.md`，数据、执行、账号或共享变化读 `docs/TEAM-DESIGN.md`。文字、静态展示等局部修改不要求预读无关设计文档。
