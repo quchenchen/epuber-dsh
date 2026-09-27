@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AI融媒中心 · 品牌标识</title>
+<style>
+  :root { --g1:#13D6AA; --g2:#21A8ED; --tile:#0B1220; --ink:#1F2329; --line:#E3E6EC; --soft:#F6F7F9; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:48px 44px 64px; background:#fff; color:var(--ink);
+    font:15px/1.7 "PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-size:15px; margin:44px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--line);
+    letter-spacing:1px; color:#4A4F57; font-weight:600; }
+  .lede { color:#6B7075; margin:0; max-width:760px; }
+  .row { display:flex; flex-wrap:wrap; gap:28px; align-items:flex-end; }
+  .tileBox { text-align:center; }
+  .tileBox span { display:block; margin-top:8px; font-size:11px; color:#8A8F98; }
+  .dark { background:#0B1220; border-radius:16px; padding:24px 28px; display:flex; gap:30px; align-items:center; }
+  .dark .tileBox span { color:#8A9199; }
+  .light { background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 28px; display:inline-flex; gap:30px; align-items:center; }
+  .split { display:flex; gap:18px; flex-wrap:wrap; }
+  .card { border:1px solid var(--line); border-radius:14px; padding:18px 20px; flex:1 1 300px; }
+  .card h3 { margin:0 0 4px; font-size:14px; }
+  .card p { margin:0 0 12px; font-size:12.5px; color:#6B7075; }
+  table { border-collapse:collapse; width:100%; font-size:13.5px; }
+  th,td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-weight:600; color:#4A4F57; background:var(--soft); }
+  code { font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--soft); padding:1px 6px; border-radius:5px; }
+  .rules { padding-left:20px; margin:0; }
+  .rules li { margin:6px 0; }
+  .swatches { display:flex; gap:14px; flex-wrap:wrap; }
+  .sw { width:150px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .sw i { display:block; height:62px; }
+  .sw span { display:block; padding:8px 10px; font-size:11.5px; color:#6B7075; }
+  .sw b { display:block; color:var(--ink); font-size:12.5px; }
+  .note { margin-top:14px; padding:14px 16px; border-left:3px solid #E8A33D; background:#FFF9EE;
+    border-radius:0 10px 10px 0; font-size:13.5px; color:#5A4B2C; }
+</style>
+</head>
+<body>
+  <h1>AI融媒中心 · 品牌标识</h1>
+  <p class="lede">外层 6 节点代表多路媒资，内层 3 节点与折线构成汇聚内核，青绿到青蓝的信号渐变贯穿全图。
+  同一图形提供两个 cut：<b>完整版</b>用于 48px 以上，<b>紧凑版</b>（放大内核、去掉外环）用于 40px 以下。</p>
+
+  <h2>完整版（≥48px）</h2>
+  <div class="row">
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="160" height="160" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pa1" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-pa1)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-pa1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-pa1)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-pa1)"/>
+  </g>
+</svg>
+<span>160px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pa2" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-pa2)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-pa2)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-pa2)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-pa2)"/>
+  </g>
+</svg>
+<span>96px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="64" height="64" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pa3" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-pa3)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-pa3)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-pa3)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-pa3)"/>
+  </g>
+</svg>
+<span>64px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="48" height="48" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pa4" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-pa4)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-pa4)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-pa4)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-pa4)"/>
+  </g>
+</svg>
+<span>48px</span></div>
+    <div class="tileBox" style="background:#0B1220;padding:16px 20px;border-radius:14px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pa5" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-pa5)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-pa5)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-pa5)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-pa5)"/>
+  </g>
+</svg>
+<span style="color:#8A9199">深底</span></div>
+  </div>
+
+  <h2>紧凑版（≤40px，界面实际尺寸）</h2>
+  <div class="row" style="align-items:flex-end">
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="40" height="40" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pb0" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pb0)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pb0)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pb0)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pb0)"/>
+  </g>
+</svg>
+<span>40px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="33" height="33" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pb1" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pb1)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pb1)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pb1)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pb1)"/>
+  </g>
+</svg>
+<span>33px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="28" height="28" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pb2" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pb2)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pb2)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pb2)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pb2)"/>
+  </g>
+</svg>
+<span>28px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="24" height="24" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pb3" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pb3)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pb3)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pb3)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pb3)"/>
+  </g>
+</svg>
+<span>24px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="22" height="22" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pb4" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pb4)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pb4)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pb4)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pb4)"/>
+  </g>
+</svg>
+<span>22px</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="16" height="16" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pb5" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pb5)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pb5)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pb5)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pb5)"/>
+  </g>
+</svg>
+<span>16px</span></div>
+  </div>
+  <div class="row" style="align-items:flex-start;margin-top:22px">
+    <div class="tileBox light" style="padding:20px 24px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="22" height="22" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pc1" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pc1)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pc1)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pc1)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pc1)"/>
+  </g>
+</svg>
+<span>浅底侧栏</span></div>
+    <div class="dark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="22" height="22" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pc2" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pc2)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pc2)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pc2)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pc2)"/>
+  </g>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="18" height="18" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pc2b" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pc2b)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pc2b)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pc2b)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pc2b)"/>
+  </g>
+</svg>
+<span style="color:#8A9199;font-size:11px">深底 / 导航图标</span></div>
+  </div>
+
+  <h2>两种 cut 的取舍</h2>
+  <div class="row">
+    <div class="tileBox"><div style="padding:12px;background:var(--soft);border-radius:12px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="32" height="32" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pd1" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-pd1)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-pd1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-pd1)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-pd1)"/>
+  </g>
+</svg>
+</div><span>完整版 @32px — 外环退化为散点</span></div>
+    <div class="tileBox"><div style="padding:12px;background:var(--soft);border-radius:12px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="32" height="32" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pd2" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pd2)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pd2)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pd2)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pd2)"/>
+  </g>
+</svg>
+</div><span>紧凑版 @32px — 轮廓清晰</span></div>
+  </div>
+
+  <h2>应用图标与方徽</h2>
+  <div class="row">
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-te1" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>  <rect width="96" height="96" rx="20" fill="#0B1220"/>
+  <g transform="translate(12 12) scale(0.75)">
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-te1)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-te1)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-te1)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-te1)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-te1)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-te1)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-te1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-te1)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-te1)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-te1)"/>
+  </g>
+</svg>
+<span>方徽 96</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-te2" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>  <rect width="96" height="96" rx="20" fill="#0B1220"/>
+  <g transform="translate(12 12) scale(0.75)">
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-te2)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-te2)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-te2)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-te2)"/>
+  </g>
+</svg>
+<span>紧凑方徽 64</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-te3" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>  <rect width="96" height="96" rx="20" fill="#0B1220"/>
+  <g transform="translate(12 12) scale(0.75)">
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-te3)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-te3)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-te3)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-te3)"/>
+  </g>
+</svg>
+<span>紧凑方徽 40</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-te4" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>  <rect width="96" height="96" rx="6" fill="#0B1220"/>
+  <g transform="translate(3 3) scale(0.75)">
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-te4)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-te4)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-te4)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-te4)"/>
+  </g>
+</svg>
+<span>紧凑方徽 24</span></div>
+  </div>
+
+  <h2>横版组合</h2>
+  <div class="light" style="flex-direction:column;align-items:flex-start;gap:14px">
+    <div style="width:420px"><svg viewBox="0 0 420 96" width="420" height="96">
+  <defs>
+    <linearGradient id="aimc-signal-l1" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>  <rect x="12" y="14" width="68" height="68" rx="14.17" fill="#0B1220"/>
+  <g transform="translate(20.5 22.5) scale(0.5313)">
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-l1)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-l1)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-l1)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-l1)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-l1)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-l1)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-l1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-l1)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-l1)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-l1)"/>
+  </g>
+  <text x="98" y="50" font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif" font-size="31" font-weight="600" fill="#1F2329" letter-spacing="0.5">AI融媒中心</text>
+  <text x="99" y="72" font-family="Inter,system-ui,sans-serif" font-size="10.5" font-weight="500" fill="#6B7075" letter-spacing="1.6">AI CONVERGENCE MEDIA CENTER</text>
+</svg>
+</div>
+  </div>
+  <div class="dark" style="margin-top:16px;flex-direction:column;align-items:flex-start;gap:14px">
+    <div style="width:420px"><svg viewBox="0 0 420 96" width="420" height="96">
+  <defs>
+    <linearGradient id="aimc-signal-l2" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6AA"/>
+      <stop offset="1" stop-color="#21A8ED"/>
+    </linearGradient>
+  </defs>  <rect x="12" y="14" width="68" height="68" rx="14.17" fill="#0B1220"/>
+  <g transform="translate(20.5 22.5) scale(0.5313)">
+    <circle cx="48" cy="10" r="5" fill="url(#aimc-signal-l2)"/>
+    <circle cx="78" cy="29" r="5" fill="url(#aimc-signal-l2)"/>
+    <circle cx="78" cy="67" r="5" fill="url(#aimc-signal-l2)"/>
+    <circle cx="48" cy="86" r="5" fill="url(#aimc-signal-l2)"/>
+    <circle cx="18" cy="67" r="5" fill="url(#aimc-signal-l2)"/>
+    <circle cx="18" cy="29" r="5" fill="url(#aimc-signal-l2)"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="url(#aimc-signal-l2)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="url(#aimc-signal-l2)"/>
+    <circle cx="61" cy="48" r="8" fill="url(#aimc-signal-l2)"/>
+    <circle cx="37" cy="62" r="8" fill="url(#aimc-signal-l2)"/>
+  </g>
+  <text x="98" y="50" font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif" font-size="31" font-weight="600" fill="#E7E7E7" letter-spacing="0.5">AI融媒中心</text>
+  <text x="99" y="72" font-family="Inter,system-ui,sans-serif" font-size="10.5" font-weight="500" fill="#A5A5A5" letter-spacing="1.6">AI CONVERGENCE MEDIA CENTER</text>
+</svg>
+</div>
+  </div>
+
+  <h2>单色变体</h2>
+  <div class="row">
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <g>
+    <circle cx="48" cy="10" r="5" fill="#1F2329"/>
+    <circle cx="78" cy="29" r="5" fill="#1F2329"/>
+    <circle cx="78" cy="67" r="5" fill="#1F2329"/>
+    <circle cx="48" cy="86" r="5" fill="#1F2329"/>
+    <circle cx="18" cy="67" r="5" fill="#1F2329"/>
+    <circle cx="18" cy="29" r="5" fill="#1F2329"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="#1F2329" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="#1F2329"/>
+    <circle cx="61" cy="48" r="8" fill="#1F2329"/>
+    <circle cx="37" cy="62" r="8" fill="#1F2329"/>
+  </g>
+</svg>
+<span>完整版 · 墨色</span></div>
+    <div class="tileBox" style="background:#0B1220;padding:14px 18px;border-radius:12px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+  <g>
+    <circle cx="48" cy="10" r="5" fill="#FFFFFF"/>
+    <circle cx="78" cy="29" r="5" fill="#FFFFFF"/>
+    <circle cx="78" cy="67" r="5" fill="#FFFFFF"/>
+    <circle cx="48" cy="86" r="5" fill="#FFFFFF"/>
+    <circle cx="18" cy="67" r="5" fill="#FFFFFF"/>
+    <circle cx="18" cy="29" r="5" fill="#FFFFFF"/>
+    <path d="M37 34 61 48 37 62" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="37" cy="34" r="8" fill="#FFFFFF"/>
+    <circle cx="61" cy="48" r="8" fill="#FFFFFF"/>
+    <circle cx="37" cy="62" r="8" fill="#FFFFFF"/>
+  </g>
+</svg>
+<span style="color:#8A9199">完整版 · 反白</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="48" height="48" aria-hidden="true">
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="#1F2329" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="#1F2329"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="#1F2329"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="#1F2329"/>
+  </g>
+</svg>
+<span>紧凑版 · 墨色</span></div>
+    <div class="tileBox"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="48" height="48" aria-hidden="true">
+  <defs>
+    <linearGradient id="aimc-signal-pf4" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0FA98A"/>
+      <stop offset="1" stop-color="#1B84C4"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M26.16 22.52 69.84 48 26.16 73.48" fill="none" stroke="url(#aimc-signal-pf4)" stroke-width="12.74" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="26.16" cy="22.52" r="14.56" fill="url(#aimc-signal-pf4)"/>
+    <circle cx="69.84" cy="48" r="14.56" fill="url(#aimc-signal-pf4)"/>
+    <circle cx="26.16" cy="73.48" r="14.56" fill="url(#aimc-signal-pf4)"/>
+  </g>
+</svg>
+<span>紧凑版 · 加深渐变</span></div>
+  </div>
+
+  <h2>配色</h2>
+  <div class="swatches">
+    <div class="sw"><i style="background:linear-gradient(90deg,#13D6AA,#21A8ED)"></i><span><b>信号渐变</b>#13D6AA → #21A8ED</span></div>
+    <div class="sw"><i style="background:linear-gradient(90deg,#0FA98A,#1B84C4)"></i><span><b>渐变加深版</b>#0FA98A → #1B84C4</span></div>
+    <div class="sw"><i style="background:#0B1220"></i><span><b>深色底座</b>#0B1220</span></div>
+    <div class="sw"><i style="background:#1F2329"></i><span><b>墨色</b>#1F2329</span></div>
+  </div>
+
+  <h2>使用规则</h2>
+  <ul class="rules">
+    <li>≥48px 用完整版；≤40px 用紧凑版。切换阈值见 <code>BRAND_COMPACT_BELOW</code>。</li>
+    <li>界面优先 SVG；位图只用于导出与外部投放。</li>
+    <li>透明底优先。需要实体块（应用图标、头像）时用深色底座 <code>#0B1220</code>，圆角与内边距按 <code>TILE_RX_RATIO</code> / <code>TILE_INSET_RATIO</code>。</li>
+    <li>浅底小尺寸若对比不足，用加深渐变；不得改变节点数量、相对位置与折线走向。</li>
+    <li>四周留白不小于图形高度的 1/4；不旋转、不加投影、不拉伸。</li>
+  </ul>
+
+  <div class="note"><b>图形来源：</b>本图形为「AI融媒中心」自有标识，取自用户提供的 <code>ai-media-symbol.svg</code>；
+  未引用 WorkBuddy、DeepSeek Harness 或其他应用的商标轮廓。</div>
+</body>
+</html>

@@ -1,3 +1,68 @@
+## 2026-09-25：品牌标识定稿 —— 自有字标「A」+ 智能青星（撤回鲸形方案）
+
+用户明确：**鲸形是 DeepSeek 的标识，不是融媒体的**；「AI融媒中心」要用自有标识，此前误用的鲸形全部作废。下一节「蓝底方徽 + 鲸形」的结论**已作废**，仅作错误链存档。
+
+- **定稿图形**：一条粗圆角带（笔画 `34/256`）构成的字标「A」——AI 首字，两腿在顶点相汇即「多源汇于一点」；右上角一颗青色四角星 `#18CFE7` 为智能火花。沿用产品原有自有标识语言（单轮廓、少元素、有限色彩），16px 仍可辨识。
+- **配色**：品牌蓝 `#176BFF`（字标与方徽底）+ 智能青 `#18CFE7`（星）。不使用宿主 token —— 实测官方全部包内**不存在** `--dsw-alias-brand-primary`，上一版绑定它等于没绑，还会被宿主品牌色污染。
+- **单一源**：`scripts/build-brand-assets.mjs` 持有字标路径、四角星路径与笔画参数，一次产出 6 个品牌 SVG + `website/assets/mark.svg` / `mark-ring.svg` + `packages/ui/src/components/brand-shape.ts`；`LogoMark.tsx` 消费该模块（`viewBox 256`，无底座）。备选方向切换：`BRAND_DIRECTION=Y node scripts/build-brand-assets.mjs`。
+- **资产**：`ai-rongmei-mark.svg`（浅底）/ `-mark-inverse.svg`（深底）/ `-mark-mono.svg`（单色）/ `-icon.svg`（应用图标，浅底方徽）/ `lockup-light|dark.svg` / `ai-rongmei-preview.html`（标识总览）。旧鲸形资产 `ai-rongmei-mark-ring.svg` 已删。
+- **评估过程（教训）**：先出三支抽象方向（四向回旋 / 弧形入芯 / 四媒方阵），用户直接否决「太丑」——抽象多形堆叠 + 粗白描边压满饱和底色，缩到 24px 必糊。改用产品**已被认可的自有标识语言**做延展后成立。
+- **验证**：ui / bundle 构建通过；Chrome headless 渲染核对 —— 标识总览页（变体、96→16px 尺寸对照、深色界面、备选方向）、官网首页（页头蓝底方徽、hero 反白 + 青星）均通过。
+- 未执行：应用内人工视检；官网与文档截图（`website/assets/*.png`、`docs/assets/screenshots/*.png`、`og:image`）仍为旧标识版本未重生成；桌面 `workdsh-icon.icns` 待重生成。未提交、推送。
+
+## ⛔ 2026-09-25（已作废）：品牌标识更正 —— 恢复「AI融媒中心」方徽（蓝底 + 鲸形）
+
+用户两次明确「AI融媒中心」的标识就是**蓝底圆角方徽 + 中心鲸形**，并指出本轮一度被我自己改错方向。记录判据与最终状态，避免再走回头路：
+
+- **识别判据**：用户提供的标识与官方客户端品牌几何同源 —— 鲸形原生坐标系 `23.16 × 17.04`，即 `@deepseek-ai/dsh-client-ui-primitives` 的 `FISH_LOGO_PATH` / `FishLogo`；官方 `dsh-client-ui-brand-official` 亦以 `FishLogo` 填 `sidebar.brand.mark`。两者是**同一个轮廓**。用户口径：这就是融媒体自己的标识。
+- **本轮错误链**：先据「不复用他人商标轮廓」旧规范与「DeepSeek 鲸形」印象做了整篇回滚（删资产、改回折叠 W），用户当即纠正 —— 鲸形方徽才是指定标识，回滚是错的，已全部重新生成。
+- **抢救路径（可复用）**：临时文件未进版本库、删除后不可恢复；鲸形路径从**已安装的官方包**取回 —— `.test-runtime/preview/profiles/preview/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js` 的 `FISH_LOGO_PATH`（3448 字符）。注意 pnpm 顶层是符号链接，BSD `grep -r` 不跟随，须用 `-R` 或在 `.pnpm` 内搜。
+- **最终落点**：`scripts/build-brand-assets.mjs` 为图形单一源（内嵌鲸形路径 + 内嵌变换 `translate(19.51 27.04) scale(2.46)`），一次产出 5 个品牌 SVG + 官网 2 个副本 + `packages/ui/src/components/brand-shape.ts`；`LogoMark.tsx` 消费该模块（蓝底走官方 token `--dsw-alias-brand-primary`）。预览页 `assets/brand/ai-rongmei-preview.html` 改为引用生成的 SVG，不再内联第二份路径。
+- **旧规范处置**：`docs/BRAND.md` 重写为当前标识规范，WorkDSH 时期原文**逐字保留**在文末存档区；`workdsh-mark.svg` / `workdsh-logo.svg` / `workdsh-logo-concept.png` 保留在仓库，已不在产品界面使用。
+- 范围约定（用户确认）：**只换产品自有品牌面**；官方客户端首屏（composer）的鲸形属上游 UI，不改动。
+- 验证：ui/bundle 构建 EXIT=0；预览页 Chrome headless 渲染核对通过（横版组合、单色/无底座变体、96/48/32/24px）。
+- 未执行：应用内人工视检本轮新构建；官网截图（`website/assets/*.png`、`docs/assets/screenshots/*.png`）仍为旧标识版本，未重新生成。未提交、推送。
+
+## 2026-09-25：本地构建 macOS x64 DMG（master 工作树，dist:mac-smoke）
+
+用户指示「本地同步后构建 DMG」。在 /tmp/workdsh-master（master @ e4d041bbbd，含 PR #16）独立 worktree 复现 CI `desktop-macos` 流水线：yarn install（1461 包，supportedArchitectures 双架构）→ 子模块 deepseek-harness + pnpm install → `check:mac-package` 门（4/4 测试 + 228 节点运行时闭包 PASS）→ `dist:mac-smoke`（WORKDSH_MAC_ARCH=x64，DSH_PACKAGE_CHECK_ALREADY_RAN=1）。
+
+**产物**：`.artifacts/desktop-local-build/WorkDSH-2.0.5-x64.dmg`（586,202,477 字节，SHA256 `0f57280eaae7002f7c9cc353d48f3b368e8543c9d8ce3d0aaf0f0fe6124644cc`）。脚本自带 verify-mac-smoke 通过：hdiutil 校验 CRC 全过、挂载检查 Info.plist OK。未签名（签名/公证仅限发布机）。内置运行时与 alpha.11 基准一致（@deepseek-ai/dsh 0.1.7-rc.2 / workdsh-bundle 0.1.0-alpha.50，锚定 prepare-workdsh-runtime.mjs WORKDSH_VERSION='0.1.0-alpha.11'）。
+
+**本机环境适配（CI 直跑会挂，需三项组合）**：
+1. GitHub 直连在 Node fetch/got 下间歇性静默挂死：prepare-workdsh-runtime 的 11 个发布包、primary-runtime 的 node/python/wheels 资产（lock.json，sha256 寻址缓存）全部用 curl 走本机代理 `http://127.0.0.1:10809` 预置缓存；electron-builder 的 got 下载（electron zip / icons-bundle / dmgbuild-bundle）靠其原生 `HTTPS_PROXY` 支持（buildGotProxyAgent）。
+2. pnpm add 本地 tarball 在后台管道 stdin 下挂起等待交互确认：必须 `CI=true` 且 stdin `</dev/null`。
+3. electron zip 须保留符号链接解包（系统 unzip），Python zipfile 会把 Framework 符号链接解成空文件导致 `@electron/fuses` 报 sentinel 缺失。prepare-workdsh-primary-runtime 有 12 分钟硬超时，慢网下需先预热缓存。
+
+**未执行**：DMG 安装后的启动冒烟与模型驱动端到端验证（需用户确认）；签名/公证版本构建；改动未提交（worktree 在 /tmp/workdsh-master，main 工作树未动）。
+
+## 2026-09-25：Desktop alpha.18 包内静态验证（以 Web alpha.11 为基准）
+
+用户指示「以最新版为基准」推进 Desktop 重建线。核对发现 desktop-v2.0.5-alpha.18 的 tag（c34981e8）即 PR #15「Package Web alpha.11 in Desktop installers」，桌面线基于 master 分支（本地已建 master 跟踪 origin/master，含 PR #16 更新域修复）。下载 macOS x64 DMG（SHA256 与发布 SHA256SUMS 逐字节匹配），hdiutil 被系统拦截，改用 7z-wasm 按路径精准抽取 7 个版本锚文件实证：
+
+- **包内基准 = Web alpha.11，实锤**：`@deepseek-ai/dsh 0.1.7-rc.2`、`workdsh-bundle 0.1.0-alpha.50`、`workdsh-plugin-experts 0.1.0-alpha.9`，三者与 v0.1.0-alpha.11 发布资产逐一对应；Info.plist 2.0.5；runtime.json 显示内置 node 24.21.0 / python 3.12.14 / pnpm 11.7.0。
+- **发现一（文档缺陷）**：alpha.18 发布说明「Agent 的 Playwright 浏览器与右侧栏尚未联动」为陈旧模板文案，与包内 alpha.11（含 PR #14 同页联动）事实矛盾，待修订 release body（对外动作，未执行）。
+- **发现二（真实缺口）**：alpha.18 的 app-update.yml 仍指向旧更新域 `anywhere-labs/deepseek-harness-desktop`；PR #16「use WorkDSH update domain」已修但 alpha.19 尚未发布。需触发新桌面发版（远端 CI，未执行）。
+- 未执行：启动级冒烟与模型驱动端到端浏览验证（需安装 app 与模型凭据，待用户确认范围）。
+
+## 2026-09-25：本地仓库同步远端 alpha.9–11 并核对发布状态
+
+本地 main 落后远端 18 个提交，已快进到 `d9473c0537`（alpha.11，含 PR #14 Agent 浏览器右侧栏同页操作）。经 GitHub API 核对远端 Release：v0.1.0-alpha.9 / alpha.10 / alpha.11（DSH 0.1.7-rc.2）及 Desktop 2.0.5-alpha.17/18 均已发布；STATUS 顶部「GitHub Release 尚未完成」表述已过时。development-order.json 的 lastReconciled 仍为 2026-09-14、D04 仍 in_progress，台账待下一轮统一校订。本轮仅同步与记录，未改代码。
+
+## 2026-09-25：品牌标识改版提案「AI融媒中心」（设计资产）
+
+用户要求将 WorkDSH logo 重做为「AI融媒中心」并已确认。新增 `assets/brand/` 4 个文件：`ai-rongmei-mark.svg`（三环融一徽标：三只相扣圆环交汇于中心实心点，象征多媒介融合与中心辐射）、`ai-rongmei-lockup-light.svg` / `ai-rongmei-lockup-dark.svg`（横版组合浅底/深底）、`ai-rongmei-preview.html`（提案预览：变体、使用规则、最小尺寸/安全空间/禁用项、色板）。主色对齐 DESIGN-SYSTEM 品牌蓝 #2E5FC0。原 WorkDSH 标识保留未动。
+
+未执行：标准字未转曲（SVG 为文本元素，依赖 PingFang SC/微软雅黑回退栈）；墨色/线性变体仅预览稿内联示意；标识是否接入 `sidebar.brand` 插件配置与 README 待用户决策。未提交、推送。
+
+## 2026-09-25：WorkDSH Design System v0.1（设计规范文档）
+
+本轮为独立设计文档任务，不推进或变更插件开发步骤。基于 `docs/UI-DESIGN.md` v1.0 建立体系化设计系统：四大域分类（01 基础 / 02 组件 / 03 模式与场景 / 04 治理），覆盖 17 个语义色 token（Dark/Light 双模式）、九级字阶、七级间距、五级圆角、控件高度、布局尺寸、按钮/输入框/标签/状态点/卡片/配置弹框规格、能力中心与项目工作台两个令牌渲染场景样板及六条治理底线。
+
+证据：设计画布 https://ardot.tencent.com/file/729558042515852 （变量集 5 组为唯一定义源，已按 4 位精度修正与 UI-DESIGN 逐字节对齐）；规范文档 `docs/DESIGN-SYSTEM.md`（含可导出 CSS 令牌）。画布章节截图 4 张已逐一目检，结构校验无溢出/重叠。
+
+未执行：Light 主题取值与官方 ThemeRuntime 实测核对（当前为拟定值）；画布组件的 Component/Variant 实例化；`packages/ui` 代码迁移（属 D02 范围）。未提交、推送或对外发送。
+
 ## 2026-09-25：Web/插件 alpha.10 rc.2 发行候选
 
 11 个运行包与项目版本已递增，按官方 DSH `0.1.7-rc.2` 的公开接口重新构建；本次发行包将替换 Desktop 先前引用的 alpha.9 包。Node 22.23.2 / pnpm 10.34.5 下构建、类型检查、556 条版本锁定、115 项集成测试、12 项项目测试、5 项资料库测试与规划校验通过。规划台账里过时的 `resources/skills/expert-manager` 路径已改为实际受版本控制的 `resources/skills/workdsh-expert-manager`。11 个打包文件的 SHA-256 与清单逐项一致，安装器 dry-run 在 `0.1.7-rc.2` CLI 上通过；GitHub Release 尚未完成。浏览器 Agent 与右侧栏共享同一页面仍未实现。
@@ -2096,3 +2161,83 @@ Office build/typecheck 以及 content/download/rich-editor 30 项相关测试通
 rc.2 官方 Team Web 探针已适配新公开服务 API：移除退役的 `remoteView()` 依赖，验证成员列表与任务板、长任务、浏览器重连、中断、失败及冷恢复。旧 0.1.6 组合探针仅作历史记录。
 
 Web 预览另已通过 WorkDSH bundle 启用官方右侧 Sidebar Browser：合成配置显示 `ui-sidebar-browser.disabled: false`，页面内可从右栏打开 Browser tab 并在 iframe 中加载 `https://example.com/`。官方 Browser tab 是用户侧页面，不是 Agent 的 Playwright 工具浏览器；两者尚未联动，不能把侧栏打开网页视为 Agent 浏览器操作已在侧栏呈现。
+
+## 2026-09-25 UI 集成调研纠偏与 token 对齐（未提交）
+- 调研确认：`--dsw-*` 为官方 `@deepseek-ai/dsh-client-ui-theme@0.1.7-rc.2` token 前缀（99 个 alias + font/radius/elevation/shadow/static 全套），插件经 `dsh.client.inject` 自注入、已在 preview Profile 运行。此前"731 处 alias 引用悬空、需自建 token 层"判断错误，已撤销，不新建第二套 token。
+- 修复 4 处官方词汇表中不存在的错名：projects/styles.ts `business-primary`→`state-business-primary`；ConnectorPicker.tsx 两处 `state-danger-primary`→`state-error-primary`；activity/styles.ts `text-primary`→`label-primary`；ProjectLineageChip.tsx `fill-tsp-secondary`→`interactive-bg-hover`。
+- 移除 packages/ui 零导入方死代码：`navigationCss`、`tokens` 导出及 navigation.ts/tokens.ts；CHANGELOG 0.1.0-alpha.7 记录。DESIGN-SYSTEM.md 顶部加定位声明（仅作官方 token 映射参考，不作新建 token 层依据）。
+- 验证：ui/projects/connectors/activity/bundle 五包 build+typecheck 全绿；重打包并重启 preview（preview:install EXIT=0，18989 已起）。未执行：明暗两态人工视检（未截图）。
+- 挂起：硬编码 hex 存量迁移（office 41/activity 7/library 6/projects 3/bundle 2/connectors 1）按需排期。
+
+## 2026-09-25 融媒体模板矩阵与配套技能体系（未提交）
+- 依据用户新指令：项目模板按国央企融媒体场景重构。契约扩展 ProjectTemplate（可选 capabilities + workItems），create() 预填推荐技能绑定与计划待办骨架，聚合活动记录不刷屏。
+- 新增 12 个融媒体模板：新闻稿件类 4（央视/新华社/人民日报/能源行业）+ 内容生产类 4（企业动态简报、图片生产、视频脚本生产、视频资源分析）+ 深度访谈类 2（深度报道/专题、圆桌访谈）+ 运营管理类 2（选题发现与策划、热点监测与响应）+ 分发复盘 2（多平台改写分发、内容运营复盘）。按用户纠偏删除行情盯盘类（国央企融媒体非市场化）。
+- 新增内置技能 9 个（resources/skills/，构建时由 generate-builtin-skills.mjs 枚举）：news-cctv/-xinhua/-renmin（公开体例初版基线，声明待项目审定资料校准）、news-industry-energy（含能源口径速查 references）、news-desk（两轮审校+三审三校+信源分级+去AI味）、topic-discovery、visual-production、video-script、platform-rewrite。内容融合自 nengjianmedia/editorial-source-selection/self-media-guide 等 WorkBuddy 现有技能，裁掉 WorkBuddy 专属工具依赖。
+- 创建弹框 openCreate/chooseTemplate 预填 capabilities，提示文案同步。contracts/projects/skills/bundle 四包 build+typecheck 全绿（14 内置技能生成成功）。
+- 未执行：preview 重打包后的人工验证（创建融媒体项目→检查预填技能与待办骨架→预绑技能可加载）。
+
+## 2026-09-25 项目模板分类选择器与能力机制闭环（未提交）
+- UI：项目中心「从模板创建」加分类筛选条（全部/通用协作/新闻稿件/内容生产/深度访谈/运营管理/分发复盘，含计数）；模板卡升级为分类着色图标 + 预填能力数/工作流步数徽标；新建弹框 Select 下拉升级为分类 TemplatePicker（含空白项目项）。图标新增 news/video/mic/compass/chart 五个分类图标；着色全部取官方 --dsw-alias-state-* token。
+- 机制：① context-injection.ts 把任务绑定的技能/专家能力注入 system-prompt（补齐 taskContext→prompt 消费缺口，声明装载以 Host 为准）；② create() 预填能力按真实目录校验、补全 scope/revision，缺失跳过并 notice 提示，目录失败保留原预填；③ 契约 ProjectTemplate 新增可选 category，服务端 templateCategories 字典标注。
+- 专家机制现状：无种子专家对象（仅 expert-manager 创建器技能），模板不伪造专家绑定；专家能力通道（契约 kind:'expert'、弹框选择器、任务签入、注入声明）已全链路可用，待真实专家资产接入。
+- 验证：contracts/projects/bundle build+typecheck 全绿；重打包 preview（57s）并重启。未执行：分类筛选与弹框选择的浏览器人工视检。
+
+## 2026-09-25 融媒体内置专家矩阵与模板专家预绑（未提交）
+- 更正 2026-09-25 早间记录：「无种子专家对象」结论有误——experts 插件 DEFAULT_TEMPLATES 本有 3 个通用内置专家（需求分析/文档评审/工作复盘），缺的是融媒体领域覆盖。
+- 新增 9 个融媒体内置专家（templates.ts，origin:'default'，categoryId:'media'）：央视时政新闻写作/新华社通稿写作/人民日报报道与评论/能源行业新闻采写/融媒体审校签发/选题发现与策划/图片生产/视频脚本创作/多平台分发。方法论融合 WorkBuddy 既有资产（nengjianmedia 审校与口径方法、editorial-source-selection 评估门、self-media-guide 平台矩阵），央媒三家按公开通行体例起草并在 boundaries 声明「项目审定资料优先」。
+- 机制补齐两处：① ensureSeeded 从「表全空才种」改为按 id 逐个查缺的幂等增量补种（旧部署自动获得新内置专家）；② seedTemplate 镜像 publish 链——skillRequirements 逐条 resolveRevision 冻结修订 + retainRevision 物化快照后随 preset 编译，解析失败降级跳过并 audit（experts/seed-dependency-missing），不阻塞专家落地；validationIssues 改用真实 validateDefinition。
+- 模板专家预绑：14 个融媒体模板 capabilities 全部补 kind:'expert' 引用（映射：央媒三家稿→对应写作专家；能源行业稿/企业简报/深度报道→能源采写专家；图片/视频/视频分析→对应生产专家；选题/圆桌/热点→选题策划专家+审校签发专家；多平台改写→分发专家；运营复盘→审校+分发专家）。
+- 验证：experts/projects/bundle 三包 build+typecheck 全绿；preview 重打包中。未执行：创建融媒体项目的人工端到端验证（专家应随首次目录读取自动补种）。
+
+## 2026-09-25 外部信源技能调研与融合（未提交）
+- 信源：JuneYaooo/awesome-ai-media-skills-cn（精选合集）与 SamurAIGPT/Generative-Media-Skills（muapi 付费 API 配方库）。逐仓核验 6 个重点仓库原文（self-media-compliance-review / capsule-cinema / OnlyShot / content-pipeline / khazix-skills / social-account-doctor），按「引入-改进-融合」吸收方法论，剥离外部 CLI/API 依赖与市场化套路，不复制文本。
+- 新增内置技能 workdsh-publish-compliance（发布前合规审核）：吸收 self-media-compliance-review 的面遍历、证据指针、覆盖门与五级严重度方法，按国央企场景重写为九大风险区（导向公序良俗/新闻真实性/权利肖像/领导人重大事项/民族宗教地图/营销合规/诱导引流/违法有害/制作质量）+ AIGC 标识要求；references/risk-areas.md 含分平台要点速查。与 news-desk 分工：审校台审稿件文字，本技能审成品发布包公开面。
+- video-script 增补：静态先行原则（脚本→静态视觉确认→高成本执行的成本分层）、制作资产登记（人物/场景/道具跨集一致）、四道完成判定门；新增 references/storyboard-prompt-template.md（八维分镜描述法 + 静态确认清单 + 画面文字防错规则，吸收 OnlyShot 分镜工艺，剥离即梦依赖）。
+- visual-production 增补 references/cover-spec.md：国央企渠道尺寸基准（公众号头图/视频号/抖音/B站/网站 banner/印刷）、封面大字可读性规范、一稿多用安全区、画面文字逐字校对规则（吸收 content-pipeline 封面规格思路）。
+- topic-discovery 增补：渠道跟踪加第六类「上级单位与同行业同类媒体账号动态」（对标盘点而非爆款模仿）；重大选题评估加横纵对照（横向多来源交叉、纵向历史口径脉络，吸收 hv-analysis 方法）。
+- 专家：新增 media-publish-compliance-officer（发布前合规审核专家，13 号内置）；media-desk-editor 与 media-visual-producer 补绑 workdsh-publish-compliance。
+- 项目模板：新闻稿件 4 模板、图片生产、视频脚本生产、多平台改写分发补绑 workdsh-publish-compliance；能源行业稿 workItems 在三审三校后插入「发布前合规审核」步骤。
+- 不引入（证据已核）：muapi 全家桶（付费外部 API，与凭据不进对话约束冲突）、电商带货风险区（国央企无此场景）、tikhub/mediacrawler 爬虫链（合规风险）、OnlyShot 红果爽剧套路（市场化）。
+- 连接器候选线索（未安装，待平台连接器体系排期）：分发通道 turbopush-mcp / douyin-upload-mcp-skill / xiaohongshu-mcp-python；剪辑执行 capcut-mate / capcut-agent / hotclip；素材采集 Douyin_TikTok_Download_API / bilibili-mcp。MCP 发布类均涉及平台凭证与浏览器自动化，须走连接器凭据隔离链，不得进内置技能。
+- 验证：skills/experts/projects 三包 build 全绿（15 内置技能枚举成功，14→15）；projects 测试 12/12；audit-skills 对 5 个改动技能包零 findings。未执行：preview 重打包与人工端到端验证。
+
+## 2026-09-25 技能市场名称修复 + WorkBuddy MCP 导入（未提交）
+- 技能市场卡片全显英文且截断的根因：中文名唯一来源是 `$DSH_AGENTS_HOME/.workdsh-catalog/catalog.json`（Host 端 SkillCatalogStore.metadata 合并 title/localizedDescription/iconUrl），该目录缺失导致全部回退 kebab-case id；卡片标题单行 ellipsis 且 hover tooltip 只显示英文 name。
+- 修复 1（数据）：用 `scripts/build-skill-catalog.mjs --source ~/.workbuddy/skills-marketplace` 重建目录——51/52 条目（1 个非 kebab-case 源目录如实跳过）+ 24 品牌图标，中文名/中文说明就位；catalog 按 mtime 缓存自动生效。
+- 修复 2（UI）：SkillsPanel 两处卡片 tooltip 改为显示完整标题（title ?? name）。
+- 修复 3（防再丢）：start-preview.mjs 增加自愈——catalog 缺失且存在市场镜像（`WORKDSH_SKILL_MARKETPLACE`，默认 `~/.workbuddy/skills-marketplace`）时自动重建，无镜像则如实提示不阻塞。
+- 新增 `scripts/import-workbuddy-mcp.mjs`：从 `~/.workbuddy/mcp.json` 导入可独立运行的 MCP 服务到连接器存储（per-record JSON），disabled/sse/凭据占位符条目如实跳过并给原因；已导入 ardot-design（streamable-http，`http://127.0.0.1:50501/api/v1/mcp`，curl initialize 握手验证通过 server:ardot 1.1.2）。
+- 明确不导入（证据）：WorkBuddy 会话内 agent-mail/genie-baas/sheetagent/weixinpay/miora 为应用内嵌插件进程，无外部 MCP 端点；`connectors/default/mcp.json` 40 个市场候选全部 disabled 且多需 OAuth 或含 ${VAR} 凭据占位符或为 woa 内网地址，导入即批量死卡。
+- 验证：start-preview/import 脚本 node --check 过；skills 插件 build EXIT=0（该包无测试套件）；catalog 落盘 sha256:cfeb9da427ec。preview:install 重打包进行中（走代理 npm resolve 慢，单包 62s），完成后重启预览再验连接器真实状态。未执行：人工视检。
+
+## 2026-09-25 Skills Hub 评估（未提交）
+- 需求：评估 `qufei1993/skills-hub` 能否作为 DSH 本地分发层。产出 [docs/research/skills-hub-evaluation.md](research/skills-hub-evaluation.md)。
+- 事实核查（源码级）：① DSH 适配属实——`tool_adapters/mod.rs:490-494` 指向 `.dsh/skills`，命中官方真实根（`dsh-skill-filesystem` roots()：`user-dsh` rank 400 / `project-dsh` rank 100）；② 48 个目标工具属实，且含 WorkBuddy（`.workbuddy/skills`，本机存在 34 技能）；③ Git/本地/搜索、多设备同步、回收站、调度更新均属实；④ `core/` 无 auth/rbac/approval/signature/audit 任何模块，企业能力确实缺失。
+- 与既有实现的比对：`workdsh-plugin-skills` 已同时管理两个官方根（`manager.ts:166` `~/.agents/skills` + `~/.dsh/skills`），已有禁用区/回收站+凭据/锁/内容摘要（sha256）/导入暂存校验/作用域/批量/依赖影响/诊断。引入 skills-hub = 在同批目录增加第二写者，非填空白。
+- 结论：不作为 WorkDSH 分发层。理由：ADR-0015 第 1 条已列「SkillHub」为当前不做且已定义企业拓扑；第二状态真源（symlink vs move、两套回收站/启用态/摘要、catalog 元数据失同步）；绕过设备身份与组织授权。纯 DSH 场景可作为员工侧可选工具直接用。
+- 顺带发现的自身缺口（已如实记录）：技能变更**无审计事件**（实测预览 1622 条审计仅 access.authorize/tool.execute/office.commit/experts.*）；`SkillCatalogEntry.version` 契约存在但 51/51 无数据；无来源 commit / 渠道 / 安全状态 / 审核状态 / 最低兼容版本 / 按版本回滚。与 `packages/plugins/skills/README.md:63`「不可变 SkillRevision、多用户授权尚未实现」一致。
+- 未执行：未安装运行 skills-hub；未做纯 DSH 端到端验证；未联调 v0.10.1 与基线 0.1.7-rc.2 兼容性。
+
+## 2026-09-25 技能市场场景过滤（未提交）
+- 需求：技能市场存量含大量技术研发/海外应用技能，建议删减。产出 [docs/research/installed-skills-audit.md](research/installed-skills-audit.md)。
+- 关键区分（本轮的判断基础）：市场页两块来源不同——「可安装」= WorkDSH 自建的 `~/.agents/.workdsh-catalog`（可筛），「已安装」= DSH 官方用户根 `~/.agents/skills`（用户资产 + WorkBuddy 共用，不可自动改）。
+- 新增 `scripts/skill-scenario-policy.json`：7 个场景域（content/office/platform/dev/overseas/personal/pending）+ 2 个范围（media 默认 / all），镜像 52 个技能逐一登记场景与中文分类，支持 title 覆盖。
+- `scripts/build-skill-catalog.mjs` 改造：新增 `--policy`/`--scope`/`--all`；默认 media 范围只纳入融媒体相关，被排除项不复制 payload 且记入 `catalog.excluded` 并逐条打印理由；未登记技能归 `pending` 不自动进入；策略缺失退回原全量行为；`--source` 缺省回退 `~/.workbuddy/skills-marketplace`（可用 WORKDSH_SKILL_MARKETPLACE 覆盖）。
+- 读数：可安装条目 51→22，分类 0→14（镜像无 `tags_zh` 字段导致筛选条一直是空的，现由策略表补上，**零 UI 改动**即可筛选），payload 4.0→0.8 MiB。`find-skills`/`skill-vetter` 显示名由英文标识改为中文，22 条全部中文名。
+- 新增工程入口：`catalog:build` / `catalog:build:all` / `catalog:preview`。
+- 已安装区块（85 个）：归类为 A 融媒体/内容 26、B 飞书办公 19、C 剧本创作 19、D 技术研发/海外 21（含三组重复技能）。**不自动动磁盘**，建议用市场页「批量管理 → 停用/卸载」自行处置；停用比卸载更安全。
+- 生效方式：catalog 由 Host 按 `mtimeMs:size` 签名缓存，重建后刷新页面即生效，**无需重启预览或重新打包**（本轮未改任何 TypeScript 源码）。
+- 未执行：人工端到端视检；已安装区块未加场景过滤（需扩策略表覆盖 85 项 + 契约加 scenario 字段，暂不做）。
+
+## 2026-09-25 品牌 logo 全面替换为 AI融媒中心（未提交）
+- 需求：「替代所有 logo 用AI融媒体来替代」；随后用户指定标识图形为鲸形轮廓。
+- 图形单一源：新增 `scripts/build-brand-assets.mjs`（`WHALE` 路径常量 + 居中缩放几何），一次产出 7 个 SVG 资产 + `packages/ui/src/components/brand-shape.ts`（产品内标识消费的 TS 常量模块）。改图形只改脚本后重跑，资产与产品内标识同步，避免多处手写漂移。
+- 资产层：`assets/brand/` 的旧 `workdsh-logo.svg` / `workdsh-mark.svg` / `workdsh-logo-concept.png` 已删除；新 `ai-rongmei-mark.svg`（蓝徽）/ `-mark-mono.svg`（墨徽）/ `-mark-ring.svg`（无底座）/ `-lockup-light.svg` / `-lockup-dark.svg`；预览页 `ai-rongmei-preview.html` 更新为鲸形并补尺寸对照与商标事项。
+- 产品界面：`LogoMark.tsx` 改为消费 `brand-shape.ts`；`Brand.tsx` 的 `DiagnosticsMark` 由旧品牌字母 `W` 改为 `LogoMark`；侧栏诊断入口标签改「AI融媒中心 接入验证」。
+- 官网：`website/assets/mark.svg`（favicon / 页头 / 页脚 / 导航字标）替换旧折叠 `W`，新增 `mark-ring.svg`（首屏悬浮底座内的无底座符号）；四页（index / zh-CN / changelog ×2）brand 组合文字改为「AI融媒中心」；未被引用的 `website/assets/logo.svg` 删除。
+- 仓库说明：`README.md` / `README.zh-CN.md` 顶部图形换新，标题分别改 AI Convergence Media Center / AI融媒中心。
+- 品牌文档：`docs/BRAND.md` 整篇重写（鲸形描述、资产清单、配色、使用规则、图形来源与维护、落地位置）；`docs/DESKTOP-PACKAGING.md` 图标源改指 `ai-rongmei-mark.svg` 并标注需重新生成 icns。`docs/evidence/desktop-pack-test.md` 为历史证据，保留原样不改。
+- 应用内品牌文案：连接器示例标题、技能导入安装范围选项、卸载回收目录提示、新建项目指令 placeholder、XLSX/PDF 文件元数据 creator、专家包导出 README 模板，统一为「AI融媒中心」。测试对技能 id `workdsh-skill-creator` 的断言不受影响。
+- **商标待决事项（如实记录）**：用户指定图形与 DeepSeek 官方鲸形商标高度相似（Wikimedia Commons 对该标识标注 Trademarked）。已写入 BRAND.md 与预览页：对外发布前须由项目方确认授权，或改用自绘鲸形轮廓（保留意象与几何比例、仅重绘路径，改脚本一处即可）。
+- 验证：ui / bundle / connectors / skills / projects / office / experts 七包 build 全绿；Chrome headless 渲染对照（96/48/32/24px + 深浅 lockup）确认形状与可辨识度。
+- 未执行：website 与 docs 界面截图（`website/assets/*.png`、`docs/assets/screenshots/*.png`、og:image）仍为旧 logo 版本，需跑应用重新截图；桌面 icns 未重新生成（桌面版挂起）；preview 重打包结果待确认。

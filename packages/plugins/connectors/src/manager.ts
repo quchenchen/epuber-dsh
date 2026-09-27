@@ -39,7 +39,7 @@ export class ConnectorManager extends Service implements ConnectorManagementServ
     if (!domain.global.get().seededExample) {
       const now = new Date().toISOString();
       await this.definitions.put('workdsh-example', {
-        id: 'workdsh-example', title: 'WorkDSH MCP 示例', description: '可查询业务目录，并通过 MCP 资源与 URI 模板读取示例资料。',
+        id: 'workdsh-example', title: 'AI融媒中心 MCP 示例', description: '可查询业务目录，并通过 MCP 资源与 URI 模板读取示例资料。',
         serverName: 'workdsh-example', transport: 'stdio', command: process.execPath, args: [serverPath], enabled: true,
         createdAt: now, updatedAt: now,
       });

@@ -1,5 +1,5 @@
-<p align="center"><img src="assets/brand/workdsh-logo.svg" width="104" alt="WorkDSH"></p>
-<h1 align="center">WorkDSH</h1>
+<p align="center"><img src="assets/brand/ai-rongmei-mark.svg" width="88" alt="AI融媒中心"></p>
+<h1 align="center">AI融媒中心</h1>
 <p align="center"><strong>把工作交给 AI，看清过程，拿到成果。</strong></p>
 <p align="center"><a href="README.md">English</a> · 简体中文</p>
 

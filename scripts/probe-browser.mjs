@@ -46,7 +46,7 @@ export async function probeBrowser(address, sessionCookie, screenshotPath, { ins
     await dismissSetup(page);
     const later = page.getByRole('button', { name: 'Configure later', exact: true });
     const graphRows = await page.evaluate(() => window.__DSH_BOOT__?.entries?.filter(row => row.id === 'workdsh-bundle'));
-    const nav = page.getByRole('button', { name: 'WorkDSH 接入验证', exact: true });
+    const nav = page.getByRole('button', { name: 'AI融媒中心 接入验证', exact: true });
     expect(graphRows).toHaveLength(installed ? 1 : 0);
     if (!installed) {
       await expect(page.getByText(/新会话|New Session/, { exact: true }).first()).toBeVisible({ timeout: 30000 });
@@ -62,7 +62,7 @@ export async function probeBrowser(address, sessionCookie, screenshotPath, { ins
     }
 
     // Harness stays the sole Sidebar owner; WorkDSH contributes only public slots.
-    await expect(page.getByTestId('workdsh-brand')).toHaveText('WorkDSH', { timeout: 30000 });
+    await expect(page.getByTestId('workdsh-brand')).toHaveText('AI融媒中心', { timeout: 30000 });
     await expect(page.getByTestId('workdsh-sidebar')).toHaveCount(0);
     await expect(page.getByRole('button', { name: '专家 · 技能 · 连接器', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '返回 WorkDSH', exact: true })).toHaveCount(0);
@@ -217,7 +217,7 @@ export async function probeBrowser(address, sessionCookie, screenshotPath, { ins
     await page.goto(invalid.href);
     await expect.poll(() => new URL(page.url()).searchParams.get('workdsh-view')).toBe('conversation');
     await page.goto(`${address}/?workdsh-view=diagnostics`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('button', { name: 'WorkDSH 接入验证', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'AI融媒中心 接入验证', exact: true })).toHaveCount(0);
     await expect(page.getByTestId('workdsh-probe')).toHaveCount(0);
     await expect.poll(() => new URL(page.url()).searchParams.get('workdsh-view')).toBe('conversation');
     if (errors.length) throw new Error(`Browser reported ${errors.length} uncaught errors: ${errors.join('; ')}`);
@@ -244,7 +244,7 @@ export async function probeProductWithoutSkills(address, sessionCookie) {
     await page.context().addCookies(sessionCookies(address, sessionCookie));
     await page.goto(`${address}/?workdsh-view=skills`);
     await dismissSetup(page);
-    await expect(page.getByTestId('workdsh-brand')).toHaveText('WorkDSH');
+    await expect(page.getByTestId('workdsh-brand')).toHaveText('AI融媒中心');
     await expect(page.getByRole('button', { name: '专家 · 技能 · 连接器', exact: true })).toHaveCount(0);
     await expect.poll(() => new URL(page.url()).searchParams.get('workdsh-view')).toBe('conversation');
     const graph = await page.evaluate(() => window.__DSH_BOOT__.entries.map(row => row.id));

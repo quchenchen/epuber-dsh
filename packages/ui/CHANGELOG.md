@@ -4,6 +4,8 @@
 
 - 共享 Modal 背景、遮罩、文字、关闭按钮和投影复用原生主题变量，随系统明暗切换。
 
+- 2026-09-25：移除零导入方的 `navigationCss` 与 `tokens` 导出（`wd-sidebar` 类无任何组件使用）。颜色 token 统一使用官方 `@deepseek-ai/dsh-client-ui-theme` 的 `--dsw-*` 词汇，WorkDSH 不另建第二套。
+
 # 0.1.0-alpha.6 — 2026-09-15
 
 - 统一共享 Modal 的紧凑层级、关闭按钮、滚动区、底部操作栏和窄屏边界。

@@ -1,5 +1,5 @@
-<p align="center"><img src="assets/brand/workdsh-logo.svg" width="104" alt="WorkDSH"></p>
-<h1 align="center">WorkDSH</h1>
+<p align="center"><img src="assets/brand/ai-rongmei-mark.svg" width="88" alt="AI Convergence Media Center"></p>
+<h1 align="center">AI Convergence Media Center</h1>
 <p align="center"><strong>Give AI a job. Watch it work. Open the result.</strong></p>
 <p align="center">English · <a href="README.zh-CN.md">简体中文</a></p>
 
