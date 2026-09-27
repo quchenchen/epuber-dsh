@@ -1,0 +1,6 @@
+# Presentation-only skin. The Host contributes no service; the browser half
+# stacks an alias-token layer over the official palette, so removing this
+# package restores the official colours without a preference write.
+- insert:
+    - id: workdsh-weknora-theme
+      name: workdsh-plugin-weknora-theme

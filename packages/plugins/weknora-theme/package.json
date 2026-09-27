@@ -1,0 +1,41 @@
+{
+  "name": "workdsh-plugin-weknora-theme",
+  "version": "0.1.0-alpha.1",
+  "type": "module",
+  "private": false,
+  "description": "WeKnora-flavoured visual skin for WorkDSH: an alias-token override layer over the official --dsw-* theme",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.browser.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "cordis.patch.yml"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node ../../../scripts/build-weknora-theme.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.3",
+    "@deepseek-ai/dsh-client-ui-theme": "0.1.7-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  }
+}
