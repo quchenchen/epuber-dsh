@@ -364,11 +364,18 @@ export class ExpertsManager extends Service implements ExpertsService {
    * (e.g. no writable preset root) skips that template rather than breaking reads.
    */
   private async ensureSeeded(actor: ActorContext, signal?: AbortSignal): Promise<void> {
-    if (this.expertsTable().size > 0) return;
+    // Idempotent incremental seeding: each shipped default expert is checked by id and
+    // only created when absent, so deployments that already seeded an earlier template
+    // list still receive newly shipped defaults. Seeded experts become ordinary
+    // personal-owned experts (copyable, disable-able), never a hidden second source of
+    // truth. A compilation failure (e.g. no writable preset root) skips that template
+    // rather than breaking reads; it is retried on the next catalog read.
+    const pending = DEFAULT_TEMPLATES.filter(template => !this.expertsTable().get(keys.expert(template.id)));
+    if (!pending.length) return;
     if (!this.seeding) {
       this.seeding = this.enqueue(async () => {
-        if (this.expertsTable().size > 0) return;
         for (const template of DEFAULT_TEMPLATES) {
+          if (this.expertsTable().get(keys.expert(template.id))) continue;
           try {
             await this.seedTemplate(actor, template.id, template.definition, signal);
           } catch (error) {
@@ -385,19 +392,36 @@ export class ExpertsManager extends Service implements ExpertsService {
     const now = new Date().toISOString();
     const normalized = normalizeDefinition(definition);
     const defDigest = definitionDigest(normalized);
-    const lockDigest = digestOf([]);
+    // Mirror the publish path: freeze real skill revisions, then retain snapshots so
+    // the seeded preset carries the referenced skills. A skill that cannot be resolved
+    // or retained is skipped with an audit entry (the definition keeps the requirement,
+    // usage details will show it as missing) rather than dropping the whole expert.
+    const dependencyLock: SkillRevisionRef[] = [];
+    const snapshotDirs: string[] = [];
+    for (const requirement of normalized.skillRequirements) {
+      const ref = requirement.skillId ?? requirement.name;
+      if (!ref || dependencyLock.some(skill => skill.skillId === ref)) continue;
+      try {
+        const skill = await this.ctx.workdshSkills.resolveRevision(ref, undefined, signal);
+        snapshotDirs.push((await this.ctx.workdshSkills.retainRevision(skill, { domain: EXPERT_DOMAIN, id: expertId }, signal)).snapshotDir);
+        dependencyLock.push(skill);
+      } catch (error) {
+        await this.audit(actor, 'experts.create-draft', expertId, 'failed', errorCode(error, 'experts/seed-dependency-missing'));
+      }
+    }
+    const lockDigest = digestOf(dependencyLock);
     const draftRevision = shortDigest({ seed: expertId, defDigest });
     const basePresetId = await this.resolveBasePreset(signal);
-    const compiled = await compileExpertPreset(this.ctx, { expertId, definition: normalized, snapshotDirs: [], basePresetId });
+    const compiled = await compileExpertPreset(this.ctx, { expertId, definition: normalized, snapshotDirs, basePresetId });
     const revisionId = revisionIdFor(defDigest, lockDigest, compiled.presetId);
     const revision: ExpertRevision = {
       expertId, revisionId, definition: normalized, definitionDigest: defDigest,
-      dependencyLock: [], dependencyLockDigest: lockDigest,
+      dependencyLock, dependencyLockDigest: lockDigest,
       presetRevisionRef: compiled.presetId, compilerVersion: COMPILER_VERSION,
       compositionDigest: compiled.compositionDigest,
       publishedAt: now, publishedBy: actor.principalId,
     };
-    const draft: ExpertDraft = { expertId, revision: draftRevision, definition: normalized, validationIssues: [] };
+    const draft: ExpertDraft = { expertId, revision: draftRevision, definition: normalized, validationIssues: [...validateDefinition(normalized)] };
     const expert: Expert = {
       id: expertId, owner: this.newOwner(actor), origin: 'default', availability: 'enabled',
       revision: `r-${randomUUID()}`, draftRevision,

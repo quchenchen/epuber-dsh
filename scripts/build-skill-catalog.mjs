@@ -8,10 +8,20 @@
 //   <source>/icons/<skill>.(svg|png)             (optional brand icon)
 //   <source>/skills/<source>/SKILL.md            (payload)
 //
+// Scenario scoping keeps the marketplace to the scenarios this product serves:
+//   scripts/skill-scenario-policy.json assigns every mirrored skill to a scenario
+//   (content/office/platform/dev/overseas/personal) and defines named scopes.
+//   The default scope drops dev/overseas/personal entries from the catalog; the
+//   mirror itself is never modified, so any of them can be restored by rebuilding
+//   with --scope all.
+//
 // Usage:
 //   node scripts/build-skill-catalog.mjs --source /path/to/skills-marketplace
 //   node scripts/build-skill-catalog.mjs --source ... --target ~/.agents/.workdsh-catalog --dry-run
+//   node scripts/build-skill-catalog.mjs --source ... --scope all     # 不做场景过滤
+//   node scripts/build-skill-catalog.mjs --source ... --policy none   # 忽略策略文件
 import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { copyFile, lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, extname, join, resolve } from 'node:path';
@@ -34,24 +44,57 @@ const SKIP_EXTENSIONS = new Set(['.zip', '.tgz', '.tar', '.gz']);
 const ICON_ALIASES = { chuangye: 'the-entrepreneurship-handbook' };
 // Icon stems that cover a skill family by name prefix.
 const ICON_PREFIXES = ['minimax'];
+const DEFAULT_POLICY = join(root, 'scripts', 'skill-scenario-policy.json');
 
 function parseArguments(argv) {
-  const options = { source: '', target: process.env.WORKDSH_SKILL_CATALOG ?? '', dryRun: false };
+  const options = { source: '', target: process.env.WORKDSH_SKILL_CATALOG ?? '', policy: DEFAULT_POLICY, scope: '', dryRun: false };
   for (let index = 0; index < argv.length; index += 1) {
     const current = argv[index];
     if (current === '--source') options.source = argv[++index] ?? '';
     else if (current === '--target') options.target = argv[++index] ?? '';
+    else if (current === '--policy') options.policy = argv[++index] ?? '';
+    else if (current === '--scope') options.scope = argv[++index] ?? '';
+    else if (current === '--all') options.scope = 'all';
     else if (current === '--dry-run') options.dryRun = true;
     else throw new Error(`未知参数：${current}`);
   }
-  if (!options.source) throw new Error('缺少 --source：请指向包含 .codebuddy-skill/marketplace.json、skills/ 与 icons/ 的镜像目录。');
+  // 缺省镜像位置：WorkBuddy 的技能市场镜像。仍可用 --source 或 WORKDSH_SKILL_MARKETPLACE 覆盖。
+  options.source = options.source || process.env.WORKDSH_SKILL_MARKETPLACE || join(homedir(), '.workbuddy', 'skills-marketplace');
   options.source = resolve(options.source.replace(/^~(?=\/|$)/, homedir()));
+  if (!existsSync(join(options.source, '.codebuddy-skill', 'marketplace.json'))) {
+    throw new Error(`找不到技能镜像：${options.source}\n请用 --source 指定包含 .codebuddy-skill/marketplace.json、skills/ 与 icons/ 的镜像目录，或设置 WORKDSH_SKILL_MARKETPLACE。`);
+  }
   if (!options.target) {
     const agentsHome = resolve(process.env.DSH_AGENTS_HOME ?? join(homedir(), '.agents'));
     options.target = join(agentsHome, '.workdsh-catalog');
   }
   options.target = resolve(options.target.replace(/^~(?=\/|$)/, homedir()));
   return options;
+}
+
+// 场景策略是可选输入：文件缺失时退回「不过滤」的全量行为，不让构建失败。
+async function loadPolicy(path) {
+  if (path === 'none' || path === '') return undefined;
+  let raw;
+  try { raw = await readFile(resolve(path.replace(/^~(?=\/|$)/, homedir())), 'utf8'); }
+  catch (cause) {
+    if (cause.code === 'ENOENT') { console.warn(`未找到场景策略 ${path}，按不过滤的全量目录构建。`); return undefined; }
+    throw cause;
+  }
+  const policy = JSON.parse(raw);
+  if (!policy || typeof policy !== 'object' || !policy.scopes || typeof policy.scopes !== 'object') {
+    throw new Error(`场景策略缺少 scopes 定义：${path}`);
+  }
+  return policy;
+}
+
+function resolveScope(policy, requested) {
+  if (!policy) return undefined;
+  const name = requested || policy.defaultScope || 'all';
+  const scope = policy.scopes[name];
+  if (!scope) throw new Error(`场景策略中不存在 scope「${name}」，可选：${Object.keys(policy.scopes).join(' / ')}`);
+  if (!Array.isArray(scope.scenarios) || !scope.scenarios.length) throw new Error(`scope「${name}」缺少 scenarios 数组。`);
+  return { name, label: text(scope.label, 40) ?? name, scenarioSet: new Set(scope.scenarios) };
 }
 
 function frontmatterValue(document, key) {
@@ -108,6 +151,10 @@ const options = parseArguments(process.argv.slice(2));
 const marketplaceFile = join(options.source, '.codebuddy-skill', 'marketplace.json');
 const skillsRoot = join(options.source, 'skills');
 const iconsRoot = join(options.source, 'icons');
+const policy = await loadPolicy(options.policy);
+const scope = resolveScope(policy, options.scope);
+const policySkills = (policy?.skills && typeof policy.skills === 'object') ? policy.skills : {};
+const fallbackScenario = policy ? (typeof policy.unclassified === 'string' ? policy.unclassified : 'pending') : undefined;
 
 const marketplace = JSON.parse(await readFile(marketplaceFile, 'utf8'));
 if (!Array.isArray(marketplace.skills)) throw new Error('镜像 marketplace.json 缺少 skills 数组。');
@@ -131,6 +178,7 @@ function matchIcon(source, name) {
 
 const entries = [];
 const skipped = [];
+const excluded = [];
 const iconsUsed = new Set();
 for (const row of marketplace.skills) {
   const source = typeof row.source === 'string' ? row.source.trim() : '';
@@ -142,6 +190,15 @@ for (const row of marketplace.skills) {
   const name = frontmatterValue(document, 'name');
   if (!name || !KEBAB.test(name)) { skipped.push({ source, reason: `frontmatter name 无效：${name ?? '(缺失)'}` }); continue; }
   if (entries.some(entry => entry.name === name)) { skipped.push({ source, reason: `技能名 ${name} 与已有条目重复` }); continue; }
+  // 场景归档先于负载遍历：被排除的条目既不入目录也不复制 payload。
+  const assignment = policySkills[name] ?? policySkills[source];
+  const scenario = typeof assignment?.scenario === 'string' ? assignment.scenario : fallbackScenario;
+  // 镜像里少数条目的 name 本身就是英文标识，策略表可用 title 覆盖为中文显示名。
+  const title = text(assignment?.title, 80) ?? text(row.name, 80) ?? name;
+  if (scope && scenario && !scope.scenarioSet.has(scenario)) {
+    excluded.push({ name, title, scenario, reason: `场景「${scenario}」不在 ${scope.name} 范围内` });
+    continue;
+  }
   await lstat(payload);
   const tree = await walkTree(payload);
   const icon = matchIcon(source, name);
@@ -151,12 +208,15 @@ for (const row of marketplace.skills) {
   if (tree.depth >= MAX_DEPTH) limits.push(`目录嵌套超过 ${MAX_DEPTH} 层`);
   if (tree.bytes > MAX_BYTES) limits.push('负载超过 50 MiB 上限');
   if (tree.symlink) limits.push('包含符号链接');
+  const mirroredCategories = Array.isArray(row.tags_zh) ? row.tags_zh.filter(value => typeof value === 'string' && value.trim()).slice(0, 4) : [];
+  const policyCategories = Array.isArray(assignment?.categories) ? assignment.categories.filter(value => typeof value === 'string' && value.trim()).slice(0, 4) : [];
   entries.push({
     name,
-    title: text(row.name, 80) ?? name,
+    title,
     description: text(row.description_zh ?? row.description, 300) ?? text(row.description_en, 300) ?? name,
     descriptionEn: text(row.description_en, 300),
-    categories: Array.isArray(row.tags_zh) ? row.tags_zh.filter(value => typeof value === 'string' && value.trim()).slice(0, 4) : [],
+    categories: policyCategories.length ? policyCategories : mirroredCategories,
+    ...(scenario ? { scenario } : {}),
     version: text(row.version, 40),
     examples: Array.isArray(row.examples_zh) ? row.examples_zh.filter(value => typeof value === 'string').slice(0, 3) : [],
     icon: icon ? `icons/${icon}` : undefined,
@@ -170,23 +230,34 @@ for (const row of marketplace.skills) {
 }
 entries.sort((a, b) => a.name.localeCompare(b.name));
 
-const categories = [...new Set(entries.flatMap(entry => entry.categories))];
+const categories = [...new Set(entries.flatMap(entry => entry.categories))].sort((a, b) => a.localeCompare(b));
+const scenarios = [...new Set(entries.flatMap(entry => entry.scenario ? [entry.scenario] : []))].sort((a, b) => a.localeCompare(b));
 const catalog = {
   schema: SCHEMA,
   kind: 'workdsh-skill-catalog',
   generatedAt: new Date().toISOString(),
   generator: 'scripts/build-skill-catalog.mjs',
   source: { path: options.source, marketplace: basename(marketplaceFile), entries: marketplace.skills.length, icons: iconFiles.size },
+  ...(scope ? { scope: { name: scope.name, label: scope.label, scenarios: [...scope.scenarioSet] } } : {}),
+  ...(scenarios.length ? { scenarios } : {}),
   categories,
   entries,
+  // 被场景范围排除的技能：数据保留、可查证，重建时加 --scope all 即可全部恢复。
+  ...(excluded.length ? { excluded } : {}),
 };
 
 const totalBytes = entries.reduce((sum, entry) => sum + entry.bytes, 0);
 console.log(`目录条目 ${entries.length} / 市场 ${marketplace.skills.length}，图标文件 ${iconFiles.size}，分类 ${categories.length}`);
+console.log(scope ? `场景范围 ${scope.name}（${scope.label}）：纳入 ${entries.length}，排除 ${excluded.length}，覆盖场景 ${scenarios.join('/') || '无'}` : '场景范围：未过滤（全量）');
 console.log(`映射图标 ${entries.filter(entry => entry.icon).length} 个，未使用图标 ${[...iconFiles.keys()].filter(stem => !iconsUsed.has(stem)).length} 个`);
 console.log(`负载合计 ${(totalBytes / 1024 / 1024).toFixed(1)} MiB`);
 for (const entry of entries.filter(row => !row.installable)) console.log(`  受限：${entry.name} — ${entry.installLimits.join('；')}`);
+for (const row of excluded) console.log(`  排除：${row.name}（${row.scenario}）— ${row.reason}`);
 for (const row of skipped) console.log(`  跳过：${row.source} — ${row.reason}`);
+if (policy && scope && scope.name === policy.defaultScope) {
+  const pending = [...excluded, ...skipped].length;
+  console.log(`提示：以上未纳入项如需回到市场，追加 --scope all 重建；新增镜像技能请登记 ${options.policy}（未登记默认归入「${fallbackScenario}」不纳入）${pending ? '' : '。'}`);
+}
 if (options.dryRun) { console.log(`dry-run：未写入 ${options.target}`); process.exit(0); }
 
 const target = options.target;

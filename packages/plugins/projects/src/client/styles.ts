@@ -125,7 +125,34 @@ ${controlsCss}
 .wd-p-center .wd-p-card>span:last-child,.wd-p-center .wd-p-card-open>span:last-child{min-width:0;flex:1}
 .wd-p-center .wd-p-card-menu{align-self:center;margin:0 8px 0 0;font-size:12px;padding:6px;flex-shrink:0}
 .wd-p-center .wd-p-center-filters{align-items:center}.wd-p-center .wd-p-center-filters input{width:220px;min-width:0}
-.wd-p-center button:focus-visible{outline:2px solid var(--dsw-alias-business-primary);outline-offset:3px}
+.wd-p-center button:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:3px}
 @container(max-width:720px){.wd-p-center{padding:24px 20px 40px}.wd-p-center .wd-p-hero{min-height:176px}.wd-p-center .wd-p-hero-art{display:none}.wd-p-center .wd-p-section-head{flex-wrap:wrap}.wd-p-center-filters{width:100%}.wd-p-center .wd-p-center-filters input{width:100%}.wd-p-center .wd-p-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
 @container(max-width:420px){.wd-p-center .wd-p-grid{grid-template-columns:minmax(0,1fr)}.wd-p-center{padding:20px 16px 32px}}
+
+/* 模板分类选择器：分类筛选条 + 分类着色图标卡（着色全部取自官方 --dsw-* token）。 */
+.wd-p-cat-bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.wd-p-cat-bar button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--dsw-alias-border-l2);border-radius:999px;background:var(--dsw-alias-bg-layer-1);padding:5px 13px;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}
+.wd-p-cat-bar button .wd-p-icon{width:15px;height:15px;flex:0 0 15px}
+.wd-p-cat-bar button:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.wd-p-cat-bar button.active{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-label-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 10%,var(--dsw-alias-bg-layer-1))}
+.wd-p-cat-bar button em{font-style:normal;font-size:12px;color:var(--dsw-alias-label-tertiary)}
+.wd-p-cat-bar button.active em{color:inherit}
+.wd-p-tpl-card{align-items:flex-start;text-align:left}
+.wd-p-tpl-card>span:last-child,.wd-p-tpl-item>span:last-child{min-width:0}
+.wd-p-card-icon[data-tint="新闻稿件"]{color:var(--dsw-alias-state-business-primary)}
+.wd-p-card-icon[data-tint="内容生产"]{color:var(--dsw-alias-state-success-primary)}
+.wd-p-card-icon[data-tint="深度访谈"]{color:var(--dsw-alias-state-warn-primary)}
+.wd-p-card-icon[data-tint="运营管理"]{color:var(--dsw-alias-state-business-tertiary)}
+.wd-p-card-icon[data-tint="分发复盘"]{color:var(--dsw-alias-state-success-tertiary)}
+.wd-p-tpl-meta{display:block;margin-top:6px;font-style:normal;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
+.wd-p-tpl-picker{display:grid;gap:12px;margin:0 0 14px}
+.wd-p-tpl-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:236px;overflow:auto;padding:2px}
+.wd-p-tpl-item{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);padding:11px 12px;color:inherit}
+.wd-p-tpl-item:hover{background:var(--dsw-alias-bg-layer-2)}
+.wd-p-tpl-item.selected{border-color:var(--dsw-alias-brand-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 10%,var(--dsw-alias-bg-layer-1))}
+.wd-p-tpl-item .wd-p-card-icon{width:30px;height:30px;flex-basis:30px;border-radius:8px}
+.wd-p-tpl-item .wd-p-card-icon svg{width:16px;height:16px}
+.wd-p-tpl-item strong{display:block;font-size:13px;line-height:20px;font-weight:600;color:var(--dsw-alias-label-primary);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.wd-p-tpl-item small{display:block;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+@media(max-width:600px){.wd-p-tpl-list{grid-template-columns:1fr}}
 `;

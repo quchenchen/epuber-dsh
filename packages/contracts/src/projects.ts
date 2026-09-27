@@ -9,7 +9,9 @@ export interface ProjectCapabilityRef { readonly kind: ProjectCapabilityKind; re
 export interface ProjectConfig { readonly instruction: string; readonly capabilities: readonly ProjectCapabilityRef[]; }
 export interface ProjectConfigRevision extends ProjectConfig { readonly id: string; readonly projectId: string; readonly number: number; readonly createdBy: string; readonly createdAt: string; }
 export interface Project { readonly id: string; readonly name: string; readonly description: string; readonly templateId?: string; readonly owner: ResourceOwner; readonly status: ProjectStatus; readonly configRevisionId: string; readonly createdAt: string; readonly updatedAt: string; }
-export interface ProjectTemplate { readonly id: string; readonly name: string; readonly description: string; readonly instruction: string; }
+export interface ProjectTemplateCapability { readonly kind: ProjectCapabilityKind; readonly id: string; readonly label: string; }
+export interface ProjectTemplateWorkItem { readonly title: string; readonly priority?: WorkItemPriority; readonly tags?: readonly string[]; }
+export interface ProjectTemplate { readonly id: string; readonly name: string; readonly description: string; readonly instruction: string; readonly category?: string; readonly capabilities?: readonly ProjectTemplateCapability[]; readonly workItems?: readonly ProjectTemplateWorkItem[]; }
 export interface ProjectWorkItem { readonly id: string; readonly projectId: string; readonly title: string; readonly status: WorkItemStatus; readonly assignee?: string; readonly priority: WorkItemPriority; readonly tags: readonly string[]; readonly revision: string; readonly createdAt: string; readonly updatedAt: string; }
 export interface ProjectAssetRef { readonly id: string; readonly projectId: string; readonly nodeId: string; readonly assetId: string; readonly revisionId: string; readonly name: string; readonly kind: string; readonly createdAt: string; }
 export type ProjectInputRefKind = 'work-item' | 'asset' | 'skill';
