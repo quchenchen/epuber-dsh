@@ -111,13 +111,13 @@ function fixture(mutateStaged = false): { options: WindowsNsisAbBuildOptions, ca
       if (args.includes('--dir')) {
         const app = join(output, 'win-unpacked')
         mkdirSync(join(app, 'resources', 'app.asar.unpacked', 'native'), { recursive: true })
-        writeFileSync(join(app, 'WorkDSH.exe'), pe())
+        writeFileSync(join(app, 'ai-rongmei-center.exe'), pe())
         writeFileSync(join(app, 'resources', 'app.asar'), 'one archive')
         writeFileSync(join(app, 'resources', 'app.asar.unpacked', 'native', 'addon.node'), 'native')
         return
       }
       mkdirSync(output, { recursive: true })
-      writeFileSync(join(output, 'WorkDSH-9.8.7-x64-Setup.exe'), pe())
+      writeFileSync(join(output, 'ai-rongmei-center-9.8.7-x64-Setup.exe'), pe())
       const prepackaged = args.find(value => value.startsWith('--prepackaged='))?.slice('--prepackaged='.length)
         ?? /--prepackaged=(?:"([^"]+)"|([^ ]+))/u.exec(args.at(-1) ?? '')?.slice(1).find(Boolean)
       if (prepackaged !== undefined) {
@@ -427,7 +427,7 @@ describe('Windows NSIS A/B packaging', () => {
     mkdirSync(join(resources, 'app.asar.unpacked'), { recursive: true })
     writeFileSync(join(source, 'package.json'), '{"name":"dsh-plugin-desktop"}\n')
     writeFileSync(join(source, 'lib', 'workdsh-main.js'), 'export {}\n')
-    writeFileSync(join(installRoot, 'WorkDSH.exe'), pe())
+    writeFileSync(join(installRoot, 'ai-rongmei-center.exe'), pe())
     writeFileSync(join(resources, 'app.asar.unpacked', 'native.node'), 'native')
     // The library-level createPackage() promise resolves when it calls
     // WriteStream.end(), not when the file's finish event fires. A short-lived
@@ -485,7 +485,7 @@ describe('Windows NSIS A/B packaging', () => {
     roots.push(root)
     const resources = join(root, 'resources')
     mkdirSync(resources, { recursive: true })
-    writeFileSync(join(root, 'WorkDSH.exe'), pe())
+    writeFileSync(join(root, 'ai-rongmei-center.exe'), pe())
     writeFileSync(join(resources, 'app.asar'), 'not an asar')
 
     const inspection = inspectInstalledWindowsApp(root)
@@ -498,7 +498,7 @@ describe('Windows NSIS A/B packaging', () => {
   it('runs the shared packaged-runtime smoke with an Electron Builder-shaped context', () => {
     const root = mkdtempSync(join(tmpdir(), 'dsh-installed-runtime-'))
     roots.push(root)
-    writeFileSync(join(root, 'WorkDSH.exe'), pe())
+    writeFileSync(join(root, 'ai-rongmei-center.exe'), pe())
     const contexts: Parameters<PackagedElectronSmoke>[0][] = []
 
     const result = probeInstalledWindowsRuntime(root, context => contexts.push(context), 'win32')
@@ -510,8 +510,8 @@ describe('Windows NSIS A/B packaging', () => {
       electronPlatformName: 'win32',
       arch: 1,
       packager: {
-        executableName: 'WorkDSH',
-        appInfo: { productFilename: 'WorkDSH' },
+        executableName: 'ai-rongmei-center',
+        appInfo: { productFilename: 'ai-rongmei-center' },
       },
     })
     expect(contexts[0]).not.toHaveProperty('executableName')

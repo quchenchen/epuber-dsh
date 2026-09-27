@@ -15,6 +15,7 @@ import {
 } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { BRAND_DISPLAY_NAME } from './brand.generated.ts'
 import { syncBundledCompatibility } from './runtime-compatibility.ts'
 
 const PROFILE_NAME = 'workdsh'
@@ -89,7 +90,7 @@ function startBrowserWorker(request: { port: number, profile: string }): void {
     await page.loadURL('about:blank')
     process.stdout.write('WORKDSH_BROWSER_WORKER_READY\n')
   }).catch(error => {
-    process.stderr.write(`WorkDSH browser worker failed: ${String(error)}\n`)
+    process.stderr.write(`${BRAND_DISPLAY_NAME} browser worker failed: ${String(error)}\n`)
     app.exit(1)
   })
 }
@@ -116,8 +117,8 @@ function materializeRuntimeProfile(home: string): string {
     const stat = lstatSync(targetModules)
     if (!stat.isSymbolicLink()) {
       throw new Error(
-        `WorkDSH cannot replace the existing unmanaged runtime at ${targetModules}. `
-        + 'Move that directory, then reopen WorkDSH.',
+        `${BRAND_DISPLAY_NAME} cannot replace the existing unmanaged runtime at ${targetModules}. `
+        + `Move that directory, then reopen ${BRAND_DISPLAY_NAME}.`,
       )
     }
     readlinkSync(targetModules)
@@ -138,7 +139,7 @@ function openWindow(url: string): void {
     height: 960,
     minWidth: 960,
     minHeight: 640,
-    title: 'WorkDSH',
+    title: BRAND_DISPLAY_NAME,
     icon,
     backgroundColor: '#111113',
     show: false,
@@ -150,7 +151,7 @@ function openWindow(url: string): void {
   })
   window.on('page-title-updated', event => {
     event.preventDefault()
-    window?.setTitle('WorkDSH')
+    window?.setTitle(BRAND_DISPLAY_NAME)
   })
   window.webContents.setWindowOpenHandler(({ url: target }) => {
     if (target.startsWith('https://') || target.startsWith('http://')) void shell.openExternal(target)
@@ -212,7 +213,7 @@ const worker = browserWorkerRequest()
 if (worker !== undefined) {
   startBrowserWorker(worker)
 } else {
-app.setName('WorkDSH')
+app.setName(BRAND_DISPLAY_NAME)
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -238,7 +239,7 @@ if (!app.requestSingleInstanceLock()) {
     const profile = materializeRuntimeProfile(home)
     startRuntime(home, profile)
   }).catch(cause => {
-    process.stderr.write(`WorkDSH failed to start: ${cause instanceof Error ? cause.stack ?? cause.message : String(cause)}\n`)
+    process.stderr.write(`${BRAND_DISPLAY_NAME} failed to start: ${cause instanceof Error ? cause.stack ?? cause.message : String(cause)}\n`)
     app.quit()
   })
 }

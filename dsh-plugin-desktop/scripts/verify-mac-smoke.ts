@@ -7,6 +7,26 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DSH_VERSION } from './runtime-version.mjs'
 
+/**
+ * 从本包 package.json 读应用显示名。
+ *
+ * 不在这里写品牌名字面量：它由 workdsh-web/scripts/sync-brand-to-desktop.mjs
+ * 从品牌真源（workdsh-web/assets/brand/brand.json）同步进 package.json。
+ * 再硬编码一份就等于又造一个改名时要撒网搜索的漂移点。
+ * @returns electron-builder 的 productName。
+ */
+function packageProductName(): string {
+  const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  const manifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8')) as {
+    build?: { productName?: string }
+  }
+  const name = manifest.build?.productName
+  if (typeof name !== 'string' || name.length === 0) {
+    throw new Error('dsh-plugin-desktop package.json is missing build.productName')
+  }
+  return name
+}
+
 /** Injectable filesystem and command boundaries for smoke verification. */
 export interface MacSmokeVerificationOptions {
   /** Directory containing exactly one smoke DMG. */
@@ -55,7 +75,7 @@ function defaultOptions(): MacSmokeVerificationOptions {
       ? join(packageRoot, 'dist', 'mac-smoke')
       : resolve(process.argv[2]),
     targetArch: process.argv[3] === 'x64' ? 'x64' : 'arm64',
-    productName: 'WorkDSH',
+    productName: packageProductName(),
     listDmgs,
     makeMountPoint: () => mkdtempSync(join(tmpdir(), 'dsh-desktop-dmg-smoke-')),
     run,

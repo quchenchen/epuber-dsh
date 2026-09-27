@@ -28,7 +28,7 @@ export function probeInstalledWindowsRuntime(
   platform: NodeJS.Platform = process.platform,
 ): InstalledWindowsRuntimeProbe {
   const root = resolve(installRoot)
-  const executable = join(root, 'WorkDSH.exe')
+  const executable = join(root, 'ai-rongmei-center.exe')
   try {
     if (platform !== 'win32') {
       throw new Error('installed Windows runtime probe requires a native Windows host')
@@ -39,8 +39,8 @@ export function probeInstalledWindowsRuntime(
       electronPlatformName: 'win32',
       arch: 1,
       packager: {
-        executableName: 'WorkDSH',
-        appInfo: { productFilename: 'WorkDSH' },
+        executableName: 'ai-rongmei-center',
+        appInfo: { productFilename: 'ai-rongmei-center' },
       },
     })
     return { installRoot: root, executable, success: true, error: null }

@@ -4,6 +4,20 @@
 
 This package builds the Electron application. The installer contains `lib/workdsh-main.js` and one bundled runtime Profile. DeepSeek Harness Host, Web Client, and core capabilities come from the pinned upstream release in that Profile. WorkDSH projects, library, experts, skills, connectors, and their supporting services are composed by `workdsh-bundle`; they are not separate desktop editions.
 
+## Brand assets
+
+The application and tray icons are **generated, never hand-placed binaries**:
+
+| Output | Source | Generator |
+| --- | --- | --- |
+| `build/app-icon.png` | `workdsh-web/assets/brand/ai-rongmei-icon.svg` | `scripts/generate-brand-app-icon.mjs` |
+| `build/app-icon.ico` | `build/app-icon.png` | `scripts/generate-windows-app-icon.mjs` |
+| `build/app-icon-mac.png` | `build/app-icon.png` | `scripts/generate-mac-app-icon.mjs` |
+| `build/tray-icon.svg` | `workdsh-web/scripts/build-brand-assets.mjs` | written by that script |
+| `build/tray-icon*.png` | `build/tray-icon.svg` | `scripts/generate-tray-icons.mjs` |
+
+Geometry, colours and naming have exactly one source: `workdsh-web/scripts/build-brand-assets.mjs`, which also emits the machine-readable `workdsh-web/assets/brand/brand.json`. The generators above read the accent colour from that file, so this package does not hardcode brand colours. `yarn build` regenerates everything in the order listed. To detect drift between the two workspaces, run `node workdsh-web/scripts/check-brand-consistency.mjs`; to change the logo, edit that script and regenerate — never edit a `build/*.png` by hand.
+
 ## Development
 
 Use Node.js `^22.19.0` or `>=24` and Corepack Yarn 4.18.0. At the repository root:

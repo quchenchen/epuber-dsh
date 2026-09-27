@@ -1,7 +1,7 @@
 {
   "name": "dsh-plugin-desktop",
   "version": "2.0.6-alpha.1",
-  "description": "WorkDSH Electron carrier for a pinned DeepSeek Harness runtime Profile",
+  "description": "AI Convergence Media Center Electron carrier for a pinned DeepSeek Harness runtime Profile",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -28,7 +28,7 @@
     "node": "^22.19.0 || >=24.0.0"
   },
   "scripts": {
-    "build": "node scripts/generate-windows-app-icon.mjs && node scripts/generate-mac-app-icon.mjs && node scripts/generate-tray-icons.mjs && node scripts/clean.mjs && tsdown && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "node scripts/generate-brand-app-icon.mjs && node scripts/generate-windows-app-icon.mjs && node scripts/generate-mac-app-icon.mjs && node scripts/generate-tray-icons.mjs && node scripts/clean.mjs && tsdown && tsc -p tsconfig.json --emitDeclarationOnly",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json --noEmit",
     "test": "vitest run && node --test scripts/verify-profile-release.test.mjs",
     "check": "yarn run build && yarn run typecheck && yarn run test",
@@ -62,7 +62,7 @@
   },
   "build": {
     "appId": "io.techflag.dsh.ssh",
-    "productName": "WorkDSH",
+    "productName": "AI融媒中心",
     "asar": {
       "smartUnpack": true
     },
@@ -96,7 +96,7 @@
       "!node_modules/**"
     ],
     "mac": {
-      "artifactName": "WorkDSH-${version}-${arch}.${ext}",
+      "artifactName": "ai-rongmei-center-${version}-${arch}.${ext}",
       "asarUnpack": [
         "build/app-icon-mac.png",
         "build/tray-iconTemplate.png",
@@ -109,6 +109,7 @@
       "extendInfo": {
         "CFBundleAllowMixedLocalizations": true,
         "CFBundleDevelopmentRegion": "en",
+        "CFBundleDisplayName": "AI融媒中心",
         "CFBundleLocalizations": [
           "en",
           "zh_CN"
@@ -140,7 +141,8 @@
           ]
         }
       ],
-      "artifactName": "WorkDSH-${version}-${arch}-Portable.${ext}",
+      "artifactName": "ai-rongmei-center-${version}-${arch}-Portable.${ext}",
+      "executableName": "ai-rongmei-center",
       "icon": "build/app-icon.ico"
     },
     "nsis": {
@@ -154,10 +156,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "differentialPackage": false,
-      "shortcutName": "WorkDSH",
+      "shortcutName": "AI融媒中心",
       "uninstallerIcon": "build/app-icon.ico",
       "useZip": false,
-      "artifactName": "WorkDSH-${version}-${arch}-Setup.${ext}"
+      "artifactName": "ai-rongmei-center-${version}-${arch}-Setup.${ext}"
     },
     "linux": {
       "asarUnpack": [
@@ -170,6 +172,7 @@
       "target": [
         "dir"
       ],
+      "executableName": "ai-rongmei-center",
       "icon": "build/app-icon.png"
     },
     "extraResources": [
