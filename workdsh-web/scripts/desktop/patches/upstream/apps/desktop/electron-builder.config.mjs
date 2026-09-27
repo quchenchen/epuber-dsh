@@ -50,9 +50,9 @@ export function createElectronBuilderConfig(
   const buildPaths = desktopTargetBuildPaths(update.target)
   return {
     appId,
-    // WORKDSH TEST PATCH: WorkDSH product branding.
-    productName: 'WorkDSH',
-    artifactName: 'workdsh-${version}-${os}-${arch}.${ext}',
+    // WORKDSH TEST PATCH: 品牌显示名与产物名统一到品牌真源，与 dsh-plugin-desktop 一致。
+    productName: 'AI融媒中心',
+    artifactName: 'ai-rongmei-center-${version}-${os}-${arch}.${ext}',
     directories: { output: buildPaths.artifacts },
     asar: true,
     files: [
@@ -67,7 +67,7 @@ export function createElectronBuilderConfig(
     ],
     mac: {
       category: 'public.app-category.developer-tools',
-      // WORKDSH TEST PATCH: WorkDSH branded application icon.
+      // WORKDSH TEST PATCH: 品牌应用图标，由 scripts/desktop/build-desktop-icon.mjs 从品牌真源生成。
       icon: fileURLToPath(new URL('./workdsh-icon.icns', import.meta.url)),
       identity: workdshUnsigned ? null : macOSSigning?.signingIdentity,
       forceCodeSigning: !workdshUnsigned,
