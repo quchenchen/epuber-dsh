@@ -1,9 +1,9 @@
 import readline from 'node:readline';
 
 const catalog = [
-  { id: 'DSH-101', name: 'MCP 接入指南', owner: 'WorkDSH', status: '可用' },
-  { id: 'DSH-102', name: '连接器验收清单', owner: 'WorkDSH', status: '可用' },
-  { id: 'DSH-103', name: '资源模板示例', owner: 'WorkDSH', status: '维护中' },
+  { id: 'DSH-101', name: 'MCP 接入指南', owner: 'AI融媒中心', status: '可用' },
+  { id: 'DSH-102', name: '连接器验收清单', owner: 'AI融媒中心', status: '可用' },
+  { id: 'DSH-103', name: '资源模板示例', owner: 'AI融媒中心', status: '维护中' },
 ];
 
 const write = message => process.stdout.write(`${JSON.stringify(message)}\n`);
@@ -23,7 +23,7 @@ input.on('line', line => {
         protocolVersion: request.params?.protocolVersion ?? '2025-06-18',
         capabilities: { tools: {}, resources: {} },
         serverInfo: { name: 'workdsh-example-business-service', version: '1.0.0' },
-        instructions: 'Use this server when the user asks to verify the WorkDSH MCP connector example or query its sample business catalog.',
+        instructions: 'Use this server when the user asks to verify the AI Convergence Media Center MCP connector example or query its sample business catalog.',
       });
       break;
     case 'ping': result(request.id, {}); break;
@@ -32,13 +32,13 @@ input.on('line', line => {
         {
           name: 'connector_status',
           title: '连接器状态',
-          description: 'Return the live status and capabilities of the WorkDSH MCP example server.',
+          description: 'Return the live status and capabilities of the AI Convergence Media Center MCP example server.',
           inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         },
         {
           name: 'search_catalog',
           title: '查询示例业务目录',
-          description: 'Search the deterministic WorkDSH sample business catalog by id, name, owner, or status.',
+          description: 'Search the deterministic AI Convergence Media Center sample business catalog by id, name, owner, or status.',
           inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Optional search text.' } }, additionalProperties: false },
         },
       ] });
@@ -55,7 +55,7 @@ input.on('line', line => {
       break;
     }
     case 'resources/list':
-      result(request.id, { resources: [{ uri: 'workdsh://connector/guide', name: 'WorkDSH 连接器指南', description: '真实 MCP 示例的说明资源。', mimeType: 'text/markdown' }] });
+      result(request.id, { resources: [{ uri: 'workdsh://connector/guide', name: 'AI融媒中心 连接器指南', description: '真实 MCP 示例的说明资源。', mimeType: 'text/markdown' }] });
       break;
     case 'resources/templates/list':
       result(request.id, { resourceTemplates: [{ uriTemplate: 'workdsh://catalog/{id}', name: '示例业务目录条目', description: '按 id 读取一个示例业务对象。', mimeType: 'application/json' }] });
@@ -63,7 +63,7 @@ input.on('line', line => {
     case 'resources/read': {
       const uri = request.params?.uri;
       if (uri === 'workdsh://connector/guide') {
-        result(request.id, { contents: [{ uri, mimeType: 'text/markdown', text: '# WorkDSH MCP 连接器\n\n该资源由随包 stdio MCP Server 实时返回。' }] });
+        result(request.id, { contents: [{ uri, mimeType: 'text/markdown', text: '# AI融媒中心 MCP 连接器\n\n该资源由随包 stdio MCP Server 实时返回。' }] });
       } else if (typeof uri === 'string' && uri.startsWith('workdsh://catalog/')) {
         const id = decodeURIComponent(uri.slice('workdsh://catalog/'.length));
         const row = catalog.find(item => item.id === id);

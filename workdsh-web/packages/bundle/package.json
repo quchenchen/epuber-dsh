@@ -3,7 +3,7 @@
   "version": "0.1.0-alpha.53",
   "private": true,
   "type": "module",
-  "description": "Composes the WorkDSH workspace, capabilities and default DSH plugins.",
+  "description": "Composes the AI Convergence Media Center workspace, capabilities and default DSH plugins.",
   "exports": {
     "./probe": {
       "types": "./dist/probe.d.ts",

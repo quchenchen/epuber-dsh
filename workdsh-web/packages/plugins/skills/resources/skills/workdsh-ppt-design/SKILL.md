@@ -1,6 +1,6 @@
 ---
 name: workdsh-ppt-design
-description: 通过需求对齐、逐页叙事和视觉设计，在 WorkDSH 原生 PPT 编辑器中实时创建、改写和美化演示文稿。支持红金政务、咨询与学术风格；通过 Office content_* 工具逐页保存并导出 PPTX。
+description: 通过需求对齐、逐页叙事和视觉设计，在「AI融媒中心」原生 PPT 编辑器中实时创建、改写和美化演示文稿。支持红金政务、咨询与学术风格；通过 Office content_* 工具逐页保存并导出 PPTX。
 metadata:
   display-name: PPT 制作
   version: workdsh-native-1
@@ -9,7 +9,7 @@ metadata:
 # PPT 制作
 
 ## 入口与执行
-使用 WorkDSH `/office.ppt` 对应的原生 Office 流程制作演示文稿，不转交 PPT Master 或其他文件生成技能。设计资源提供叙事和视觉方法，实际制作使用 `content_open/content_capabilities/content_read/content_edit/content_export`。此内置版由工程维护，执行差异见 [原生适配](references/workdsh-execution.md)。
+使用「AI融媒中心」`/office.ppt` 对应的原生 Office 流程制作演示文稿，不转交 PPT Master 或其他文件生成技能。设计资源提供叙事和视觉方法，实际制作使用 `content_open/content_capabilities/content_read/content_edit/content_export`。此内置版由工程维护，执行差异见 [原生适配](references/workdsh-execution.md)。
 
 ## 制作步骤
 1. 提供客户标准 PPTX 时先调用 `content_import_pptx(path,title,operationId)`，保留原包作为实时工作副本；导入失败不得空白重绘。文字替换优先 `presentation.updateText(slideId,elementId,expectedText,text)`，保留模板位置和首段样式。普通新建时，先调用 `content_open`，input 使用 kind:"presentation"、source:"new"、title 和唯一 operationId，立即打开右侧编辑器；不要先写完整大纲或创建中间文件。已有实时 PPT 按真实 documentId 重新打开并读取，保留用户编辑。独立上传 PPTX 不自动成为实时文档，不猜 documentId。

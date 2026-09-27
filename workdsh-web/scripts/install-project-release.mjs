@@ -73,7 +73,7 @@ const dshHome = resolve(process.env.DSH_HOME || join(homedir(), '.dsh'));
 const versionResult = execute(['--version'], { always: true, capture: true });
 const actualHarness = versionResult?.stdout?.trim();
 if (actualHarness !== expectedHarness) {
-  throw new Error(`WorkDSH ${manifest.version} requires dsh ${expectedHarness}; found ${actualHarness || 'unknown'}. Pass --dsh /absolute/path/to/a-compatible-dsh.`);
+  throw new Error(`AI Convergence Media Center ${manifest.version} requires dsh ${expectedHarness}; found ${actualHarness || 'unknown'}. Pass --dsh /absolute/path/to/a-compatible-dsh.`);
 }
 
 const profileManifest = join(dshHome, 'profiles', profile, 'package.json');
@@ -180,5 +180,5 @@ if (!dryRun) {
   }
 }
 const profileCli = join(dshHome, 'profiles', profile, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js');
-console.log(`\nWorkDSH ${manifest.version} ${dryRun ? 'installation plan verified' : 'is installed'} in profile ${profile}.`);
+console.log(`\nAI Convergence Media Center ${manifest.version} ${dryRun ? 'installation plan verified' : 'is installed'} in profile ${profile}.`);
 console.log(`Start it with: node ${JSON.stringify(profileCli)} --profile ${JSON.stringify(profile)}`);

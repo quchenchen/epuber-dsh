@@ -61,7 +61,7 @@ const previewManifest = JSON.parse(await readFile(previewManifestPath, 'utf8'));
 const normalizedManifest = withoutRedundantAgentTeamProfile(previewManifest);
 if (normalizedManifest) {
   await writeFile(previewManifestPath, `${JSON.stringify(normalizedManifest, null, 2)}\n`);
-  console.log('Removed redundant standalone Agent Team profile from preview; WorkDSH experts owns Team composition.');
+  console.log('Removed redundant standalone Agent Team profile from preview; AI Convergence Media Center experts owns Team composition.');
 }
 // Reinstall the pinned official Web bundle as well as the WorkDSH layers. An
 // existing preview Profile may have been created by an older DSH release; its
@@ -139,5 +139,5 @@ for (const { directory, manifest } of packages) {
     if (!expected.equals(installed)) throw new Error(`Installed ${manifest.name} ${face} differs from the current build; refusing to report a successful preview update.`);
   }
 }
-console.log('Installed Skill, Expert, Connector, Office, Library, Projects and WorkDSH presentation as separate official Profile layers.');
+console.log('Installed Skill, Expert, Connector, Office, Library, Projects and AI Convergence Media Center presentation as separate official Profile layers.');
 console.log('Start the stopped preview with: corepack pnpm preview');

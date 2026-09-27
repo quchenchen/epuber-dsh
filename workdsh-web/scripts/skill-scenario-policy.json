@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "description": "WorkDSH 本地技能目录（catalog）的场景域策略。本文件只决定「技能市场 → 可安装」区块默认纳入哪些技能，不改动 WorkBuddy 市场镜像，也不改动用户已安装技能目录。回滚方式：改 defaultScope 为 all 后重建，或直接删除本文件（构建脚本将退回原全量行为）。",
+  "description": "「AI融媒中心」本地技能目录（catalog）的场景域策略。本文件只决定「技能市场 → 可安装」区块默认纳入哪些技能，不改动 WorkBuddy 市场镜像，也不改动用户已安装技能目录。回滚方式：改 defaultScope 为 all 后重建，或直接删除本文件（构建脚本将退回原全量行为）。",
   "owner": "packages/plugins/skills",
   "defaultScope": "media",
   "scopes": {

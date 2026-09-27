@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Import enabled MCP server definitions from the local WorkBuddy config
-// into the WorkDSH connector storage (per-record JSON files owned by the
+// into the AI Convergence Media Center connector storage (per-record JSON files owned by the
 // connectors plugin's `workdsh_connectors` domain).
 //
 // Source: ~/.workbuddy/mcp.json (override with WORKBUDDY_MCP), the WorkBuddy
@@ -10,9 +10,9 @@
 //   - `command` entries    -> stdio connectors
 // Skipped honestly (with a reason per entry):
 //   - disabled entries
-//   - `sse` transport (WorkDSH supports stdio / streamable-http only)
+//   - `sse` transport (AI Convergence Media Center supports stdio / streamable-http only)
 //   - headers/env containing ${VAR} credential placeholders (credentials must
-//     go through the WorkDSH credential flow, never a definition file)
+//     go through the AI Convergence Media Center credential flow, never a definition file)
 //
 // Target: $WORKDSH_PREVIEW_HOME/storages/workdsh_connectors/definitions/<id>.json
 // (default preview home: <repo>/.test-runtime/preview). The running preview
@@ -67,10 +67,10 @@ for (const [serverName, config] of Object.entries(servers)) {
   if (config?.disabled === true) { skipped.push({ ...base, reason: 'WorkBuddy 中已停用' }); continue; }
   if (typeof config?.url === 'string' && config.url.trim() && !/^\$\{/.test(config.url)) {
     if ((config.type ?? '').toLowerCase() === 'sse') { skipped.push({ ...base, reason: 'sse 传输暂不支持' }); continue; }
-    if (config.headers && Object.values(config.headers).some(value => /\$\{[^}]+\}/.test(String(value)))) { skipped.push({ ...base, reason: 'headers 含凭据占位符，需走 WorkDSH 凭据流程' }); continue; }
+    if (config.headers && Object.values(config.headers).some(value => /\$\{[^}]+\}/.test(String(value)))) { skipped.push({ ...base, reason: 'headers 含凭据占位符，需走「AI融媒中心」凭据流程' }); continue; }
     imported.push({ serverName, title, transport: 'streamable-http', url: config.url.trim(), description: known.description ?? `从 WorkBuddy 导入的 MCP 服务（${serverName}，streamable-http）。` });
   } else if (typeof config?.command === 'string' && config.command.trim()) {
-    if (config.env && Object.values(config.env).some(value => /\$\{[^}]+\}/.test(String(value)))) { skipped.push({ ...base, reason: 'env 含凭据占位符，需走 WorkDSH 凭据流程' }); continue; }
+    if (config.env && Object.values(config.env).some(value => /\$\{[^}]+\}/.test(String(value)))) { skipped.push({ ...base, reason: 'env 含凭据占位符，需走「AI融媒中心」凭据流程' }); continue; }
     imported.push({ serverName, title, transport: 'stdio', command: config.command.trim(), args: [...(Array.isArray(config.args) ? config.args : [])], description: known.description ?? `从 WorkBuddy 导入的 MCP 服务（${serverName}，stdio）。` });
   } else skipped.push({ ...base, reason: '无 url/command，无法独立运行' });
 }

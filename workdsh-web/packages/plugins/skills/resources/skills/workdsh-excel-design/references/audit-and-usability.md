@@ -8,6 +8,6 @@
 
 图表引用真实数据范围：趋势用折线、比较用柱条、少量构成用饼环。高级图表、透视、下拉、条件格式、打印设置须工具真实支持，不能仅写设计说明就称已设置。
 
-当前 WorkDSH 已有文件的表格副本编辑能力不等于完整AI新建接口。含高级对象的文件可能禁止导出，结构/格式保真范围按实际工具核对。Preview 的 content_* 已支持 spreadsheet 值、公式与多工作表和 XLSX 导出；先读取 content_capabilities 核对当前 Profile，格式、合并和图表仍未接入。文档/PPT操作不能提交spreadsheet；不要照搬sheetagent MCP、editor_sdk端点、Python自动安装或强制子代理。
+当前「AI融媒中心」已有文件的表格副本编辑能力不等于完整AI新建接口。含高级对象的文件可能禁止导出，结构/格式保真范围按实际工具核对。Preview 的 content_* 已支持 spreadsheet 值、公式与多工作表和 XLSX 导出；先读取 content_capabilities 核对当前 Profile，格式、合并和图表仍未接入。文档/PPT操作不能提交spreadsheet；不要照搬sheetagent MCP、editor_sdk端点、Python自动安装或强制子代理。
 
 最终XLSX必须有真实文件回执；设计、CSV或分析报告如作为替代需要明确称谓，不能宣称原XLSX已生成或无损保存。必要功能缺失时先说明具体影响，继续可完成的分析与规划。

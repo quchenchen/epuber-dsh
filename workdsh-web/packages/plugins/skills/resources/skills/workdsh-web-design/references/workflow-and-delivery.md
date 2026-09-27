@@ -42,7 +42,7 @@ GitHub Pages等部署只在用户请求发布且有真实仓库/流程时执行�
 
 反例：只有1440像素固定布局；页面能看但CTA无动作；所有语言只有导航变化；工程缺图片或运行说明；服务器已退出却称预览可用。这些都不满足对应的交付要求。
 
-## WorkDSH 单文件实时网页
+## 「AI融媒中心」单文件实时网页
 
 普通 HTML 看板先用 content_open(kind:html,source:new) 打开右侧预览；不要先独立写完文件。读取当前能力和修订，通过 html.replaceDocument 提交完整 HTML，先有用首屏再逐步完善。使用内联 CSS/JS/SVG，无外部 CDN。预览与源码均可查看，最终 content_export 交付真实 HTML。已有独立 HTML 暂无自动导入，多文件或服务器应用沿用工程流程。
 

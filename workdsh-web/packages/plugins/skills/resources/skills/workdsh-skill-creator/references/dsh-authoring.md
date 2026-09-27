@@ -4,7 +4,7 @@ For multi-stage work, use the available native todo_write tool to track the actu
 
 ## 安装与更新边界
 
-制作完整资源目录和 ZIP 后，通过 WorkDSH 导入界面预检并确认安装。不要用通用文件工具直接写正式技能目录。完整资源树不走单文件草稿发布工具。
+制作完整资源目录和 ZIP 后，通过「AI融媒中心」导入界面预检并确认安装。不要用通用文件工具直接写正式技能目录。完整资源树不走单文件草稿发布工具。
 
 无附加资源的技能可使用 workdsh_save_skill_draft 保存，workdsh_validate_skill_draft 校验，workdsh_publish_skill_draft 发布；发布使用确切校验 revision 和 user_confirmed:true，遵从已有用户授权，不重复索取已经给出的确认。默认 shared-agents，只有明确要求时选择 profile；workspace-only 不在当前草稿工具支持范围内。
 

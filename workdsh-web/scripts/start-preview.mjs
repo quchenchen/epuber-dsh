@@ -12,7 +12,7 @@ const previewHome = process.env.WORKDSH_PREVIEW_HOME ?? resolve(root, '.test-run
 // requires the manual 18989 preview to read the user's real skill directory
 // and forbids judging "skills are lost" from an empty probe home. Upstream
 // moved this default to `previewHome/agents` for fully isolated desktop
-// runs; the WorkDSH web preview deliberately does not take that change.
+// runs; the AI Convergence Media Center web preview deliberately does not take that change.
 const agentsHome = process.env.DSH_AGENTS_HOME ?? resolve(homedir(), '.agents');
 // The skill catalog is environment data, not a build artifact: the skills
 // plugin reads `$DSH_AGENTS_HOME/.workdsh-catalog` for marketplace display
@@ -40,7 +40,7 @@ if (existsSync(profileManifestPath)) {
   const normalizedManifest = withoutRedundantAgentTeamProfile(profileManifest);
   if (normalizedManifest) {
     writeFileSync(profileManifestPath, `${JSON.stringify(normalizedManifest, null, 2)}\n`);
-    console.log('Removed redundant standalone Agent Team profile; WorkDSH experts owns Team composition.');
+    console.log('Removed redundant standalone Agent Team profile; AI Convergence Media Center experts owns Team composition.');
   }
 }
 const dsh = resolve(profile, 'node_modules/@deepseek-ai/dsh/lib/bin.js');

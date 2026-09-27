@@ -3,7 +3,7 @@
   "version": "0.1.0-alpha.1",
   "type": "module",
   "private": false,
-  "description": "WeKnora-flavoured visual skin for WorkDSH: an alias-token override layer over the official --dsw-* theme",
+  "description": "WeKnora-flavoured visual skin for AI Convergence Media Center: an alias-token override layer over the official --dsw-* theme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

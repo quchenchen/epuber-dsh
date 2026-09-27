@@ -3,7 +3,7 @@
   "version": "0.1.0-alpha.9",
   "private": false,
   "type": "module",
-  "description": "Manages reusable experts and expert teams in WorkDSH.",
+  "description": "Manages reusable experts and expert teams in AI Convergence Media Center.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

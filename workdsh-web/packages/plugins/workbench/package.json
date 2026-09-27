@@ -42,5 +42,5 @@
     "@deepseek-ai/dsh-client-ui-chat": "0.1.7-rc.2",
     "@deepseek-ai/dsh-tool-todo": "0.1.7-rc.2"
   },
-  "description": "Adds WorkDSH navigation and workspace entry points to the DSH sidebar."
+  "description": "Adds AI Convergence Media Center navigation and workspace entry points to the DSH sidebar."
 }
