@@ -22,3 +22,7 @@ dsh-community-market/lib/
 
 # WorkBuddy project memory (local only, never published)
 .workbuddy/
+
+# Local task deliverables and test scratch space (never published)
+.artifacts/
+.test-runtime/
