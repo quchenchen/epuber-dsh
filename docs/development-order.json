@@ -236,6 +236,18 @@
   },
   "completedSlices": [
     {
+      "id": "dsh-0.1.7-rc2-web-browser",
+      "task": "P0-02",
+      "status": "completed",
+      "decision": "docs/DSH-0.1.7-UPGRADE-PLAN.md",
+      "scope": "基线推进到官方 DSH 0.1.7-rc.2：alpha.9 预览升级与全新 Profile 安装复验、alpha.10 十一个运行包对齐 rc.2 重建（SHA-256 与 dry-run 通过）、alpha.11 Agent Playwright 浏览器同步到会话右侧栏并支持用户同页点击/滚动/输入/导航（会话隔离）。GitHub Release alpha.9/10/11 与 Desktop 2.0.5-alpha.17/18 已发布（2026-09-25 API 核对）。Desktop 包仍基于 alpha.10 Web（未联动浏览器），Desktop 端模型驱动端到端浏览任务与 Windows/macOS 交互未验证；真实模型任务未执行。",
+      "evidence": [
+        "docs/releases/v0.1.0-alpha.11.md",
+        "docs/releases/v0.1.0-alpha.10.md",
+        "docs/DSH-0.1.7-UPGRADE-PLAN.md"
+      ]
+    },
+    {
       "id": "skill-create-loop",
       "task": "P1-03",
       "status": "completed",
@@ -331,6 +343,6 @@
       "reason": "用户授权优先完成 0.1.7-alpha.1 原生优先升级，历史验收范围保留。"
     }
   ],
-  "lastReconciled": "2026-09-14",
+  "lastReconciled": "2026-09-25",
   "statusGuide": "主线/切片完成、模块实现、公开发行与产品验收分别登记；STATUS顶部是当前摘要，scopeHistory只供历史追溯。"
 }

@@ -53,7 +53,7 @@ electron-builder 经 `extraResources` 把快照内 `.desktop-build/targets/mac-a
 | 6 | `electron-builder.config.mjs` | 品牌：`productName 'WorkDSH'`、`artifactName 'workdsh-${version}-…'`、`mac.icon` 指向 `workdsh-icon.icns`；unsigned 时跳过签名/公证导入校验（`mac.identity=null`、`forceCodeSigning/notarize=false`、`dmg.sign=false`、afterSign/artifactBuildCompleted 钩子守卫）。 |
 | 7 | `src/main.ts` | `createWindow(preload, shellFrame=false)` 新增参数；主窗口 darwin 下 `titleBarStyle: 'hiddenInset'`；管理窗口保持默认标题栏。 |
 | 8 | `src/preload-app.ts` | 注入 `style[data-workdsh-shell]` 适配样式（MutationObserver 先于首帧）：`_logoRow` 留白 48px/height:auto、logoRow 与 header 为 drag 区、交互控件 no-drag；`dataset.workdshShell='inset'` 可检测标记。选择器用 CSS-modules 类名后缀（如 `_logoRow`），官方 web UI 升级后若失效需重验。 |
-| 9 | `workdsh-icon.icns` | 品牌图标（由 `assets/brand/workdsh-logo-concept.png` 经 sips + iconutil 生成）。 |
+| 9 | `workdsh-icon.icns` | 品牌图标（由 `assets/brand/ai-rongmei-icon.svg` 经 sips + iconutil 生成）。**注**：快照内现存 icns 仍由更早的旧标识资产生成，桌面打包恢复前须用当前「AI融媒中心」应用图标重新生成并核对 SHA-256。 |
 
 改动流程：改快照 → `--check-only` 核对差异 → `--sync-patches` 同步存档 → 存档随代码提交。补丁类别受 ADR-0025 约束（品牌 / 未签名模式 / 种子扩展 / 窗口壳融合），新增其他类别需先补 ADR。
 

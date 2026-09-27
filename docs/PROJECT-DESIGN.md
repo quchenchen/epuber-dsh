@@ -166,3 +166,18 @@ ProjectConnectorBinding 表示项目选择了某连接定义及授权方式，�
 
 ## 2026-09-22 项目执行目录修正
 新建项目任务由 Host 为当前组织/主体/项目解析独立目录，并通过官方 workspaceController.create/rename 幂等登记为项目同名原生工作区。禁止回退到当前 Session 或第一个 Workspace。目录在 DSH_HOME/workdsh-projects 下（无 DSH_HOME 时 ~/.workdsh/workdsh-projects）；身份与项目 ID 的哈希隔离目录，名称仅作为展示名。同名冲突加项目短 ID，不重命名其他空间。原生 Sidebar/Session 继续拥有分组和执行；历史会话不自动搬迁或改变 cwd。任务列表按创建时间降序。
+
+## 2026-09-25 模板预填扩展与融媒体模板矩阵
+- 契约扩展（向后兼容）：`ProjectTemplate` 新增可选 `capabilities`（推荐技能/专家绑定，创建时写入 ProjectConfigRevision.capabilities）与 `workItems`（计划待办骨架，创建时预建为 todo 状态待办）。预填产生一条聚合活动记录「模板预填了 N 项计划待办」，不逐条刷事件；预填待办与其他待办同构，可正常编辑归档。
+- 模板矩阵新增 12 个融媒体模板，面向国央企融媒体中心场景：新闻稿件类（央视/新华社/人民日报/能源行业新闻稿）、内容生产类（企业动态简报、图片生产、视频脚本生产、视频资源分析）、深度访谈类（深度报道/专题、圆桌访谈）、运营管理类（选题发现与策划、热点监测与快速响应、多平台改写分发、内容运营复盘）。不设行情盯盘类模板（国央企融媒体非市场化场景）。
+- 配套内置技能 9 个：workdsh-news-cctv/-xinhua/-renmin（公开通行体例初版基线，项目审定资料优先）、workdsh-news-industry-energy（含能源口径速查）、workdsh-news-desk（两轮审校+三审三校+信源分级+去 AI 味清单）、workdsh-topic-discovery、workdsh-visual-production、workdsh-video-script、workdsh-platform-rewrite。技能为通用方法论，不硬编码具体账号的栏目配置与业务数据。
+
+## 2026-09-25 模板分类选择器与能力注入闭环
+- 契约扩展（向后兼容）：`ProjectTemplate` 新增可选 `category`。服务端由 `templateCategories` 字典统一标注（通用协作/新闻稿件/内容生产/深度访谈/运营管理/分发复盘），未命中默认「通用协作」；`templates()` 与 create 查找均走 `allTemplates`。
+- 项目中心「从模板创建」升级为分类可视化：分类筛选条（全部+分类计数）+ 模板卡（分类着色图标、名称、说明、预填能力数与工作流步数徽标）。新建项目弹框内 `<Select>` 下拉升级为分类 `TemplatePicker`（含「空白项目」项，选中态即预览预填内容）。分类图标着色全部取自官方 `--dsw-alias-state-*` token，不新增色彩体系。
+- 能力注入闭环（机制补齐）：此前 `taskContext`/`availableCapabilities` 仅存在于契约无消费方，模板预填的技能/专家绑定对任务会话不可见。现 `runtime/context-injection.ts` 在 system-prompt/assemble 时把任务携带的能力绑定（task.capabilities ?? config.capabilities，过滤 connector）注入为绑定清单，声明「实际装载以 Host 运行时为准，不构成额外授权」。
+- 预填真实性校验（机制补齐）：新建项目时客户端按技能/专家/连接器真实目录（loadChoices）校验模板预填引用，缺失项跳过并提示（notice），命中项补全 scope/revision 后写入配置修订；能力目录服务不可用时保留原始预填，不阻塞创建。专家预填依赖真实安装的专家对象，当前无种子专家，模板仅绑定真实内置技能。
+
+## 2026-09-25 模板专家预绑与内置专家矩阵
+- 项目模板的 `capabilities` 现支持三类引用：connector / expert / skill。专家引用的校验走专家真实目录（experts.list），目录读取会幂等触发内置专家增量补种（ensureSeeded 按 id 查缺），因此模板预绑的融媒体专家在创建项目时按需自动就位。
+- 融媒体模板与内置专家的绑定关系是一对多建议（非强制）：创建弹框中用户可增删。专家引用真实存在时补全 scope/revision 后写入项目配置修订；专家目录暂不可用时保留原始预填并在 notice 提示，不阻塞创建。
