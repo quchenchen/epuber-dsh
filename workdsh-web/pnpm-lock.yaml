@@ -1147,6 +1147,15 @@ importers:
         specifier: workspace:*
         version: link:../../ui
 
+  packages/plugins/weknora-theme:
+    dependencies:
+      '@deepseek-ai/cordis':
+        specifier: 4.0.3
+        version: 4.0.3(@deepseek-ai/cordis-plugin-include@1.0.9)(@deepseek-ai/cordis-plugin-loader@1.0.5)
+      '@deepseek-ai/dsh-client-ui-theme':
+        specifier: 0.1.7-rc.2
+        version: 0.1.7-rc.2(@deepseek-ai/cordis@4.0.3)
+
   packages/plugins/workbench:
     devDependencies:
       '@deepseek-ai/cordis':
