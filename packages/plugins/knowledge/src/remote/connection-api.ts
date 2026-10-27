@@ -8,6 +8,9 @@ declare module '@deepseek-ai/cordis' { interface Context { workdshIdentity: Iden
 
 /** Same-origin endpoint the knowledge client panel calls. */
 export const knowledgeManagementPath = '/api/workdsh-knowledge';
+/** WeKnora rejects uploads above MAX_FILE_SIZE_MB (50MB by default). */
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+const MAX_UPLOAD_BASE64 = Math.ceil(MAX_UPLOAD_BYTES / 3) * 4;
 
 const ok = <T>(value: T): ConnectionRpcResult<T> => ({ ok: true, value });
 const fail = (code: string, message: string): ConnectionRpcResult<never> => ({ ok: false, error: { code, message, details: {} } });
@@ -151,6 +154,60 @@ export function registerKnowledgeConnection(ctx: Context): void {
             ...(asInteger(payload.matchCount) === undefined ? {} : { matchCount: asInteger(payload.matchCount)! }),
             ...(mode === undefined ? {} : { mode: mode as KnowledgeSearchMode }),
           }, request.signal)));
+        }
+
+        if (endpoint === 'create-kb') {
+          const name = asString(payload.name);
+          if (!name?.trim()) return Response.json(fail('knowledge/invalid-request', '知识库名称不能为空。'), { status: 400 });
+          const description = asString(payload.description);
+          const templateKbId = asString(payload.templateKbId);
+          const embeddingModelId = asString(payload.embeddingModelId);
+          return Response.json(ok(await service.createKb(actor, {
+            name,
+            ...(description === undefined ? {} : { description }),
+            ...(templateKbId ? { templateKbId } : {}),
+            ...(embeddingModelId ? { embeddingModelId } : {}),
+          }, request.signal)));
+        }
+
+        if (endpoint === 'update-kb' && typeof payload.kbId === 'string') {
+          const name = asString(payload.name);
+          const description = asString(payload.description);
+          return Response.json(ok(await service.updateKb(actor, payload.kbId, {
+            ...(name === undefined ? {} : { name }),
+            ...(description === undefined ? {} : { description }),
+          }, request.signal)));
+        }
+
+        if (endpoint === 'delete-kb' && typeof payload.kbId === 'string') {
+          await service.deleteKb(actor, payload.kbId, request.signal);
+          return Response.json(ok({ deleted: true }));
+        }
+
+        if (endpoint === 'upload-document') {
+          const kbId = asString(payload.kbId);
+          const fileName = asString(payload.fileName);
+          const base64 = payload.base64;
+          if (!kbId?.trim() || !fileName?.trim()) return Response.json(fail('knowledge/invalid-request', '上传请求缺少知识库或文件名。'), { status: 400 });
+          if (typeof base64 !== 'string' || !base64.length || base64.length % 4 !== 0 || base64.length > MAX_UPLOAD_BASE64 || /[^A-Za-z0-9+/=]/.test(base64)) {
+            return Response.json(fail('knowledge/invalid-request', '文件编码无效或超过 50MB 上传上限。'), { status: 400 });
+          }
+          const bytes = Buffer.from(base64, 'base64');
+          if (!bytes.byteLength || bytes.toString('base64') !== base64) return Response.json(fail('knowledge/invalid-request', '文件编码无效。'), { status: 400 });
+          const mediaType = asString(payload.mediaType);
+          return Response.json(ok(await service.uploadDocument(actor, kbId, {
+            fileName,
+            bytes: new Uint8Array(bytes),
+            ...(mediaType ? { mediaType } : {}),
+          }, request.signal)));
+        }
+
+        if (endpoint === 'delete-document' && typeof payload.knowledgeId === 'string') {
+          return Response.json(ok(await service.deleteDocument(actor, payload.knowledgeId, request.signal)));
+        }
+
+        if (endpoint === 'reparse-document' && typeof payload.knowledgeId === 'string') {
+          return Response.json(ok(await service.reparseDocument(actor, payload.knowledgeId, request.signal)));
         }
 
         return Response.json(fail('knowledge/invalid-request', '知识库请求无效。'), { status: 400 });

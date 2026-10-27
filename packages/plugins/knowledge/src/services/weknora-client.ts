@@ -75,11 +75,17 @@ export interface QueryValues {
   readonly [key: string]: string | number | boolean | undefined;
 }
 
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
 interface RequestInitInternal {
   readonly query?: QueryValues;
   readonly body?: unknown;
+  /** Multipart form (files); mutually exclusive with `body`. */
+  readonly formData?: FormData;
   readonly headers?: Record<string, string>;
   readonly signal?: AbortSignal;
+  /** Overrides the retry attempt count for this request. */
+  readonly retries?: number;
 }
 
 export type JsonRecord = Record<string, unknown>;
@@ -197,13 +203,37 @@ export class WeKnoraClient {
     return this.withRetry(async () => readPage<T>(await this.requestJson('GET', path, { ...(query ? { query } : {}), ...(signal ? { signal } : {}) }), fallback));
   }
 
-  postJson<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
-    return this.withRetry(async () => await this.requestJson('POST', path, { body, ...(signal ? { signal } : {}) }) as T);
+  /**
+   * POST a JSON body. Writes are not retried by default: replaying a create or
+   * upload after an ambiguous timeout could duplicate the resource. Pass
+   * `{ retry: true }` only for idempotent POSTs such as search.
+   */
+  postJson<T>(path: string, body: unknown, signal?: AbortSignal, options: { readonly retry?: boolean } = {}): Promise<T> {
+    return this.requestWrite('POST', path, { body, ...(signal ? { signal } : {}) }, options.retry === true);
   }
 
-  /** POST a search request and normalize the hit list. */
+  /** POST a search request and normalize the hit list (idempotent read). */
   postPage<T>(path: string, body: unknown, signal?: AbortSignal): Promise<Page<T>> {
-    return this.withRetry(async () => readPage<T>(await this.requestJson('POST', path, { body, ...(signal ? { signal } : {}) })));
+    return this.withRetry(async () => readPage<T>(await this.requestJson('POST', path, { body, ...(signal ? { signal } : {}) })), this.retries);
+  }
+
+  /** PUT a JSON body. Not retried by default; see {@link postJson}. */
+  putJson<T>(path: string, body: unknown, signal?: AbortSignal, options: { readonly retry?: boolean } = {}): Promise<T> {
+    return this.requestWrite('PUT', path, { body, ...(signal ? { signal } : {}) }, options.retry === true);
+  }
+
+  /** DELETE a resource. Not retried by default; see {@link postJson}. */
+  deleteJson<T>(path: string, signal?: AbortSignal, options: { readonly retry?: boolean } = {}): Promise<T> {
+    return this.requestWrite('DELETE', path, { ...(signal ? { signal } : {}) }, options.retry === true);
+  }
+
+  /** POST a multipart form (file upload). Never retried: an upload is not idempotent. */
+  postMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+    return this.withRetry(async () => readData<T>(await this.requestJson('POST', path, { formData, ...(signal ? { signal } : {}) })), 0);
+  }
+
+  private async requestWrite<T>(method: HttpMethod, path: string, init: RequestInitInternal, retry: boolean): Promise<T> {
+    return this.withRetry(async () => await this.requestJson(method, path, init) as T, retry ? this.retries : 0);
   }
 
   /**
@@ -251,13 +281,13 @@ export class WeKnoraClient {
     });
   }
 
-  private async withRetry<T>(run: () => Promise<T>): Promise<T> {
+  private async withRetry<T>(run: () => Promise<T>, retries = this.retries): Promise<T> {
     let lastError: unknown;
-    for (let attempt = 0; attempt <= this.retries; attempt += 1) {
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
       try { return await run(); }
       catch (error) {
         lastError = error;
-        if (!this.retryable(error) || attempt === this.retries) throw error;
+        if (!this.retryable(error) || attempt === retries) throw error;
         await sleep(RETRY_DELAY_MS * (attempt + 1));
       }
     }
@@ -270,7 +300,7 @@ export class WeKnoraClient {
     return error.status === 429 || (error.status !== undefined && error.status >= 500 && error.status < 600);
   }
 
-  private async requestJson(method: 'GET' | 'POST', path: string, init: RequestInitInternal): Promise<unknown> {
+  private async requestJson(method: HttpMethod, path: string, init: RequestInitInternal): Promise<unknown> {
     const response = await this.send(method, path, init);
     if (!response.ok) throw await this.httpError(response, path);
     const text = await response.text();
@@ -285,19 +315,21 @@ export class WeKnoraClient {
     return value;
   }
 
-  private async send(method: 'GET' | 'POST', path: string, init: RequestInitInternal): Promise<Response> {
+  private async send(method: HttpMethod, path: string, init: RequestInitInternal): Promise<Response> {
     const suffix = path.startsWith('/') ? path : `/${path}`;
     const url = new URL(`${this.baseUrl}${suffix}`);
     for (const [key, value] of Object.entries(init.query ?? {})) if (value !== undefined) url.searchParams.set(key, String(value));
     const timeout = AbortSignal.timeout(this.timeoutMs);
     const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
     const headers: Record<string, string> = { 'X-API-Key': this.apiKey, ...(init.headers ?? {}) };
-    if (init.body !== undefined) headers['content-type'] = 'application/json';
+    if (init.formData === undefined && init.body !== undefined) headers['content-type'] = 'application/json';
+    // fetch sets the multipart boundary itself; setting a content-type would break it.
+    const body = init.formData ?? (init.body === undefined ? undefined : JSON.stringify(init.body));
     try {
       return await this.fetchImpl(url.toString(), {
         method,
         headers,
-        ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
+        ...(body === undefined ? {} : { body: body as RequestInit['body'] }),
         signal,
       });
     } catch (cause) {
