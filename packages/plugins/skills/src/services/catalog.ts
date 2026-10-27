@@ -124,6 +124,16 @@ export class SkillCatalogStore {
       'workdsh-excel-design': 'Excel 表格设计',
       'workdsh-web-design': '网页设计与制作',
       'workdsh-pdf-design': 'PDF 文档设计',
+      'workdsh-news-cctv': '央视新闻稿写作',
+      'workdsh-news-desk': '新闻审校台',
+      'workdsh-news-industry-energy': '能源行业新闻稿写作',
+      'workdsh-news-renmin': '人民日报新闻稿写作',
+      'workdsh-news-xinhua': '新华社新闻稿写作',
+      'workdsh-platform-rewrite': '多平台改写分发',
+      'workdsh-publish-compliance': '发布前合规审核',
+      'workdsh-topic-discovery': '选题发现与策划',
+      'workdsh-video-script': '视频脚本生产',
+      'workdsh-visual-production': '视觉内容生产',
     };
     for (const [name, title] of Object.entries(builtinTitles)) {
       if (installed.has(name) && (!rows.get(name)?.title || rows.get(name)?.title === name)) rows.set(name, { ...rows.get(name), title });

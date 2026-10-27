@@ -135,8 +135,7 @@ export const skillsMarketCss = `${modalCss}
 .wd-skills .skill-mark.large{width:48px}
 .wd-skills .skill-mark.large{height:48px;border-radius:12px;font-size:44px}
 .wd-skills .card-title{display:flex;flex-direction:column;gap:3px;min-width:0}
-.wd-skills .card-title strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wd-skills .card-title strong{font-weight:600;font-size:17px}
+.wd-skills .card-title strong{font-weight:600;font-size:17px;overflow-wrap:anywhere;white-space:normal}
 .wd-skills .card-title small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wd-skills .card-title small{color:var(--dsw-alias-label-tertiary);font-size:12px}
 .wd-skills .card-title small.slug{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
