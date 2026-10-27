@@ -62,16 +62,48 @@ Client bundle 由 `apps/web/scripts/build-knowledge.mjs`（esbuild）生成，�
 
 ## 安装到隔离 Profile
 
-```bash
-cd packages/plugins/knowledge
-corepack pnpm pack --pack-destination /tmp/knowledge-pack
-# 把 tgz 加入目标 Profile，并把包名加入 dsh.profile.bundles（dsh plugin add 会自动补）
-dsh plugin --profile kbtest add /tmp/knowledge-pack/workdsh-plugin-knowledge-0.1.0-alpha.1.tgz
-dsh --profile kbtest web --port 18990
-```
-
 `cordis.patch.yml` 会 `insert` 一个 `workdsh-knowledge` 插件条目，Host 侧注册
 `workdshKnowledge` 服务 + `/api/workdsh-knowledge` 传输端点 + 四个 Agent 工具。
+`dsh plugin add` 会把包名自动补进 `dsh.profile.bundles`。
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.22.0/bin:$PATH"
+
+# 1) 构建并打包
+cd apps/web && corepack pnpm install
+corepack pnpm --filter workdsh-plugin-knowledge typecheck
+corepack pnpm --filter workdsh-plugin-knowledge build
+cd ../../packages/plugins/knowledge
+node ../../../apps/web/node_modules/pnpm/bin/pnpm.cjs pack --pack-destination /tmp/knowledge-pack
+
+# 2) 复制一个隔离 Profile（不要改动正在使用的 preview profile）
+cp -a ~/.workdsh/preview/profiles/preview ~/.workdsh/preview/profiles/kbtest
+export PATH="$HOME/.nvm/versions/node/v22.22.0/bin:$PATH"
+DSH_HOME=$HOME/.workdsh/preview dsh plugin --profile kbtest add \
+  /tmp/knowledge-pack/workdsh-plugin-knowledge-0.1.0-alpha.1.tgz
+
+# 3) 启动（API Key 走凭据服务的 env 层，不落库）
+cd ~/.workdsh/preview/profiles/kbtest
+DSH_HOME=~/.workdsh/preview DSH_AGENTS_HOME=~/.workdsh/preview/agents \
+WEKNORA_BASE_URL=http://127.0.0.1:18081 WEKNORA_API_KEY="$(cat /tmp/dsh-key-10000.txt)" \
+node node_modules/@deepseek-ai/dsh/lib/bin.js --profile kbtest \
+  --host 127.0.0.1 --port 18990 --no-open
+```
+
+浏览器访问输出里的 `http://127.0.0.1:18990/?token=...` 即可。验收脚本（仓库内，使用 `@playwright/test` 无头 Chromium）：
+
+```bash
+cd apps/web
+node scripts/verify-knowledge-isolated.mjs "<login-url-with-token>"   # 11 项 GUI 检查 + 截图
+node scripts/verify-knowledge-tool.mjs "<login-url-with-token>"       # Agent 调用 knowledge_search 并核对出处
+```
+
+> 已实测的本机变通：若 `dsh plugin --profile kbtest install/add` 在非 TTY 环境因
+> `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` 或 copied lockfile 的
+> `minimumReleaseAge` 供应链策略中止，可把同一 tgz 解包到
+> `kbtest/node_modules/workdsh-plugin-knowledge`（`tar xzf <tgz> --strip-components=1`），
+> 并在其 `node_modules` 下用符号链接指向 Profile 已有的 `@deepseek-ai/*` 与 `zod`；
+> 这不会改变安装字节，只替代 pnpm 的链接步骤。
 
 ## 边界与风险
 
