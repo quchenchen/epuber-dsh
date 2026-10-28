@@ -41,12 +41,24 @@ const formatTime = (value: string | undefined): string => {
 const modeLabel: Record<KnowledgeSearchMode, string> = { hybrid: '混合检索', semantic: '语义检索', keyword: '关键词检索' };
 const isProcessing = (document: KnowledgeDocument | undefined): boolean => document?.parseStatus === 'pending' || document?.parseStatus === 'processing';
 /**
- * A base built without vector and keyword indexing cannot answer any search
- * mode; WeKnora reports that as `capabilities`. Absent capabilities means an
- * older deployment — assume searchable rather than warning without evidence.
+ * How a base can be searched, from its `capabilities`. A base built without
+ * vector/keyword indexing is not necessarily unsearchable: if wiki is on, the
+ * wiki index still answers, with derived pages instead of chunks. Absent
+ * capabilities means an older deployment — assume indexed rather than warn
+ * without evidence.
  */
-const isUnsearchable = (item: KnowledgeBase): boolean =>
-  item.capabilities !== undefined && !item.capabilities.vector && !item.capabilities.keyword;
+/** Wiki page kinds are stored in English; the panel is Chinese. */
+const pageTypeLabel = (type: string | undefined): string => {
+  const labels: Readonly<Record<string, string>> = {
+    concept: '概念页', entity: '实体页', summary: '摘要页', index: '索引页', synthesis: '综述页', comparison: '对比页',
+  };
+  return type ? labels[type] ?? type : '';
+};
+
+const searchModeOf = (item: KnowledgeBase): 'inline' | 'wiki' | 'none' => {
+  if (item.capabilities === undefined || item.capabilities.vector || item.capabilities.keyword) return 'inline';
+  return item.capabilities.wiki ? 'wiki' : 'none';
+};
 
 export function KnowledgePanel({ management, toggleNavigation }: Props) {
   const [view, setView] = useState<View>('kbs');
@@ -66,6 +78,8 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<KnowledgeSearchMode>('hybrid');
   const [hits, setHits] = useState<readonly KnowledgeSearchHit[]>([]);
+  /** Expanded wiki page bodies, keyed by slug; absent means "not opened yet". */
+  const [wikiBodies, setWikiBodies] = useState<Readonly<Record<string, string>>>({});
   const [searched, setSearched] = useState(false);
   const [searchNote, setSearchNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -188,6 +202,23 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     });
   };
 
+  /**
+   * Wiki hits locate evidence, they do not quote it: the readable body lives on
+   * the page itself, so it is fetched on demand instead of being in the result.
+   */
+  const toggleWiki = (hit: KnowledgeSearchHit) => {
+    const slug = hit.wiki?.slug;
+    if (!slug) return;
+    if (wikiBodies[slug] !== undefined) {
+      setWikiBodies(current => { const next = { ...current }; delete next[slug]; return next; });
+      return;
+    }
+    void run(async () => {
+      const page = await management.readWiki(hit.knowledgeBaseId, slug);
+      setWikiBodies(current => ({ ...current, [slug]: page.text || '（该 wiki 页暂无正文）' }));
+    });
+  };
+
   const stepDocs = (page: number) => {
     if (!kb) return;
     void run(async () => { await loadDocs(kb.id, page); });
@@ -211,8 +242,12 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
       // Zero hits is a state, not an error: ask the Host why, so a base without
       // an index is never presented as "no matching content".
       const scope = await management.searchScope(targets).catch(() => []);
-      const reasons = scope.filter(row => !row.searchable).map(row => `${row.name}：${row.reason ?? '不可检索'}`);
-      setSearchNote(reasons.length ? reasons.join('；') : `检索范围内 ${targets.length} 个知识库可检索，但本次未命中；可换关键词或检索模式。`);
+      const blocked = scope.filter(row => !row.channels.length).map(row => `${row.name}：${row.reason ?? '不可检索'}`);
+      if (blocked.length) { setSearchNote(blocked.join('；')); return; }
+      const wikiOnly = scope.filter(row => !row.channels.includes('inline') && row.channels.includes('wiki'));
+      setSearchNote(wikiOnly.length
+        ? `${wikiOnly.map(row => row.name).join('、')} 只有 wiki 索引，wiki 按术语匹配；请改用术语（实体名/概念名）重试，自然语言问句通常不命中。`
+        : `检索范围内 ${targets.length} 个知识库可检索，但本次未命中；可换关键词或检索模式。`);
     });
   };
 
@@ -330,7 +365,11 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     {kbs.length === 0
       ? <div className="wd-knowledge-state">还没有可用的知识库。请检查连接设置与凭据。</div>
       : <div className="wd-knowledge-kb-grid">{visibleKbs.map(item => <button key={item.id} type="button" className="wd-knowledge-kb-card" data-testid="kb-card" onClick={() => openKb(item)}>
-          <h3>{item.name}{isUnsearchable(item) ? <span className="wd-knowledge-badge failed" data-testid="kb-unsearchable" title="未启用向量索引与关键词索引，任何检索模式都不会命中">不可检索</span> : null}</h3>
+          <h3>{item.name}{searchModeOf(item) === 'none'
+            ? <span className="wd-knowledge-badge failed" data-testid="kb-unsearchable" title="未启用向量/关键词索引，也未启用 wiki，没有任何可用检索通道">不可检索</span>
+            : searchModeOf(item) === 'wiki'
+              ? <span className="wd-knowledge-badge" data-testid="kb-wiki-only" title="未启用向量/关键词索引，检索走 wiki 导览页；命中是派生摘要，引用需回原文">仅 wiki 检索</span>
+              : null}</h3>
           <p>{item.description || '（无描述）'}</p>
           <span className="wd-knowledge-kb-meta">
             <span>{item.knowledgeCount} 篇文档</span>
@@ -422,15 +461,24 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     <div className="wd-knowledge-search-mode"><span>模式：{modeLabel[mode]}</span><span>·</span><span>结果带 knowledge_title、相关度与原文片段</span></div>
     {busy && !hits.length ? <div className="wd-knowledge-state">正在检索…</div> : null}
     {searched && !busy && hits.length === 0 ? <div className="wd-knowledge-state" data-testid="search-empty">{searchNote ? `没有检索到匹配内容。${searchNote}` : '没有检索到匹配内容。'}</div> : null}
-    <div className="wd-knowledge-hits">{hits.map(hit => <article className="wd-knowledge-hit" key={`${hit.knowledgeId}-${hit.chunkId}`} data-testid="search-hit">
-      <div className="wd-knowledge-hit-head"><strong>{hit.knowledgeTitle}</strong><span className="wd-knowledge-score" data-testid="hit-score">score {hit.score.toFixed(3)}</span></div>
+    <div className="wd-knowledge-hits">{hits.map(hit => <article className="wd-knowledge-hit" key={hit.via === 'wiki' ? `wiki-${hit.wiki?.slug ?? hit.knowledgeTitle}` : `${hit.knowledgeId}-${hit.chunkId}`} data-testid="search-hit">
+      <div className="wd-knowledge-hit-head"><strong>{hit.knowledgeTitle}</strong>{hit.via === 'wiki'
+        ? <span className="wd-knowledge-badge" data-testid="hit-wiki">wiki 导览页</span>
+        : <span className="wd-knowledge-score" data-testid="hit-score">score {hit.score.toFixed(3)}</span>}</div>
       <p>{hit.content.length > 420 ? `${hit.content.slice(0, 420)}…` : hit.content}</p>
       <footer>
         <span>{kb?.name ?? hit.knowledgeBaseId}</span>
-        <span>knowledge_id {hit.knowledgeId}</span>
-        <span>chunk_id {hit.chunkId}</span>
-        <button type="button" onClick={() => openFromHit(hit)}>打开文档</button>
+        {hit.via === 'wiki'
+          ? <><span>slug {hit.wiki?.slug ?? ''}</span><span>{pageTypeLabel(hit.wiki?.pageType)}</span>
+              <button type="button" data-testid="hit-wiki-open" onClick={() => toggleWiki(hit)}>
+                {wikiBodies[hit.wiki?.slug ?? ''] === undefined ? '读 wiki 页' : '收起 wiki 页'}
+              </button></>
+          : <><span>knowledge_id {hit.knowledgeId}</span><span>chunk_id {hit.chunkId}</span>
+              <button type="button" onClick={() => openFromHit(hit)}>打开文档</button></>}
       </footer>
+      {hit.via === 'wiki' && wikiBodies[hit.wiki?.slug ?? ''] !== undefined
+        ? <pre className="wd-knowledge-wiki-body" data-testid="hit-wiki-body">{wikiBodies[hit.wiki!.slug]}</pre>
+        : null}
     </article>)}</div>
   </div>;
 

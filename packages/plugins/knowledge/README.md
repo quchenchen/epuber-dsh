@@ -14,7 +14,7 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | Host 服务 | `src/services/weknora-client.ts`（fetch、`X-API-Key`、超时、写操作不自动重试、错误归一化、分页）、`src/services/knowledge-service.ts`（只读查询 + 建/改/删 KB、上传、重新解析、删除、解析状态轮询） |
 | 配置存储 | storage domain `workdsh_knowledge`：`connections`（`baseUrl`、默认 KB、凭据引用、超时）、`selections`（按成员 + Session 的知识库绑定）；API Key 值不入库 |
 | 凭据 | 通过 `ctx.credentials` 的引用保存（默认引用 `WEKNORA_API_KEY`），每个操作解析一次；只写不读、不进日志 |
-| Agent 工具（读） | `knowledge_list_kbs`、`knowledge_list_documents`、`knowledge_search`、`knowledge_read`，结果带出处（`knowledge_title`、`knowledge_id`、`chunk_id`、`knowledge_base_id`） |
+| Agent 工具（读） | `knowledge_list_kbs`（含 `search_mode`）、`knowledge_list_documents`、`knowledge_search`（结果带 `via`：inline 有 `knowledge_id`/`chunk_id`，wiki 有 `wiki_slug`/`source_knowledge_ids`）、`knowledge_read`、`knowledge_read_wiki`（读 wiki 页正文与来源文档） |
 | Agent 工具（写） | `knowledge_upload`（上传 UTF-8 文本内容并等待解析）、`knowledge_reparse`、`knowledge_delete`（⚠️ 破坏性，必须 `confirm=true`） |
 | Client | `main` 槽位 key `workdsh-knowledge` + `sidebar.panellist` 一级入口「知识库」，使用 Harness 原生控件与 `workdsh-ui`，跟随主题 |
 | 对话引用 | `@知识库` 提及源 + 输入框左侧入口，绑定当前 Session；`system-prompt/assemble` 每轮注入 `<knowledge-base>` 说明块 |
@@ -54,6 +54,9 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | 统一检索（多库 / 文档或标签限定 / 阈值覆盖） | POST | `/api/v1/knowledge-search` |
 | 单库检索（旧部署回退路径） | POST | `/api/v1/knowledge-bases/:id/hybrid-search` |
 | 租户检索策略（默认阈值、rerank） | GET/PUT | `/api/v1/tenants/kv/retrieval-config` —— **需要 system 读权限，普通 `retrieve` Key 返回 403**，插件不依赖它 |
+| wiki 检索（跨库，术语匹配） | POST | `/api/v1/wiki-search`（`query`、`knowledge_base_ids[]`、`limit`；库必须启用 wiki，否则 400） |
+| wiki 页面全文 | GET | `/api/v1/knowledgebase/:kb_id/wiki/pages/*slug`（slug 含 `/`，逐段编码） |
+| wiki 统计（页数、链接数） | GET | `/api/v1/knowledgebase/:kb_id/wiki/stats` |
 
 响应外层一般为 `{ success, data }`；列表分页字段（`page` / `page_size` / `total`）与 `data` 同级，
 `weknora-client.ts` 的 `readPage` 同时兼容数组、`{data:[]}` 与带分页三种形状。
@@ -74,18 +77,45 @@ WeKnora 自己的对话与 `search_knowledge` 工具走 `/api/v1/knowledge-searc
 
 **零命中不是错误。** 检索跑通但没命中时，WeKnora 返回 `{"data":null,"success":true}`；
 `readPage` 把它当空页处理（早期版本曾误判为 `knowledge/malformed`，导致工具报“知识库返回了无法识别的数据”
-并诱发模型反复换模式重试）。零命中时工具会附带 `searched_knowledge_bases` 与 `note`，
-区分两种完全不同的情况：
+并诱发模型反复换模式重试）。
+
+### 两条检索通道（inline / wiki）
+
+「没有向量索引」不等于「不可检索」。WeKnora 的知识库可以只开 wiki，此时它有几千个
+由文档聚合出的概念页/实体页，由 `/api/v1/wiki-search` 检索。插件按通道自动选择：
+
+| 通道 | 判据 | 接口 | 命中形态 |
+|---|---|---|---|
+| `inline` | `capabilities.vector` 或 `capabilities.keyword` | `/api/v1/knowledge-search` | 原文分块，带 `knowledge_id` + `chunk_id` + 相关度 |
+| `wiki` | 仅 `capabilities.wiki`（或 inline 零命中后兜底） | `/api/v1/wiki-search` | 派生导览页，带 `slug` / `page_type` / 摘要，**无 chunk_id** |
+
+选择顺序：先 inline（可引用原文）；零命中或该库没有 inline 索引时查 wiki；
+`wiki_search` 零命中且 query 是问句时，用 `wikiTermOf` 抽出的术语**再试一次**（wiki 是术语匹配，
+`新型电力系统是什么` 命中不了而 `新型电力系统` 可以）。
+
+wiki 页是**派生摘要页**，不是原文。工具输出用 `via` 区分两者，渲染层明确写出
+「导览页是派生摘要，不是原文；引用原文请用 knowledge_read_wiki 读该 slug，或用 knowledge_read 读
+source_knowledge_ids 中的文档」——这是防止把摘要当引文的唯一可靠手段。
+wiki 页正文在 Host 侧经 `wikiLinksToText` 把 `[[slug|label]]` 摊平成纯文本后再返回。
+
+零命中时工具附带 `searched_knowledge_bases`（含 `channels`）与 `note`，区分三种情况：
 
 | 情况 | 判据 | 提示 |
 |---|---|---|
-| 知识库不可检索 | `capabilities.vector` 与 `capabilities.keyword` 均为 false（库创建时只开了 wiki） | 明确说明“未启用向量/关键词索引”，不要再换模式空跑 |
-| 可检索但没命中 | 索引已启用 | 建议换更短关键词或换模式、确认文档解析完成 |
+| 完全不可检索 | `channels` 为空（vector/keyword/wiki 全关） | 说明没有任何检索通道，停止重试 |
+| 仅 wiki 通道 | `channels = ['wiki']` | 告知 wiki 按术语匹配，改用实体名/概念名，或用 `knowledge_read` 直接读原文 |
+| 索引可检索但没命中 | `channels` 含 `inline` | 建议换更短关键词或换 mode、确认文档解析完成 |
 
 `chunk_count` 在部分部署恒为 0（即使检索正常），因此**只作展示、不作判据**。
-面板上不可检索的知识库会带「不可检索」徽标，检索页零命中时展示原因而不是空结果。
+面板对仅 wiki 的库标「仅 wiki 检索」，完全不可检索的标「不可检索」。
 
-`tests/live-search.mjs` 对真实部署固定这两个事实：不可检索的库返回 0 条且不报错、可检索的库返回带出处的命中。
+`tests/live-search.mjs` 对真实部署固定三个事实：无索引库的 inline 检索返回 0 条且不报错、
+其 wiki 通道用术语能命中且页面带 `source_refs`/`chunk_refs`、同一问题用问句查 wiki 会失配（这解释了自动术语重试）。
+
+### 图标与入口区分
+
+知识库与资料库是两个入口，图标必须不同：知识库用 `knowledge`（分层索引柱），
+资料库用 `library`（书架）。新增图标需重建 `packages/ui`（`IconName` 来自其 `dist`）。
 
 ### 新建知识库的配置来源
 
@@ -175,7 +205,8 @@ node scripts/verify-knowledge-tool.mjs "<login-url-with-token>"       # Agent �
 node scripts/verify-knowledge-p2.mjs "<login-url-with-token>"         # P2：新建库/上传/轮询/重解析/删除 + 截图
 node scripts/verify-knowledge-write-tools.mjs "<login-url-with-token>" # P2：Agent 调用 knowledge_upload + knowledge_delete
 node scripts/verify-knowledge-reference.mjs "<login-url-with-token>"  # P3：@知识库 菜单 / chip / Session 绑定写入与读回
-node scripts/verify-knowledge-search.mjs "<login-url-with-token>"     # P3：不可检索标注 / 零命中原因 / 可检索库命中
+node scripts/verify-knowledge-wiki.mjs "<login-url-with-token>"        # P6.2：图标区隔 / 仅 wiki 标注 / 问句命中 / 展开 wiki 页（10 项）
+node scripts/verify-knowledge-wiki-agent.mjs "<login-url-with-token>"  # P6.2：Agent 走 wiki 检索并给出处
 ```
 
 live 契约检查（不经浏览器，直连 REST）：

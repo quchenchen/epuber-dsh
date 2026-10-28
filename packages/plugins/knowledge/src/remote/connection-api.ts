@@ -163,6 +163,9 @@ export function registerKnowledgeConnection(ctx: Context): void {
           }, request.signal)));
         }
 
+        if (endpoint === 'read-wiki' && typeof payload.kbId === 'string' && typeof payload.slug === 'string') {
+          return Response.json(ok(await service.readWikiPage(actor, payload.kbId, payload.slug, request.signal)));
+        }
         if (endpoint === 'search-scope') {
           const kbIds = stringList(payload.knowledge_base_ids);
           if (!kbIds.length) return Response.json(fail('knowledge/invalid-request', '检索范围需要至少一个知识库 ID。'), { status: 400 });

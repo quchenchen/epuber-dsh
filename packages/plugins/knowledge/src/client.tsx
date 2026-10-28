@@ -21,6 +21,10 @@ export const name = 'workdsh-knowledge-client';
 /** Scroll/citation surface stays official: only slots, triggers and the session binding are used. */
 export const inject = ['slots', 'layout', 'conversation', 'sessions', 'inputTriggers'];
 
+/** The `@` menu only accepts 'file' | 'folder' | 'session' or a component; the
+ * knowledge index needs its own mark so it is not read as a file entry. */
+const KnowledgeCandidateIcon = () => <Icon name="knowledge" size={16} />;
+
 type KnowledgeNavIconProps = PropsRuntime<'sidebar.panellist'> & InjectFace<{ readonly icon: IconName }>;
 
 /** One `@知识库` reference: the base is addressed by id, the name is a display label. */
@@ -87,7 +91,7 @@ export function apply(ctx: Context): void {
     id: 'workdsh-knowledge',
     label: '知识库',
     order: 45,
-    inject: () => ({ icon: 'library' as const }),
+    inject: () => ({ icon: 'knowledge' as const }),
   }, KnowledgeNavIcon));
 
   ctx.slots.inject('main', () => ctx.slots.register({
@@ -114,7 +118,7 @@ export function apply(ctx: Context): void {
           name: kb.name,
           label: kb.name,
           description: `知识库 · ${kb.knowledgeCount} 篇文档`,
-          icon: 'folder' as const,
+          icon: KnowledgeCandidateIcon,
           value: encodeRef({ kbId: kb.id, name: kb.name }),
         }));
     },

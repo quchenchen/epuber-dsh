@@ -74,7 +74,7 @@ export function KnowledgePicker({ sessionId, management, openKnowledge, addRefer
     <style>{css}</style>
     <div className="wd-kb-picker" ref={root}>
       <button ref={trigger} type="button" className="wd-kb-picker-trigger" aria-label="从知识库添加到对话" aria-haspopup="dialog" aria-expanded={open} title="从知识库添加到对话"
-        onClick={() => setOpen(value => !value)}><Icon name="library" size={22} /></button>
+        onClick={() => setOpen(value => !value)}><Icon name="knowledge" size={22} /></button>
       {open && <div className="wd-kb-popover" role="dialog" aria-label="知识库">
         <div className="wd-kb-head"><span>引用知识库（回答前会先检索）</span><span>{rows.length ? `${rows.length} 个` : ''}</span></div>
         {loading && <div className="wd-kb-status" role="status">正在加载知识库…</div>}
@@ -83,7 +83,7 @@ export function KnowledgePicker({ sessionId, management, openKnowledge, addRefer
         {!loading && !error && !rows.length && <div className="wd-kb-status">还没有知识库，可在知识库面板中新建。</div>}
         {rows.map(kb => <div className="wd-kb-row" key={kb.id}>
           <button className="wd-kb-main" type="button" onClick={() => pick(kb)}>
-            <span className="wd-kb-mark"><Icon name="library" /></span>
+            <span className="wd-kb-mark"><Icon name="knowledge" /></span>
             <span className="wd-kb-copy"><strong>{kb.name}</strong><small>{kb.knowledgeCount} 篇文档{kb.description ? ` · ${kb.description}` : ''}</small></span>
           </button>
           <button className="wd-kb-action" type="button" aria-label={`引用 ${kb.name}`} onClick={() => pick(kb)}>引用</button>

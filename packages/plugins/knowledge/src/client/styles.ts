@@ -83,6 +83,7 @@ ${controlsCss}
 .wd-knowledge-score{flex:0 0 auto;padding:2px 9px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-tertiary);font-size:12px;font-variant-numeric:tabular-nums}
 .wd-knowledge-hit p{margin:0 0 10px;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-primary)}
 .wd-knowledge-hit footer{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--dsw-alias-label-tertiary);font-size:12px}
+.wd-knowledge-wiki-body{margin:12px 0 0;padding:12px;max-height:420px;overflow:auto;border-radius:8px;background:var(--dsw-alias-bg-layer-2);font-family:inherit;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--dsw-alias-label-primary)}
 .wd-knowledge-hit footer button{border:0;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;padding:0;text-decoration:underline}
 .wd-knowledge-form{display:grid;gap:16px;max-width:620px}
 .wd-knowledge-form label{display:grid;gap:7px;font-size:13px;color:var(--dsw-alias-label-secondary)}

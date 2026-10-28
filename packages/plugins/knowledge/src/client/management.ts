@@ -13,6 +13,7 @@ import type {
   KnowledgeSelectionInput,
   KnowledgeSettings,
   KnowledgeSettingsPatch,
+  KnowledgeWikiPage,
 } from '../services/knowledge-service.js';
 import type { KnowledgeSelectionEntry } from '../storage/domain.js';
 
@@ -58,6 +59,8 @@ export interface KnowledgeSearchScope {
   readonly name: string;
   readonly chunkCount: number;
   readonly searchable: boolean;
+  /** Channels that can answer: `inline` (vector/keyword index) and/or `wiki`. */
+  readonly channels: readonly ('inline' | 'wiki')[];
   readonly reason?: string;
 }
 
@@ -93,6 +96,9 @@ export function createKnowledgeClient(lifetime?: AbortSignal) {
       ...(request.matchCount === undefined ? {} : { matchCount: request.matchCount }),
       ...(request.mode ? { mode: request.mode } : {}),
     }, withLifetime(signal)),
+    /** Read one wiki page in full; hits of `via: 'wiki'` locate pages this reads. */
+    readWiki: (kbId: string, slug: string, signal?: AbortSignal) =>
+      invoke<KnowledgeWikiPage>('read-wiki', { kbId, slug }, withLifetime(signal)),
     /** Why a search over these bases is or is not able to answer. */
     searchScope: (knowledgeBaseIds: readonly string[], signal?: AbortSignal) =>
       invoke<readonly KnowledgeSearchScope[]>('search-scope', { knowledge_base_ids: [...knowledgeBaseIds] }, withLifetime(signal)),

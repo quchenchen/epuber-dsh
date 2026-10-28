@@ -43,6 +43,63 @@ const MAX_KB_DESCRIPTION_LENGTH = 4_000;
 const MAX_FILE_NAME_LENGTH = 256;
 /** Upper bound of knowledge bases one conversation may reference; each adds a prompt block. */
 export const MAX_SESSION_KNOWLEDGE_BASES = 8;
+/** WeKnora's cross-base wiki search rejects more than 32 base ids. */
+const MAX_WIKI_SEARCH_BASES = 32;
+
+/**
+ * Question words a wiki term lookup must shed to match.
+ *
+ * The wiki matcher ranks pages by a POSIX regex over title / aliases / content,
+ * so `新型电力系统是什么` finds nothing while `新型电力系统` finds the concept
+ * page. Only trailing/interior function words are removed — this narrows a
+ * question to its subject, it never invents a different query.
+ */
+const WIKI_TERM_LEAD = /^(?:请问|请|帮我|帮忙|我想知道|查一下|查查|介绍一下|说明一下|告诉我)/u;
+/** Where a question's framing starts; everything before it is the subject. */
+const WIKI_QUESTION_CUT = /(?:是什么样的|是什么|是啥|有哪些|有何|怎么样|怎么办|怎么|为什么|为何|如何|多少|多大|吗|呢)/u;
+const WIKI_TERM_NOUN_TAIL = /(?:的)?(?:定义|含义|概念|介绍|概述|综述|原理|特点|特征|作用|意义|内容|情况)$/u;
+
+/**
+ * Flatten wiki-link markup into plain text.
+ *
+ * Pages are authored with `[[concept/x|显示文字]]` links, which are navigation
+ * metadata: keeping them in the body makes the page unreadable for both the
+ * model and the user, and invites treating a slug as content. The link graph is
+ * available separately; the body should read as prose.
+ */
+export function wikiLinksToText(markdown: string): string {
+  return markdown.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/gu, (_match: string, target: string, label?: string) => {
+    if (label) return label.trim();
+    return (target.split('/').pop() ?? target).trim();
+  });
+}
+
+/**
+ * The term a wiki search should use for a natural-language question, or
+ * `undefined` when the query is already a term. Deterministic on purpose: it
+ * strips question framing and stops, so the caller can retry once and report
+ * honestly what it searched for.
+ */
+export function wikiTermOf(query: string): string | undefined {
+  const cleaned = query.replace(/[。！？!?；;，,、\n\r\t]/gu, ' ').trim();
+  if (!cleaned) return undefined;
+  for (const raw of cleaned.split(/\s+/u)) {
+    let term = raw.trim();
+    // Leading filler can stack ("帮我查一下…"), so strip until it stops changing.
+    for (let guard = 0; guard < 4; guard += 1) {
+      const next = term.replace(WIKI_TERM_LEAD, '');
+      if (next === term) break;
+      term = next;
+    }
+    // A question word marks the end of the subject: keep what precedes it.
+    const cut = WIKI_QUESTION_CUT.exec(term);
+    if (cut && cut.index > 0) term = term.slice(0, cut.index);
+    else if (cut) continue; // the token is pure framing, try the next one
+    term = term.replace(WIKI_TERM_NOUN_TAIL, '').trim();
+    if (term.length >= 2) return term === query.trim() ? undefined : term;
+  }
+  return undefined;
+}
 
 const mediaTypesByExtension: Readonly<Record<string, string>> = {
   md: 'text/markdown', markdown: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf',
@@ -109,6 +166,31 @@ export interface KnowledgeChunk {
   readonly endAt?: number;
 }
 
+/**
+ * Which retrieval channel produced a hit.
+ *
+ * `inline` is a real chunk out of the vector/keyword index: it has a
+ * `knowledge_id` + `chunk_id` and its text is source prose that can be quoted.
+ * `wiki` is a derived navigation page: the matched text is a summary WeKnora
+ * generated from the documents, so it locates evidence but is never itself a
+ * quotable source. Both channels are searches; only one of them yields citable
+ * text, and callers must keep that distinction visible.
+ */
+export type KnowledgeRetrievalChannel = 'inline' | 'wiki';
+
+/** A wiki page a search matched, with the documents it was built from. */
+export interface KnowledgeWikiRef {
+  readonly pageId: string;
+  readonly slug: string;
+  readonly pageType: string;
+  readonly summary: string;
+  readonly aliases: readonly string[];
+  /** Document ids that contributed to this page (document-level granularity). */
+  readonly sourceKnowledgeIds: readonly string[];
+  /** How many source chunks the page cites; 0 for synopsis pages. */
+  readonly chunkRefCount: number;
+}
+
 export interface KnowledgeSearchHit {
   readonly chunkId: string;
   readonly knowledgeId: string;
@@ -117,6 +199,22 @@ export interface KnowledgeSearchHit {
   readonly score: number;
   readonly content: string;
   readonly chunkIndex?: number;
+  /** Defaults to `inline` for every pre-existing caller; `wiki` carries no ids. */
+  readonly via?: KnowledgeRetrievalChannel;
+  /** Present only on `wiki` hits. */
+  readonly wiki?: KnowledgeWikiRef;
+}
+
+/** One wiki page read in full, including the documents behind it. */
+export interface KnowledgeWikiPage extends KnowledgeWikiRef {
+  readonly knowledgeBaseId: string;
+  readonly title: string;
+  /** Raw markdown as stored, including `[[slug|label]]` wiki links. */
+  readonly content: string;
+  /** The same body with wiki links flattened to their label: what to read or quote. */
+  readonly text: string;
+  readonly updatedAt?: string;
+  readonly version?: number;
 }
 
 export interface KnowledgePreview {
@@ -164,8 +262,10 @@ export interface KnowledgeSearchScope {
   readonly name: string;
   readonly chunkCount: number;
   readonly capabilities?: KnowledgeCapabilities;
-  /** True only when an index exists AND chunks were produced. */
+  /** True when at least one retrieval channel can answer: index or wiki. */
   readonly searchable: boolean;
+  /** Channels this base can answer on; empty means it cannot be searched at all. */
+  readonly channels: readonly KnowledgeRetrievalChannel[];
   /** Why this base cannot answer, when it cannot. */
   readonly reason?: string;
 }
@@ -314,6 +414,10 @@ const clampInteger = (value: number | undefined, minimum: number, maximum: numbe
 
 /** Thresholds are 0–1 similarities; anything else is a caller bug, not a reason to fail the search. */
 const clampScore = (value: number): number => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
+
+/** String list out of an unknown JSON value; non-string members are dropped, not fatal. */
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.length > 0) : [];
 
 const fileNameFromDisposition = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
@@ -474,6 +578,40 @@ export class KnowledgeService extends Service {
   }
 
   /**
+   * Search a base's wiki index. Wiki pages are not chunks: they are derived
+   * navigation pages (concept / entity / summary) generated from the documents,
+   * so a hit locates evidence instead of quoting it.
+   *
+   * The matcher is a term match, not a semantic one — WeKnora ranks pages with
+   * a POSIX regex over title / aliases / content. A natural-language question
+   * such as `新型电力系统是什么` matches nothing while the bare term matches,
+   * so callers should pass terms and retry with one when a question misses.
+   */
+  async wikiSearch(
+    actor: ActorContext, kbIds: readonly string[], query: string, limit: number, signal?: AbortSignal,
+  ): Promise<readonly KnowledgeSearchHit[]> {
+    const text = this.cleanQuery(query);
+    const ids = kbIds.map(value => this.cleanId(value, '知识库 ID')).slice(0, MAX_WIKI_SEARCH_BASES);
+    if (!ids.length) throw new KnowledgeError('knowledge/invalid-request', 'wiki 检索需要至少一个知识库。');
+    const client = await this.clientFor(actor, signal);
+    const result = await client.postPage<unknown>(`${API}/wiki-search`, {
+      query: text,
+      knowledge_base_ids: ids,
+      limit: clampInteger(limit, 1, MAX_MATCH_COUNT, DEFAULT_MATCH_COUNT),
+    }, signal);
+    return result.items.map(raw => this.mapWikiHit(raw));
+  }
+
+  /** Read one wiki page in full, including the documents it was built from. */
+  async readWikiPage(actor: ActorContext, kbId: string, slug: string, signal?: AbortSignal): Promise<KnowledgeWikiPage> {
+    const id = this.cleanId(kbId, '知识库 ID');
+    const path = this.cleanWikiSlug(slug);
+    const client = await this.clientFor(actor, signal);
+    const raw = await client.getJson<unknown>(`${API}/knowledgebase/${encodeURIComponent(id)}/wiki/pages/${path}`, undefined, signal);
+    return this.mapWikiPage(raw, id);
+  }
+
+  /**
    * Resolve the bases one search targets: explicit list, then the single-base
    * field, then the member's default, then the only base the tenant exposes.
    */
@@ -497,16 +635,13 @@ export class KnowledgeService extends Service {
     };
   }
 
-  /**
-   * Search across one or more knowledge bases through WeKnora's unified
-   * `/knowledge-search` endpoint — the same surface its chat and agent use.
-   * Falls back to per-base `hybrid-search` on 404/405 (older deployment).
-   */
-  async search(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<readonly KnowledgeSearchHit[]> {
+  /** Inline (vector/keyword) search through the unified `/knowledge-search` endpoint. */
+  private async searchInline(
+    actor: ActorContext, kbIds: readonly string[], input: KnowledgeSearchInput, signal?: AbortSignal,
+  ): Promise<readonly KnowledgeSearchHit[]> {
     const query = this.cleanQuery(input.query);
     const matchCount = clampInteger(input.matchCount, 1, MAX_MATCH_COUNT, DEFAULT_MATCH_COUNT);
     const mode: KnowledgeSearchMode = input.mode ?? 'hybrid';
-    const kbIds = await this.resolveSearchKbIds(actor, input, signal);
     const scoped = (input.knowledgeIds?.length ?? 0) > 0 || (input.tagIds?.length ?? 0) > 0;
     const client = await this.clientFor(actor, signal);
     const body = {
@@ -537,21 +672,84 @@ export class KnowledgeService extends Service {
   }
 
   /**
-   * Search plus the reason a zero-hit result is zero. Only an empty result pays
-   * for the extra metadata reads, and the caller can then explain a data state
-   * (no index, no chunks) instead of surfacing an error the user cannot act on.
+   * One search over one or more bases, across both retrieval channels.
+   *
+   * Inline comes first because a chunk is citable prose. When it yields nothing
+   * the wiki index is tried, because "no vector/keyword index" does not mean
+   * "nothing here": a base can be built with wiki only and still answer, with
+   * navigation-grade hits. Only when both channels miss does this spend the
+   * extra metadata reads that let the caller explain why.
    */
-  async searchDetailed(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<{ readonly hits: readonly KnowledgeSearchHit[]; readonly scope: readonly KnowledgeSearchScope[] }> {
-    const hits = await this.search(actor, input, signal);
-    if (hits.length) return { hits, scope: [] };
-    return { hits, scope: await this.describeSearchScope(actor, await this.resolveSearchKbIds(actor, input, signal), signal) };
+  private async retrieve(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<{
+    readonly hits: readonly KnowledgeSearchHit[];
+    readonly kbIds: readonly string[];
+    readonly scope?: readonly KnowledgeSearchScope[];
+    readonly wikiTerm?: string;
+  }> {
+    const kbIds = await this.resolveSearchKbIds(actor, input, signal);
+    const matchCount = clampInteger(input.matchCount, 1, MAX_MATCH_COUNT, DEFAULT_MATCH_COUNT);
+    let inlineError: unknown;
+    try {
+      const inline = await this.searchInline(actor, kbIds, input, signal);
+      if (inline.length) return { hits: inline, kbIds };
+    } catch (cause) {
+      if (signal?.aborted) throw cause;
+      inlineError = cause;
+    }
+
+    const scope = await this.describeSearchScope(actor, kbIds, signal);
+    const wikiKbIds = scope.filter(kb => kb.channels.includes('wiki')).map(kb => kb.id);
+    if (wikiKbIds.length) {
+      try {
+        const hits = await this.wikiSearch(actor, wikiKbIds, input.query, matchCount, signal);
+        if (hits.length) return { hits, kbIds, scope };
+      } catch (cause) {
+        if (signal?.aborted) throw cause;
+        // A wiki miss is a data state; keep the inline error as the real cause.
+        if (!inlineError) inlineError = undefined;
+      }
+      // Wiki matching is term-based: a full question misses where its term hits.
+      const term = wikiTermOf(input.query);
+      if (term) {
+        try {
+          const retried = await this.wikiSearch(actor, wikiKbIds, term, matchCount, signal);
+          if (retried.length) return { hits: retried, kbIds, scope, wikiTerm: term };
+        } catch (cause) {
+          if (signal?.aborted) throw cause;
+        }
+      }
+    }
+    if (inlineError && !scope.some(kb => kb.channels.length)) throw inlineError;
+    return { hits: [], kbIds, scope };
+  }
+
+  async search(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<readonly KnowledgeSearchHit[]> {
+    return (await this.retrieve(actor, input, signal)).hits;
   }
 
   /**
-   * Why a search over these bases can or cannot return anything: index
-   * capability and chunk count per base. A base built without vector and
-   * keyword indexing returns zero hits for every mode, which is a data state,
-   * not a failure — the caller needs to say so instead of reporting an error.
+   * Search plus the reason a zero-hit result is zero and which channel answered.
+   * Only an empty result pays for the extra metadata reads, and the caller can
+   * then explain a data state (no index, wiki only) instead of surfacing an
+   * error the user cannot act on.
+   */
+  async searchDetailed(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<{
+    readonly hits: readonly KnowledgeSearchHit[];
+    readonly scope: readonly KnowledgeSearchScope[];
+    readonly wikiTerm?: string;
+  }> {
+    const result = await this.retrieve(actor, input, signal);
+    if (result.hits.length) return { hits: result.hits, scope: [], ...(result.wikiTerm ? { wikiTerm: result.wikiTerm } : {}) };
+    const scope = result.scope ?? await this.describeSearchScope(actor, result.kbIds, signal);
+    return { hits: [], scope, ...(result.wikiTerm ? { wikiTerm: result.wikiTerm } : {}) };
+  }
+
+  /**
+   * Why a search over these bases can or cannot return anything: which
+   * retrieval channels each base was built with. Vector/keyword/index absence is
+   * a data state, not a failure, and a wiki-only base is still searchable — the
+   * caller must say so instead of reporting an error or claiming it cannot be
+   * searched at all.
    */
   async describeSearchScope(actor: ActorContext, kbIds: readonly string[], signal?: AbortSignal): Promise<readonly KnowledgeSearchScope[]> {
     const scope: KnowledgeSearchScope[] = [];
@@ -559,21 +757,24 @@ export class KnowledgeService extends Service {
       const id = this.cleanId(kbId, '知识库 ID');
       try {
         const kb = await this.getKb(actor, id, signal);
-        // Searchability is decided by the index flags alone: `chunk_count` reads
-        // 0 on deployments that never populate the counter, including bases that
+        // Searchability comes from the index flags alone: `chunk_count` reads 0
+        // on deployments that never populate the counter, including bases that
         // answer searches fine, so it is reported but never gates the verdict.
-        const indexed = kb.capabilities ? kb.capabilities.vector || kb.capabilities.keyword : true;
+        const channels: KnowledgeRetrievalChannel[] = [];
+        if (!kb.capabilities || kb.capabilities.vector || kb.capabilities.keyword) channels.push('inline');
+        if (kb.capabilities?.wiki) channels.push('wiki');
         scope.push({
           id: kb.id,
           name: kb.name,
           chunkCount: kb.chunkCount ?? 0,
           ...(kb.capabilities === undefined ? {} : { capabilities: kb.capabilities }),
-          searchable: indexed,
-          ...(indexed ? {} : { reason: '该知识库创建时未启用向量索引与关键词索引（仅 wiki），因此任何检索模式都不会命中；需要在 WeKnora 控制台重建索引或重新创建知识库。' }),
+          searchable: channels.length > 0,
+          channels,
+          ...(channels.length ? {} : { reason: '该知识库既未启用向量/关键词索引，也未启用 wiki，因此没有任何可用检索通道；需要在 WeKnora 控制台重建索引或重新创建知识库。' }),
         });
       } catch (cause) {
         if (signal?.aborted) throw cause;
-        scope.push({ id, name: id, chunkCount: 0, searchable: false, reason: `无法读取知识库元数据（${cause instanceof Error ? cause.message : String(cause)}）。` });
+        scope.push({ id, name: id, chunkCount: 0, searchable: false, channels: [], reason: `无法读取知识库元数据（${cause instanceof Error ? cause.message : String(cause)}）。` });
       }
     }
     return scope;
@@ -972,10 +1173,87 @@ export class KnowledgeService extends Service {
     };
   }
 
+  /**
+   * A wiki search hit. It carries no `knowledge_id` / `chunk_id` because a wiki
+   * page is derived, not a chunk: reporting chunk ids here would let a caller
+   * cite a summary page as if it were source text.
+   */
+  private mapWikiHit(raw: unknown): KnowledgeSearchHit {
+    const record = jsonRecord(raw) ?? {};
+    const slug = asString(record.slug) ?? '';
+    const pageId = asString(record.id) ?? '';
+    if (!slug && !pageId) throw new KnowledgeError('knowledge/malformed', 'wiki 检索结果缺少页面标识。');
+    // Snippets and summaries carry the same link markup as the page body;
+    // flattened here so neither the model nor the panel reads slug noise.
+    const summary = wikiLinksToText(asString(record.summary) ?? '');
+    const snippet = wikiLinksToText(asString(record.match_snippet) ?? '');
+    return {
+      chunkId: '',
+      knowledgeId: '',
+      knowledgeTitle: asString(record.title) ?? slug ?? pageId,
+      knowledgeBaseId: asString(record.knowledge_base_id) ?? '',
+      // Pages are ranked by regex match position, not by a similarity score;
+      // reporting 0 keeps callers from presenting a made-up confidence.
+      score: 0,
+      content: snippet || summary,
+      via: 'wiki',
+      wiki: {
+        pageId,
+        slug,
+        pageType: asString(record.page_type) ?? '',
+        summary,
+        aliases: asStringArray(record.aliases),
+        sourceKnowledgeIds: asStringArray(record.source_refs),
+        chunkRefCount: asStringArray(record.chunk_refs).length,
+      },
+    };
+  }
+
+  private mapWikiPage(raw: unknown, kbId: string): KnowledgeWikiPage {
+    const record = jsonRecord(raw) ?? {};
+    const page = jsonRecord(record.data) ?? record;
+    const slug = asString(page.slug) ?? '';
+    const title = asString(page.title) ?? slug;
+    if (!slug) throw new KnowledgeError('knowledge/malformed', 'wiki 页面缺少标识。');
+    const sourceRefs = asStringArray(page.source_refs);
+    return {
+      pageId: asString(page.id) ?? '',
+      slug,
+      pageType: asString(page.page_type) ?? '',
+      summary: asString(page.summary) ?? '',
+      aliases: asStringArray(page.aliases),
+      // `source_refs` is `<knowledge_id>|<doc_title>` in the legacy ingest
+      // convention and a bare id on newer rows: keep the id, expose the title
+      // separately when the row carries one.
+      sourceKnowledgeIds: sourceRefs.map(ref => ref.split('|')[0] ?? ref).filter(ref => ref.length > 0),
+      chunkRefCount: asStringArray(page.chunk_refs).length,
+      knowledgeBaseId: asString(page.knowledge_base_id) ?? kbId,
+      title,
+      content: asString(page.content) ?? '',
+      text: wikiLinksToText(asString(page.content) ?? ''),
+      ...(asString(page.updated_at) === undefined ? {} : { updatedAt: asString(page.updated_at)! }),
+      ...(asNumber(page.version) === undefined ? {} : { version: asNumber(page.version)! }),
+    };
+  }
+
   private cleanId(value: string, label: string): string {
     const id = value?.trim();
     if (!id || id.length > 512 || /[\u0000-\u001f]/.test(id)) throw new KnowledgeError('knowledge/invalid-request', `${label}无效。`);
     return id;
+  }
+
+  /**
+   * A wiki slug addresses a page inside a base (`concept/xxx`, `entity/yyy`).
+   * The route is a catch-all, so the slashes stay literal and each segment is
+   * encoded on its own — encoding the whole slug would turn `/` into `%2F` and
+   * stop matching the route.
+   */
+  private cleanWikiSlug(value: string): string {
+    const slug = value?.trim().replace(/^\/+/u, '');
+    if (!slug || slug.length > 512 || /[\u0000-\u001f]/u.test(slug) || slug.split('/').some(part => part === '..' || part === '.')) {
+      throw new KnowledgeError('knowledge/invalid-request', 'wiki 页面标识（slug）无效。');
+    }
+    return slug.split('/').map(part => encodeURIComponent(part)).join('/');
   }
 
   private cleanQuery(value: string): string {
