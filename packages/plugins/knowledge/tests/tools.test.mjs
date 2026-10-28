@@ -130,6 +130,8 @@ test('a wiki hit is reported as a locator, never as a quotable chunk', async () 
   assert.equal(hit.wiki_slug, 'concept/xin-xing-dian-li-xi-tong');
   assert.equal(hit.chunk_ref_count, 142);
   assert.deepEqual(hit.source_knowledge_ids, ['doc-a', 'doc-b']);
+  // The renderer must not promise ids the search endpoint never returns.
+  assert.match(tools.get('knowledge_search').output.render({}, value)[0].text, /返回会列出可读的来源文档/);
   // The rendered text must say the page is derived: that sentence is what stops
   // the model from quoting a summary page as source prose.
   const rendered = tools.get('knowledge_search').output.render({}, value)[0].text;

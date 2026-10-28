@@ -1,8 +1,8 @@
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { zstdDecompressSync } from 'node:zlib';
+import { readSessionLog } from './session-log.mjs';
 import { chromium, expect } from '@playwright/test';
 
 /**
@@ -46,7 +46,8 @@ const recentSessionLogs = async since => {
       const file = join(workspaceDir, session.name, 'session.v4.jsonl.zstd');
       const info = await stat(file).catch(() => undefined);
       if (!info || info.mtimeMs < since) continue;
-      const text = await readFile(file).then(buffer => zstdDecompressSync(buffer).toString('utf8')).catch(() => undefined);
+      // Multi-frame zstd: the single-frame decoder would read only the header.
+      const text = await readSessionLog(file).then(result => result.text).catch(() => undefined);
       if (!text) continue;
       found.push({ file, mtimeMs: info.mtimeMs, text });
     }

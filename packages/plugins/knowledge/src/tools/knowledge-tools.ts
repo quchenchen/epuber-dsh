@@ -205,7 +205,7 @@ export function registerKnowledgeTools(ctx: Context): void {
           : '';
         const body = value.count
           ? value.hits.map(hit => hit.via === 'wiki'
-            ? `【wiki 导览页：${hit.knowledge_title}｜slug=${hit.wiki_slug ?? ''}｜page_type=${hit.wiki_page_type ?? ''}｜kb_id=${hit.knowledge_base_id}】\n${hit.summary || hit.excerpt}\n（导览页是派生摘要，不是原文；引用原文请用 knowledge_read_wiki 读该 slug，或用 knowledge_read 读 source_knowledge_ids 中的文档）`
+            ? `【wiki 导览页：${hit.knowledge_title}｜slug=${hit.wiki_slug ?? ''}｜page_type=${hit.wiki_page_type ?? ''}｜kb_id=${hit.knowledge_base_id}】\n${hit.summary || hit.excerpt}\n（导览页是派生摘要，不是原文；引用原文请用 knowledge_read_wiki 读该 slug，其返回会列出可读的来源文档 knowledge_id）`
             : `【出处：${hit.knowledge_title}｜knowledge_id=${hit.knowledge_id}｜chunk_id=${hit.chunk_id}｜相关度 ${hit.score.toFixed(3)}】\n${hit.excerpt}`).join('\n\n')
           : `知识库中没有找到匹配内容。${value.note ?? ''}`;
         return [{ type: 'text', text: `${body}${scope}` }];
@@ -235,8 +235,13 @@ export function registerKnowledgeTools(ctx: Context): void {
             wiki_slug: hit.wiki?.slug ?? '',
             wiki_page_type: hit.wiki?.pageType ?? '',
             summary: hit.wiki?.summary ?? '',
-            source_knowledge_ids: [...(hit.wiki?.sourceKnowledgeIds ?? [])].slice(0, 20),
-            chunk_ref_count: hit.wiki?.chunkRefCount ?? 0,
+            // The search endpoint does not carry source refs; only the page read
+            // does. Report the field when it exists instead of an empty array
+            // that would read as "this page has no sources".
+            ...((hit.wiki?.sourceKnowledgeIds ?? []).length
+              ? { source_knowledge_ids: [...(hit.wiki?.sourceKnowledgeIds ?? [])].slice(0, 20) }
+              : {}),
+            ...(hit.wiki?.chunkRefCount ? { chunk_ref_count: hit.wiki.chunkRefCount } : {}),
           }
           : {
             via: 'inline' as const,
