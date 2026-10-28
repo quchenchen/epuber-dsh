@@ -18,9 +18,12 @@ import {
   DEFAULT_BASE_URL,
   DEFAULT_TIMEOUT_MS,
   knowledgeDomainSpec,
+  knowledgeSelectionKey,
   knowledgeStateKey,
   type KnowledgeConnection,
   type KnowledgeConnectionState,
+  type KnowledgeSelectionEntry,
+  type KnowledgeSelectionState,
 } from '../storage/domain.js';
 
 declare module '@deepseek-ai/cordis' { interface Context { workdshKnowledge: KnowledgeService; } }
@@ -36,6 +39,8 @@ const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const MAX_KB_NAME_LENGTH = 128;
 const MAX_KB_DESCRIPTION_LENGTH = 4_000;
 const MAX_FILE_NAME_LENGTH = 256;
+/** Upper bound of knowledge bases one conversation may reference; each adds a prompt block. */
+export const MAX_SESSION_KNOWLEDGE_BASES = 8;
 
 const mediaTypesByExtension: Readonly<Record<string, string>> = {
   md: 'text/markdown', markdown: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf',
@@ -126,6 +131,43 @@ export interface KnowledgeSearchInput {
   readonly kbId?: string;
   readonly matchCount?: number;
   readonly mode?: KnowledgeSearchMode;
+}
+
+/** One knowledge base a conversation asks to reference; `name` is a display cache. */
+export interface KnowledgeSelectionInput {
+  readonly id: string;
+  readonly name?: string;
+  readonly documentCount?: number;
+}
+
+/**
+ * Normalise one conversation's knowledge-base binding: trim and validate ids,
+ * keep first occurrence of each base, enforce the per-conversation cap, and
+ * fall back to a resolved or raw name so a display label never fails a write.
+ */
+export function normalizeKnowledgeSelection(
+  entries: readonly KnowledgeSelectionInput[],
+  resolvedNames: ReadonlyMap<string, string> = new Map(),
+): KnowledgeSelectionEntry[] {
+  const deduped = new Map<string, KnowledgeSelectionInput>();
+  for (const entry of entries) {
+    const id = entry?.id?.trim();
+    if (!id || id.length > 512 || /[\u0000-\u001f]/.test(id)) {
+      throw new KnowledgeError('knowledge/invalid-request', '知识库 ID 无效。');
+    }
+    if (!deduped.has(id)) deduped.set(id, { ...entry, id });
+  }
+  if (deduped.size > MAX_SESSION_KNOWLEDGE_BASES) {
+    throw new KnowledgeError('knowledge/invalid-request', `一个对话最多引用 ${MAX_SESSION_KNOWLEDGE_BASES} 个知识库。`);
+  }
+  return [...deduped.values()].map(entry => {
+    const name = entry.name?.trim() || resolvedNames.get(entry.id) || entry.id;
+    return {
+      id: entry.id,
+      name: name.length > 512 ? name.slice(0, 512) : name,
+      ...(entry.documentCount === undefined ? {} : { documentCount: entry.documentCount }),
+    };
+  });
 }
 
 export interface KnowledgeSettings {
@@ -250,6 +292,7 @@ const fileNameFromDisposition = (value: string | undefined): string | undefined 
 export class KnowledgeService extends Service {
   static inject = ['storageDomain', 'credentials'];
   private table?: KvTable<string, KnowledgeConnectionState>;
+  private selectionTable?: KvTable<string, KnowledgeSelectionState>;
   private readonly options: KnowledgeServiceOptions;
 
   constructor(ctx: Context, options: KnowledgeServiceOptions = {}) {
@@ -260,6 +303,7 @@ export class KnowledgeService extends Service {
   async [Service.init](): Promise<void> {
     const domain = await this.ctx.storageDomain.open(knowledgeDomainSpec);
     this.table = domain.table('connections');
+    this.selectionTable = domain.table('selections');
     this.ctx.effect(() => () => domain.close(), 'workdshKnowledge.domainClose');
   }
 
@@ -395,6 +439,63 @@ export class KnowledgeService extends Service {
     }
     if (!kbId) throw new KnowledgeError('knowledge/invalid-request', '请指定知识库（kb_id），或在知识库设置中配置默认知识库。');
     return this.hybridSearch(actor, kbId, input, signal);
+  }
+
+  /**
+   * Knowledge bases one conversation currently references. The record is keyed
+   * by member + Session, so a Session can never read another Session's binding,
+   * and a member cannot read another member's.
+   */
+  async sessionSelection(actor: ActorContext, sessionId: string, signal?: AbortSignal): Promise<readonly KnowledgeSelectionEntry[]> {
+    signal?.throwIfAborted();
+    this.validateActor(actor);
+    const id = this.cleanId(sessionId, '会话 ID');
+    const state = this.selections().get(knowledgeSelectionKey(actor.organizationId, actor.principalId, id));
+    if (!state) return [];
+    if (state.owner.organizationId !== actor.organizationId || state.owner.principalId !== actor.principalId || state.sessionId !== id) return [];
+    return state.knowledgeBases;
+  }
+
+  /**
+   * Replace the conversation's knowledge-base binding; an empty list clears it.
+   * Names are display-only caching: a caller-supplied name is kept, otherwise the
+   * service resolves names in one list call and degrades to the id when the
+   * knowledge service is unreachable — binding never fails on a naming lookup.
+   */
+  async setSessionSelection(
+    actor: ActorContext,
+    sessionId: string,
+    entries: readonly KnowledgeSelectionInput[],
+    signal?: AbortSignal,
+  ): Promise<readonly KnowledgeSelectionEntry[]> {
+    signal?.throwIfAborted();
+    this.validateActor(actor);
+    const id = this.cleanId(sessionId, '会话 ID');
+    const key = knowledgeSelectionKey(actor.organizationId, actor.principalId, id);
+    if (!entries.length) {
+      await this.selections().delete(key);
+      return [];
+    }
+    const resolvedNames = new Map<string, string>();
+    if (entries.some(entry => !entry?.name?.trim())) {
+      try {
+        for (const kb of await this.listKbs(actor, signal)) resolvedNames.set(kb.id, kb.name);
+      } catch (cause) {
+        if (signal?.aborted) throw cause;
+        // Display-name resolution is best-effort; the binding itself stays valid.
+      }
+    }
+    const knowledgeBases = normalizeKnowledgeSelection(entries, resolvedNames);
+    signal?.throwIfAborted();
+    const state: KnowledgeSelectionState = {
+      schemaVersion: 1,
+      owner: { organizationId: actor.organizationId, principalId: actor.principalId },
+      sessionId: id,
+      knowledgeBases,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.selections().put(key, state);
+    return knowledgeBases;
   }
 
   /** Read one document as text with stable character offsets, built from its chunks. */
@@ -751,6 +852,10 @@ export class KnowledgeService extends Service {
   private states(): KvTable<string, KnowledgeConnectionState> {
     if (!this.table) throw new KnowledgeError('knowledge/unavailable', '知识库存储尚未就绪。');
     return this.table;
+  }
+  private selections(): KvTable<string, KnowledgeSelectionState> {
+    if (!this.selectionTable) throw new KnowledgeError('knowledge/unavailable', '知识库存储尚未就绪。');
+    return this.selectionTable;
   }
 }
 

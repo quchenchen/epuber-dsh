@@ -12,11 +12,32 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | 层 | 内容 |
 |---|---|
 | Host 服务 | `src/services/weknora-client.ts`（fetch、`X-API-Key`、超时、写操作不自动重试、错误归一化、分页）、`src/services/knowledge-service.ts`（只读查询 + 建/改/删 KB、上传、重新解析、删除、解析状态轮询） |
-| 配置存储 | storage domain `workdsh_knowledge`：`baseUrl`、默认 KB、凭据引用、超时；API Key 值不入库 |
+| 配置存储 | storage domain `workdsh_knowledge`：`connections`（`baseUrl`、默认 KB、凭据引用、超时）、`selections`（按成员 + Session 的知识库绑定）；API Key 值不入库 |
 | 凭据 | 通过 `ctx.credentials` 的引用保存（默认引用 `WEKNORA_API_KEY`），每个操作解析一次；只写不读、不进日志 |
 | Agent 工具（读） | `knowledge_list_kbs`、`knowledge_list_documents`、`knowledge_search`、`knowledge_read`，结果带出处（`knowledge_title`、`knowledge_id`、`chunk_id`、`knowledge_base_id`） |
 | Agent 工具（写） | `knowledge_upload`（上传 UTF-8 文本内容并等待解析）、`knowledge_reparse`、`knowledge_delete`（⚠️ 破坏性，必须 `confirm=true`） |
 | Client | `main` 槽位 key `workdsh-knowledge` + `sidebar.panellist` 一级入口「知识库」，使用 Harness 原生控件与 `workdsh-ui`，跟随主题 |
+| 对话引用 | `@知识库` 提及源 + 输入框左侧入口，绑定当前 Session；`system-prompt/assemble` 每轮注入 `<knowledge-base>` 说明块 |
+
+## 对话中引用知识库
+
+与「资料库」的引用不是一回事：资料库把**固定修订的正文**直接塞进上下文；知识库是**远程检索域**，
+远程库可能有上千篇文档，正文不可能整包注入。
+
+因此 `@知识库/能源知识库` 的语义是**绑定检索域**：
+
+1. `onPick` 把 `{kbId, name}` 写入本 Session 的绑定（`workdsh_knowledge.selections`，键含成员与 Session，互不可见）；
+2. 每轮 `system-prompt/assemble` 读回绑定，注入 `<knowledge-base name kb_id documents />` 与使用规则：
+   先 `knowledge_search`（用注入的 `kb_id`）检索、引用必须标注 `knowledge_title` / `knowledge_id` / `chunk_id`、
+   检索为空必须说明没有找到、不得编造；
+3. 模型按需检索，正文只在需要时通过工具进入上下文。
+
+设计上的取舍：**不做「自动检索注入」**。`AssembleContext` 只带 `scope` 与 `signal`，不暴露本轮用户消息，
+自动检索需要另取会话末条消息并在提示装配路径上引入一次远程调用与延迟；收益（省一次工具调用）
+低于风险（每轮多一次 HTTP、失败要降级、注入内容不可审计）。绑定 + 明确指令是更稳的基线；
+若后续要自动预检索，应作为独立开关，并按轮记录检索参数与命中以便审计。
+
+失败语义：绑定读取失败（存储/身份/远程）只记 `warn` 并跳过注入，**不阻塞本轮**；绑定写入失败不影响消息发送。
 
 ## 使用的 WeKnora REST 契约
 
@@ -124,6 +145,7 @@ node scripts/verify-knowledge-isolated.mjs "<login-url-with-token>"   # P1：11 
 node scripts/verify-knowledge-tool.mjs "<login-url-with-token>"       # Agent 调用 knowledge_search 并核对出处
 node scripts/verify-knowledge-p2.mjs "<login-url-with-token>"         # P2：新建库/上传/轮询/重解析/删除 + 截图
 node scripts/verify-knowledge-write-tools.mjs "<login-url-with-token>" # P2：Agent 调用 knowledge_upload + knowledge_delete
+node scripts/verify-knowledge-reference.mjs "<login-url-with-token>"  # P3：@知识库 菜单 / chip / Session 绑定写入与读回
 ```
 
 P2 GUI 脚本会在隔离 Profile 中创建临时知识库「WorkDSH 插件联调」，验证完删除，

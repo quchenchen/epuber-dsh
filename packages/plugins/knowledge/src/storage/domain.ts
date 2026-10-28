@@ -27,15 +27,46 @@ export const knowledgeStateSchema = z.object({
 
 export type KnowledgeConnectionState = z.infer<typeof knowledgeStateSchema>;
 
+/**
+ * One knowledge base a member explicitly added to a conversation. Only the
+ * `@知识库` binding lives here: the base is addressed by id, and the display
+ * name is a cache refreshed on every write. Retrieved chunk text is never
+ * stored — the model fetches it through `knowledge_search` on demand.
+ */
+export const knowledgeSelectionEntrySchema = z.object({
+  id,
+  name: z.string().max(512),
+  documentCount: z.number().int().nonnegative().optional(),
+});
+
+export type KnowledgeSelectionEntry = z.infer<typeof knowledgeSelectionEntrySchema>;
+
+export const knowledgeSelectionSchema = z.object({
+  schemaVersion: z.literal(1),
+  owner: z.object({ organizationId: id, principalId: id }),
+  sessionId: id,
+  knowledgeBases: z.array(knowledgeSelectionEntrySchema).max(8),
+  updatedAt: iso,
+});
+
+export type KnowledgeSelectionState = z.infer<typeof knowledgeSelectionSchema>;
+
 export const knowledgeDomainSpec = defineDomain({
   name: 'workdsh_knowledge',
   version: 1,
   layout: 'per-record',
-  tables: { connections: domainTable<string, KnowledgeConnectionState>(knowledgeStateSchema) },
+  tables: {
+    connections: domainTable<string, KnowledgeConnectionState>(knowledgeStateSchema),
+    selections: domainTable<string, KnowledgeSelectionState>(knowledgeSelectionSchema),
+  },
 });
 
 export const knowledgeStateKey = (organizationId: string, principalId: string): string =>
   `${organizationId}_${principalId}`.replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 240);
+
+/** Selection records are keyed by member + Session so a Session never reads another's binding. */
+export const knowledgeSelectionKey = (organizationId: string, principalId: string, sessionId: string): string =>
+  `${knowledgeStateKey(organizationId, principalId)}_${sessionId}`.replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 240);
 
 /** Default endpoint of the local WeKnora deployment used during integration. */
 export const DEFAULT_BASE_URL = 'http://127.0.0.1:18081';

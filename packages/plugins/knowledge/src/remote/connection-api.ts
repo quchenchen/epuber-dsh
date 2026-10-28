@@ -2,7 +2,7 @@ import type { Context } from '@deepseek-ai/cordis';
 import type { ConnectionRpcResult, HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
 import type { IdentityService } from 'workdsh-contracts';
 import { KnowledgeError, jsonRecord } from '../services/weknora-client.js';
-import type { KnowledgeSearchMode, KnowledgeSettingsPatch } from '../services/knowledge-service.js';
+import type { KnowledgeSearchMode, KnowledgeSelectionInput, KnowledgeSettingsPatch } from '../services/knowledge-service.js';
 
 declare module '@deepseek-ai/cordis' { interface Context { workdshIdentity: IdentityService; } }
 
@@ -208,6 +208,27 @@ export function registerKnowledgeConnection(ctx: Context): void {
 
         if (endpoint === 'reparse-document' && typeof payload.knowledgeId === 'string') {
           return Response.json(ok(await service.reparseDocument(actor, payload.knowledgeId, request.signal)));
+        }
+
+        if (endpoint === 'selection' && typeof payload.sessionId === 'string') {
+          return Response.json(ok(await service.sessionSelection(actor, payload.sessionId, request.signal)));
+        }
+
+        if (endpoint === 'set-selection' && typeof payload.sessionId === 'string' && Array.isArray(payload.knowledgeBases)) {
+          const entries: KnowledgeSelectionInput[] = [];
+          for (const raw of payload.knowledgeBases) {
+            const record = jsonRecord(raw);
+            const id = asString(record?.id);
+            if (!id?.trim()) return Response.json(fail('knowledge/invalid-request', '会话引用缺少知识库 ID。'), { status: 400 });
+            const name = asString(record?.name);
+            const documentCount = asInteger(record?.documentCount);
+            entries.push({
+              id,
+              ...(name === undefined ? {} : { name }),
+              ...(documentCount === undefined ? {} : { documentCount }),
+            });
+          }
+          return Response.json(ok(await service.setSessionSelection(actor, payload.sessionId, entries, request.signal)));
         }
 
         return Response.json(fail('knowledge/invalid-request', '知识库请求无效。'), { status: 400 });

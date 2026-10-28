@@ -10,9 +10,11 @@ import type {
   KnowledgePreview,
   KnowledgeSearchHit,
   KnowledgeSearchMode,
+  KnowledgeSelectionInput,
   KnowledgeSettings,
   KnowledgeSettingsPatch,
 } from '../services/knowledge-service.js';
+import type { KnowledgeSelectionEntry } from '../storage/domain.js';
 
 /** Encode a browser File as base64 for the Host transport (which rebuilds the multipart upload). */
 export async function fileBase64(file: File): Promise<string> {
@@ -70,6 +72,12 @@ export function createKnowledgeClient(lifetime?: AbortSignal) {
       invoke<KnowledgePage<KnowledgeChunk>>('list-chunks', { knowledgeId, ...query }, withLifetime(signal)),
     search: (request: KnowledgeSearchRequest, signal?: AbortSignal) =>
       invoke<readonly KnowledgeSearchHit[]>('search', request, withLifetime(signal)),
+    /** Knowledge bases this conversation currently references. */
+    selection: (sessionId: string, signal?: AbortSignal) =>
+      invoke<readonly KnowledgeSelectionEntry[]>('selection', { sessionId }, withLifetime(signal)),
+    /** Replace the conversation's knowledge-base binding; an empty list clears it. */
+    setSelection: (sessionId: string, knowledgeBases: readonly KnowledgeSelectionInput[], signal?: AbortSignal) =>
+      invoke<readonly KnowledgeSelectionEntry[]>('set-selection', { sessionId, knowledgeBases }, withLifetime(signal)),
   };
 }
 
