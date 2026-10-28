@@ -46,9 +46,13 @@ ${controlsCss}
 .wd-knowledge-kb-card h3{margin:0;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wd-knowledge-kb-card p{margin:0;color:var(--dsw-alias-label-tertiary);font-size:13px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .wd-knowledge-kb-meta{display:flex;align-items:center;gap:10px;margin-top:auto;color:var(--dsw-alias-label-tertiary);font-size:12px}
-.wd-knowledge-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-.wd-knowledge-toolbar h2{margin:0;font-size:20px}
-.wd-knowledge-toolbar small{color:var(--dsw-alias-label-tertiary)}
+.wd-knowledge-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+/* Document titles are file names and can be far longer than the panel: the
+   title block must shrink (min-width:0) or the actions beside it get pushed
+   out of view, which silently removes the only "back" affordance. */
+.wd-knowledge-toolbar>div:first-child{min-width:0;flex:1 1 auto}
+.wd-knowledge-toolbar h2{margin:0;font-size:20px;overflow-wrap:anywhere}
+.wd-knowledge-toolbar small{color:var(--dsw-alias-label-tertiary);overflow-wrap:anywhere}
 .wd-knowledge-pager{display:flex;align-items:center;gap:10px;margin:16px 0 0;color:var(--dsw-alias-label-tertiary);font-size:13px}
 .wd-knowledge-list{display:grid;gap:8px}
 .wd-knowledge-doc{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);text-align:left;cursor:pointer}
@@ -91,18 +95,8 @@ ${controlsCss}
 .wd-knowledge-form select{height:40px;padding:0 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-layer-1)}
 .wd-knowledge-form small{color:var(--dsw-alias-label-tertiary);font-size:12px}
 .wd-knowledge-form-actions{display:flex;gap:10px;align-items:center}
-.wd-knowledge-toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wd-knowledge-toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto}
 .wd-knowledge-hint{padding:10px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:13px}
-.wd-knowledge-upload{display:none}
-.wd-knowledge .wd-form-button[data-tone="danger"]{color:#cf6a6a}
-.wd-knowledge-dialog{width:min(580px,calc(100vw - 48px));padding:26px}
-.wd-knowledge-dialog h2{margin:0 40px 8px 0;font-size:20px}
-.wd-knowledge-dialog .wd-knowledge-dialog-hint{margin:0 0 18px;color:var(--dsw-alias-label-tertiary);font-size:13px}
-.wd-knowledge-dialog p{margin:0 0 18px;color:var(--dsw-alias-label-tertiary)}
-.wd-knowledge-dialog label{display:grid;gap:8px;margin-bottom:16px;color:var(--dsw-alias-label-secondary);font-size:13px}
-.wd-knowledge-dialog :is(input,.wd-form-input,textarea){width:100%}
-.wd-knowledge-dialog textarea{min-height:72px;padding:10px 12px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-layer-1)}
-.wd-knowledge-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
 @media(max-width:760px){.wd-knowledge{grid-template-columns:1fr}.wd-knowledge-sidebar{display:none}.wd-knowledge-body{padding:18px}.wd-knowledge-search-form{grid-template-columns:1fr}.wd-knowledge-nav-toggle{display:block}}
 
 `;

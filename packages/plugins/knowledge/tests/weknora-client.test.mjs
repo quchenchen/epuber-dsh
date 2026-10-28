@@ -79,7 +79,7 @@ test('getRaw keeps a bounded prefix and reads the real length from Content-Range
   } finally { await stub.close(); }
 });
 
-test('postJson sends the search body and unwraps hits', async () => {
+test('postPage sends the search body and unwraps hits', async () => {
   const stub = await startStub((_request, response) => json(response, 200, {
     success: true,
     data: [{ id: 'chunk-1', knowledge_id: 'doc-1', knowledge_title: '新型电力系统建设“十五五”规划.pdf', score: 0.979, content: '规划目标' }],
@@ -130,54 +130,13 @@ test('unsafe base URLs are rejected', () => {
   assert.throws(() => new WeKnoraClient({ baseUrl: 'file:///etc/passwd', apiKey: 'k' }), (error) => error instanceof KnowledgeError && error.code === 'knowledge/invalid-config');
 });
 
-test('putJson and deleteJson send write requests', async () => {
-  const stub = await startStub((request, response) => {
-    if (request.method === 'PUT') json(response, 200, { success: true, data: { id: 'kb-1', name: 'renamed' } });
-    else json(response, 200, { success: true, message: 'deleted', data: {} });
-  });
-  try {
-    const client = new WeKnoraClient({ baseUrl: stub.baseUrl, apiKey: 'test-key' });
-    const updated = await client.putJson('/api/v1/knowledge-bases/kb-1', { name: 'renamed', description: 'd' }, undefined);
-    await client.deleteJson('/api/v1/knowledge-bases/kb-1', undefined);
-    assert.equal(stub.requests[0].method, 'PUT');
-    assert.deepEqual(JSON.parse(stub.requests[0].body), { name: 'renamed', description: 'd' });
-    assert.equal(stub.requests[1].method, 'DELETE');
-    assert.equal(updated.success, true);
-  } finally { await stub.close(); }
-});
-
-test('postMultipart sends a multipart body with the file part', async () => {
-  const stub = await startStub((_request, response) => json(response, 200, { success: true, data: { id: 'doc-1', title: 'note.md', parse_status: 'pending' } }));
-  try {
-    const client = new WeKnoraClient({ baseUrl: stub.baseUrl, apiKey: 'test-key' });
-    const form = new FormData();
-    form.append('file', new Blob([new TextEncoder().encode('# hello')], { type: 'text/markdown' }), 'note.md');
-    form.append('fileName', 'note.md');
-    const created = await client.postMultipart('/api/v1/knowledge-bases/kb-1/knowledge/file', form);
-    assert.equal(created.id, 'doc-1');
-    const request = stub.requests[0];
-    assert.match(request.headers['content-type'], /^multipart\/form-data; boundary=/);
-    assert.match(request.body, /filename="note.md"/);
-    assert.match(request.body, /# hello/);
-  } finally { await stub.close(); }
-});
-
-test('write requests are not retried on 5xx', async () => {
-  let calls = 0;
-  const stub = await startStub((_request, response) => { calls += 1; json(response, 500, { success: false, message: 'boom' }); });
-  try {
-    const client = new WeKnoraClient({ baseUrl: stub.baseUrl, apiKey: 'test-key', retries: 2 });
-    await assert.rejects(client.putJson('/api/v1/knowledge-bases/kb-1', { name: 'x' }), (error) => error instanceof KnowledgeError && error.code === 'knowledge/upstream');
-    assert.equal(calls, 1);
-  } finally { await stub.close(); }
-});
-
-test('deleteJson surfaces a 404 as knowledge/not-found', async () => {
-  const stub = await startStub((_request, response) => json(response, 404, { success: false, message: 'no such knowledge' }));
-  try {
-    const client = new WeKnoraClient({ baseUrl: stub.baseUrl, apiKey: 'test-key' });
-    await assert.rejects(client.deleteJson('/api/v1/knowledge/missing'), (error) => error instanceof KnowledgeError && error.code === 'knowledge/not-found');
-  } finally { await stub.close(); }
+test('the transport exposes no write surface', () => {
+  const client = new WeKnoraClient({ baseUrl: 'http://127.0.0.1:1', apiKey: 'k' });
+  // The plugin is read-only end to end: no PUT/DELETE/upload can be issued even
+  // by accident, which is what lets the deployment key stay `retrieve`-only.
+  for (const method of ['putJson', 'deleteJson', 'postMultipart', 'postJson']) {
+    assert.equal(typeof client[method], 'undefined', `${method} must not exist`);
+  }
 });
 
 test('a zero-hit search is an empty page, not a malformed payload', () => {

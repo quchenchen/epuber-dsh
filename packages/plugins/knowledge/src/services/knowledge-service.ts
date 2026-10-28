@@ -9,9 +9,7 @@ import {
   asString,
   jsonRecord,
   normalizeBaseUrl,
-  readData,
   type FetchLike,
-  type Page,
 } from './weknora-client.js';
 import {
   DEFAULT_API_KEY_REF,
@@ -37,11 +35,6 @@ const DEFAULT_MATCH_COUNT = 10;
 const MAX_READ_LIMIT = 20_000;
 const MAX_READ_PAGES = 10;
 const CREDENTIAL_REF = /^[A-Za-z_][A-Za-z0-9_]{0,127}$/;
-/** WeKnora rejects uploads above MAX_FILE_SIZE_MB (50MB by default). */
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
-const MAX_KB_NAME_LENGTH = 128;
-const MAX_KB_DESCRIPTION_LENGTH = 4_000;
-const MAX_FILE_NAME_LENGTH = 256;
 /** Upper bound of knowledge bases one conversation may reference; each adds a prompt block. */
 export const MAX_SESSION_KNOWLEDGE_BASES = 8;
 /** WeKnora's cross-base wiki search rejects more than 32 base ids. */
@@ -101,21 +94,6 @@ export function wikiTermOf(query: string): string | undefined {
   }
   return undefined;
 }
-
-const mediaTypesByExtension: Readonly<Record<string, string>> = {
-  md: 'text/markdown', markdown: 'text/markdown', txt: 'text/plain', pdf: 'application/pdf',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  csv: 'text/csv', html: 'text/html', htm: 'text/html', json: 'application/json',
-};
-
-const sleepWithSignal = (milliseconds: number, signal?: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
-  if (signal?.aborted) { reject(new KnowledgeError('knowledge/aborted', '知识库请求已取消。')); return; }
-  const abort = () => { clearTimeout(timer); reject(new KnowledgeError('knowledge/aborted', '知识库请求已取消。')); };
-  const timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve(); }, milliseconds);
-  signal?.addEventListener('abort', abort, { once: true });
-});
 
 /** How a document's parse pipeline currently stands. */
 export type KnowledgeParseStatus = 'completed' | 'processing' | 'pending' | 'failed' | 'deleting' | 'unknown';
@@ -347,44 +325,6 @@ export interface KnowledgeDocumentQuery {
   readonly page?: number;
   readonly pageSize?: number;
   readonly parseStatus?: KnowledgeParseStatus;
-}
-
-export interface KnowledgeBaseCreateInput {
-  readonly name: string;
-  readonly description?: string;
-  /** Existing KB whose embedding model and chunking config seed the new KB. */
-  readonly templateKbId?: string;
-  /** Explicit embedding model id; overrides the template's model. */
-  readonly embeddingModelId?: string;
-}
-
-export interface KnowledgeBaseUpdateInput {
-  readonly name?: string;
-  readonly description?: string;
-}
-
-export interface KnowledgeUploadInput {
-  readonly fileName: string;
-  readonly bytes: Uint8Array;
-  readonly mediaType?: string;
-}
-
-export interface KnowledgeDeleteResult {
-  readonly queued: boolean;
-  readonly taskId?: string;
-}
-
-export interface KnowledgeWaitResult {
-  readonly document: KnowledgeDocument;
-  readonly completed: boolean;
-  readonly timedOut: boolean;
-}
-
-export interface KnowledgeWaitOptions {
-  /** Total wait budget, default 120000ms. */
-  readonly timeoutMs?: number;
-  /** Poll interval, default 3000ms. */
-  readonly intervalMs?: number;
 }
 
 export interface KnowledgeServiceOptions {
@@ -889,174 +829,6 @@ export class KnowledgeService extends Service {
       ...(truncated ? { nextOffset } : {}),
       truncated,
     };
-  }
-
-  /**
-   * Create a knowledge base. WeKnora needs an embedding model to parse
-   * documents at all, so the new KB inherits the embedding model and chunking
-   * config from an existing template KB (explicit, configured default, or the
-   * first KB). Wiki/graph pipelines and question generation are kept off so a
-   * freshly uploaded document reaches `completed` promptly; both can be turned
-   * on later in the WeKnora console.
-   */
-  async createKb(actor: ActorContext, input: KnowledgeBaseCreateInput, signal?: AbortSignal): Promise<KnowledgeBase> {
-    const name = this.cleanName(input.name);
-    const description = this.cleanDescription(input.description);
-    const client = await this.clientFor(actor, signal);
-    const template = await this.creationTemplate(actor, client, input.templateKbId, signal);
-    const embeddingModelId = input.embeddingModelId?.trim() || template.embeddingModelId;
-    if (!embeddingModelId) {
-      throw new KnowledgeError('knowledge/invalid-request', '无法确定向量模型：服务器没有可继承配置的现有知识库。请先在 WeKnora 控制台创建并配置一个知识库，或显式提供 embeddingModelId。');
-    }
-    const raw = await client.postJson<unknown>(`${API}/knowledge-bases`, {
-      name,
-      ...(description === undefined ? {} : { description }),
-      embedding_model_id: embeddingModelId,
-      ...(template.chunkingConfig === undefined ? {} : { chunking_config: template.chunkingConfig }),
-      indexing_strategy: { vector_enabled: true, keyword_enabled: true, wiki_enabled: false, graph_enabled: false },
-      question_generation_config: { enabled: false, question_count: 1 },
-    }, signal);
-    return this.mapKb(readData(raw));
-  }
-
-  /** Update a knowledge base name/description. The API requires `name`, so a missing name is read from the current KB. */
-  async updateKb(actor: ActorContext, kbId: string, input: KnowledgeBaseUpdateInput, signal?: AbortSignal): Promise<KnowledgeBase> {
-    const id = this.cleanId(kbId, '知识库 ID');
-    const description = this.cleanDescription(input.description);
-    const client = await this.clientFor(actor, signal);
-    const name = input.name === undefined || !input.name.trim()
-      ? (await this.getKb(actor, id, signal)).name
-      : this.cleanName(input.name);
-    const raw = await client.putJson<unknown>(`${API}/knowledge-bases/${encodeURIComponent(id)}`, {
-      name,
-      ...(description === undefined ? {} : { description }),
-    }, signal);
-    return this.mapKb(readData(raw));
-  }
-
-  /** Delete a knowledge base. A missing KB is treated as already deleted (idempotent cleanup). */
-  async deleteKb(actor: ActorContext, kbId: string, signal?: AbortSignal): Promise<void> {
-    const id = this.cleanId(kbId, '知识库 ID');
-    const client = await this.clientFor(actor, signal);
-    try {
-      await client.deleteJson<unknown>(`${API}/knowledge-bases/${encodeURIComponent(id)}`, signal);
-    } catch (cause) {
-      if (cause instanceof KnowledgeError && cause.code === 'knowledge/not-found') return;
-      throw cause;
-    }
-  }
-
-  /** Upload one file (multipart, field `file` plus the display `fileName`) into a KB. Parsing is asynchronous. */
-  async uploadDocument(actor: ActorContext, kbId: string, input: KnowledgeUploadInput, signal?: AbortSignal): Promise<KnowledgeDocument> {
-    const id = this.cleanId(kbId, '知识库 ID');
-    const fileName = this.cleanFileName(input.fileName);
-    if (!input.bytes.byteLength) throw new KnowledgeError('knowledge/invalid-request', '上传文件为空。');
-    if (input.bytes.byteLength > MAX_UPLOAD_BYTES) throw new KnowledgeError('knowledge/invalid-request', `文件超过 ${MAX_UPLOAD_BYTES / 1024 / 1024}MB 上传上限。`);
-    const client = await this.clientFor(actor, signal);
-    const form = new FormData();
-    const bytes = Uint8Array.from(input.bytes);
-    const mediaType = input.mediaType?.trim() || this.mediaTypeFor(fileName);
-    form.append('file', new Blob([bytes.buffer as ArrayBuffer], { type: mediaType }), fileName);
-    form.append('fileName', fileName);
-    const raw = await client.postMultipart<unknown>(`${API}/knowledge-bases/${encodeURIComponent(id)}/knowledge/file`, form, signal);
-    return this.mapDocument(raw);
-  }
-
-  /** Delete one document. WeKnora runs deletion as an async task; use {@link waitForDocumentDeletion} to observe completion. */
-  async deleteDocument(actor: ActorContext, knowledgeId: string, signal?: AbortSignal): Promise<KnowledgeDeleteResult> {
-    const id = this.cleanId(knowledgeId, '文档 ID');
-    const client = await this.clientFor(actor, signal);
-    try {
-      const raw = await client.deleteJson<unknown>(`${API}/knowledge/${encodeURIComponent(id)}`, signal);
-      const data = jsonRecord(readData<unknown>(raw));
-      const taskId = asString(data?.task_id);
-      return { queued: true, ...(taskId ? { taskId } : {}) };
-    } catch (cause) {
-      if (cause instanceof KnowledgeError && cause.code === 'knowledge/not-found') return { queued: true };
-      throw cause;
-    }
-  }
-
-  /** Submit a reparse (rebuild chunks/index) for one document. */
-  async reparseDocument(actor: ActorContext, knowledgeId: string, signal?: AbortSignal): Promise<KnowledgeDocument> {
-    const id = this.cleanId(knowledgeId, '文档 ID');
-    const client = await this.clientFor(actor, signal);
-    const raw = await client.postJson<unknown>(`${API}/knowledge/${encodeURIComponent(id)}/reparse`, {}, signal);
-    return this.mapDocument(readData(raw));
-  }
-
-  /** Poll a document until parsing settles (`completed`/`failed`) or the timeout expires. */
-  async waitForDocument(actor: ActorContext, knowledgeId: string, options: KnowledgeWaitOptions = {}, signal?: AbortSignal): Promise<KnowledgeWaitResult> {
-    const timeoutMs = clampInteger(options.timeoutMs, 1_000, 600_000, 120_000);
-    const intervalMs = clampInteger(options.intervalMs, 500, 30_000, 3_000);
-    const deadline = Date.now() + timeoutMs;
-    let document = await this.getDocument(actor, knowledgeId, signal);
-    while (document.parseStatus !== 'completed' && document.parseStatus !== 'failed') {
-      if (Date.now() >= deadline) return { document, completed: false, timedOut: true };
-      await sleepWithSignal(Math.min(intervalMs, Math.max(1, deadline - Date.now())), signal);
-      document = await this.getDocument(actor, knowledgeId, signal);
-    }
-    return { document, completed: document.parseStatus === 'completed', timedOut: false };
-  }
-
-  /** Poll the KB document list until the document disappears (WeKnora deletes asynchronously). */
-  async waitForDocumentDeletion(actor: ActorContext, kbId: string, knowledgeId: string, options: KnowledgeWaitOptions = {}, signal?: AbortSignal): Promise<boolean> {
-    const timeoutMs = clampInteger(options.timeoutMs, 1_000, 600_000, 120_000);
-    const intervalMs = clampInteger(options.intervalMs, 500, 30_000, 2_000);
-    const deadline = Date.now() + timeoutMs;
-    for (;;) {
-      const page = await this.listDocuments(actor, kbId, { page: 1, pageSize: MAX_PAGE_SIZE }, signal);
-      if (!page.items.some(document => document.id === knowledgeId)) return true;
-      if (Date.now() >= deadline) return false;
-      await sleepWithSignal(Math.min(intervalMs, Math.max(1, deadline - Date.now())), signal);
-    }
-  }
-
-  private async creationTemplate(actor: ActorContext, client: WeKnoraClient, templateKbId: string | undefined, signal?: AbortSignal): Promise<{ readonly embeddingModelId?: string; readonly chunkingConfig?: unknown }> {
-    if (templateKbId !== undefined) this.cleanId(templateKbId, '模板知识库 ID');
-    let id = templateKbId?.trim() || (await this.ensureState(actor, signal)).connection.defaultKbId;
-    let raw: unknown;
-    if (id) raw = await client.getJson<unknown>(`${API}/knowledge-bases/${encodeURIComponent(id)}`, undefined, signal);
-    else {
-      const page = await client.getPage<unknown>(`${API}/knowledge-bases`, { page: 1, page_size: 1 }, signal);
-      raw = page.items[0];
-      if (!raw) return {};
-    }
-    const record = jsonRecord(raw) ?? {};
-    const embeddingModelId = asString(record.embedding_model_id)?.trim();
-    const chunkingConfig = jsonRecord(record.chunking_config);
-    return {
-      ...(embeddingModelId ? { embeddingModelId } : {}),
-      ...(chunkingConfig === undefined ? {} : { chunkingConfig }),
-    };
-  }
-
-  private cleanName(value: string): string {
-    const name = value?.trim();
-    if (!name) throw new KnowledgeError('knowledge/invalid-request', '知识库名称不能为空。');
-    if (name.length > MAX_KB_NAME_LENGTH) throw new KnowledgeError('knowledge/invalid-request', `知识库名称不能超过 ${MAX_KB_NAME_LENGTH} 个字符。`);
-    if (/[\u0000-\u001f]/.test(name)) throw new KnowledgeError('knowledge/invalid-request', '知识库名称包含无效字符。');
-    return name;
-  }
-
-  private cleanDescription(value: string | undefined): string | undefined {
-    if (value === undefined) return undefined;
-    const description = value.trim();
-    if (description.length > MAX_KB_DESCRIPTION_LENGTH) throw new KnowledgeError('knowledge/invalid-request', `知识库描述不能超过 ${MAX_KB_DESCRIPTION_LENGTH} 个字符。`);
-    return description;
-  }
-
-  private cleanFileName(value: string): string {
-    const name = value?.trim();
-    if (!name) throw new KnowledgeError('knowledge/invalid-request', '文件名不能为空。');
-    if (name.length > MAX_FILE_NAME_LENGTH) throw new KnowledgeError('knowledge/invalid-request', `文件名不能超过 ${MAX_FILE_NAME_LENGTH} 个字符。`);
-    if (/[\\/\u0000-\u001f]/.test(name)) throw new KnowledgeError('knowledge/invalid-request', '文件名不能包含路径分隔符或控制字符。');
-    return name;
-  }
-
-  private mediaTypeFor(fileName: string): string {
-    const extension = fileName.includes('.') ? fileName.split('.').pop()!.toLowerCase() : '';
-    return mediaTypesByExtension[extension] ?? 'application/octet-stream';
   }
 
   private async clientFor(actor: ActorContext, signal?: AbortSignal): Promise<WeKnoraClient> {

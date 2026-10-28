@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { WeKnoraClient, readPage } from '../dist/services/weknora-client.js';
+import { WeKnoraClient } from '../dist/services/weknora-client.js';
 
 /**
  * Live integration check against a running WeKnora deployment.
@@ -47,7 +47,7 @@ console.log('Chunks:', chunks.items.map(chunk => `#${chunk.chunk_index}(${chunk.
 
 const query = '新型电力系统 规划 目标';
 for (const [mode, extra] of [['hybrid', {}], ['semantic', { disable_keywords_match: true }], ['keyword', { disable_vector_match: true }]]) {
-  const page = readPage(await client.postJson(`/api/v1/knowledge-bases/${grid.id}/hybrid-search`, { query_text: query, match_count: 5, ...extra }));
+  const page = await client.postPage(`/api/v1/knowledge-bases/${grid.id}/hybrid-search`, { query_text: query, match_count: 5, ...extra });
   assert.ok(page.items.length >= 1, `${mode} search returned no hits`);
   assert.ok(page.items.every(hit => typeof hit.knowledge_title === 'string' && hit.knowledge_title.length > 0), `${mode} hits must carry knowledge_title`);
   assert.equal(typeof page.items[0].score, 'number');

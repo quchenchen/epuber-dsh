@@ -76,7 +76,8 @@ export interface QueryValues {
   readonly [key: string]: string | number | boolean | undefined;
 }
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+/** Read-only transport: this client deliberately has no PUT/DELETE surface. */
+export type HttpMethod = 'GET' | 'POST';
 
 interface RequestInitInternal {
   readonly query?: QueryValues;
@@ -211,37 +212,9 @@ export class WeKnoraClient {
     return this.withRetry(async () => readPage<T>(await this.requestJson('GET', path, { ...(query ? { query } : {}), ...(signal ? { signal } : {}) }), fallback));
   }
 
-  /**
-   * POST a JSON body. Writes are not retried by default: replaying a create or
-   * upload after an ambiguous timeout could duplicate the resource. Pass
-   * `{ retry: true }` only for idempotent POSTs such as search.
-   */
-  postJson<T>(path: string, body: unknown, signal?: AbortSignal, options: { readonly retry?: boolean } = {}): Promise<T> {
-    return this.requestWrite('POST', path, { body, ...(signal ? { signal } : {}) }, options.retry === true);
-  }
-
   /** POST a search request and normalize the hit list (idempotent read). */
   postPage<T>(path: string, body: unknown, signal?: AbortSignal): Promise<Page<T>> {
     return this.withRetry(async () => readPage<T>(await this.requestJson('POST', path, { body, ...(signal ? { signal } : {}) })), this.retries);
-  }
-
-  /** PUT a JSON body. Not retried by default; see {@link postJson}. */
-  putJson<T>(path: string, body: unknown, signal?: AbortSignal, options: { readonly retry?: boolean } = {}): Promise<T> {
-    return this.requestWrite('PUT', path, { body, ...(signal ? { signal } : {}) }, options.retry === true);
-  }
-
-  /** DELETE a resource. Not retried by default; see {@link postJson}. */
-  deleteJson<T>(path: string, signal?: AbortSignal, options: { readonly retry?: boolean } = {}): Promise<T> {
-    return this.requestWrite('DELETE', path, { ...(signal ? { signal } : {}) }, options.retry === true);
-  }
-
-  /** POST a multipart form (file upload). Never retried: an upload is not idempotent. */
-  postMultipart<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
-    return this.withRetry(async () => readData<T>(await this.requestJson('POST', path, { formData, ...(signal ? { signal } : {}) })), 0);
-  }
-
-  private async requestWrite<T>(method: HttpMethod, path: string, init: RequestInitInternal, retry: boolean): Promise<T> {
-    return this.withRetry(async () => await this.requestJson(method, path, init) as T, retry ? this.retries : 0);
   }
 
   /**

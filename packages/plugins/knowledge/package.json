@@ -26,8 +26,7 @@
     "build": "tsc -p tsconfig.json && node ../../../apps/web/scripts/build-knowledge.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.json && node --test tests/*.test.mjs",
-    "test:live": "node tests/live-weknora.mjs",
-    "test:live:write": "node tests/live-write.mjs"
+    "test:live": "node tests/live-weknora.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.5",

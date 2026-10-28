@@ -1,10 +1,8 @@
-import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Input, Modal, Select, Textarea } from 'workdsh-ui';
+import { Button, Input, Select } from 'workdsh-ui';
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 import type {
   KnowledgeBase,
-  KnowledgeBaseCreateInput,
   KnowledgeChunk,
   KnowledgeDocument,
   KnowledgePreview,
@@ -12,20 +10,15 @@ import type {
   KnowledgeSearchMode,
   KnowledgeSettings,
 } from '../services/knowledge-service.js';
-import { fileBase64, type KnowledgeClient } from './management.js';
+import type { KnowledgeClient } from './management.js';
 import { knowledgeCss } from './styles.js';
 
 type Props = PropsRuntime<'main'> & InjectFace<{ management: KnowledgeClient; toggleNavigation: () => void }>;
 type View = 'kbs' | 'search' | 'settings';
 type SettingsForm = { baseUrl: string; apiKey: string; defaultKbId: string };
-type CreateForm = { name: string; description: string; templateKbId: string };
-type ConfirmState =
-  | { readonly kind: 'delete-document'; readonly document: KnowledgeDocument }
-  | { readonly kind: 'delete-kb'; readonly kb: KnowledgeBase };
 
 const docsPageSize = 20;
 const chunksPageSize = 10;
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const message = (cause: unknown): string => cause instanceof Error ? cause.message : '知识库操作失败。';
 const formatBytes = (value: number | undefined): string => {
   if (value === undefined) return '—';
@@ -83,16 +76,9 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
   const [searched, setSearched] = useState(false);
   const [searchNote, setSearchNote] = useState('');
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateForm>({ name: '', description: '', templateKbId: '' });
-  const [confirm, setConfirm] = useState<ConfirmState>();
-  const [kbDeleteName, setKbDeleteName] = useState('');
-  const [deletingId, setDeletingId] = useState<string>();
   const generation = useRef(0);
-  const upload = useRef<HTMLInputElement>(null);
 
   const run = useCallback(async (task: () => Promise<void>) => {
     const current = ++generation.current;
@@ -153,27 +139,6 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     }, 4000);
     return () => window.clearInterval(timer);
   }, [docs, doc, kb, docsPage, management, flash]);
-
-  // WeKnora deletes documents asynchronously; poll the list until the row disappears.
-  useEffect(() => {
-    if (!deletingId || !kb) return;
-    const timer = window.setInterval(() => {
-      void management.listDocuments(kb.id, { page: docsPage, pageSize: docsPageSize }).then(async result => {
-        setDocs(result.items); setDocsTotal(result.total);
-        if (!result.items.some(item => item.id === deletingId)) {
-          setDeletingId(undefined);
-          flash('文档已删除。');
-          if (!result.items.length && docsPage > 1) await loadDocs(kb.id, docsPage - 1).catch(() => undefined);
-          // The async delete task can make the row visible once more; re-read after a short settle.
-          window.setTimeout(() => {
-            void management.listDocuments(kb.id, { page: docsPage, pageSize: docsPageSize }).then(next => { setDocs(next.items); setDocsTotal(next.total); }).catch(() => undefined);
-            void loadKbs();
-          }, 2_500);
-        }
-      }).catch(() => undefined);
-    }, 2500);
-    return () => window.clearInterval(timer);
-  }, [deletingId, kb, docsPage, management, flash, loadDocs]);
 
   const openKb = (nextKb: KnowledgeBase) => {
     setKb(nextKb); setDoc(undefined); setPreview(undefined); setHits([]); setSearched(false); setView('kbs');
@@ -265,92 +230,6 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     });
   };
 
-  const openCreate = () => {
-    setCreateForm({ name: '', description: '', templateKbId: settings?.defaultKbId ?? kbs[0]?.id ?? '' });
-    setCreateOpen(true);
-  };
-
-  const submitCreate = () => {
-    const name = createForm.name.trim();
-    if (!name) { setError('请输入知识库名称。'); return; }
-    const input: KnowledgeBaseCreateInput = {
-      name,
-      ...(createForm.description.trim() ? { description: createForm.description.trim() } : {}),
-      ...(createForm.templateKbId ? { templateKbId: createForm.templateKbId } : {}),
-    };
-    void run(async () => {
-      const created = await management.createKb(input);
-      setCreateOpen(false);
-      setCreateForm({ name: '', description: '', templateKbId: '' });
-      flash(`已创建知识库「${created.name}」。`);
-      await loadKbs();
-      setKb(created); setDoc(undefined); setPreview(undefined); setDocs([]); setDocsPage(1); setDocsTotal(undefined); setView('kbs');
-      await loadDocs(created.id, 1);
-    });
-  };
-
-  const pickUpload = () => { if (kb) upload.current?.click(); };
-
-  const onUpload = (files: FileList | null) => {
-    const file = files?.[0];
-    if (!file || !kb) return;
-    if (file.size > MAX_UPLOAD_BYTES) { setError('文件超过 50MB 上传上限。'); return; }
-    setUploading(true);
-    void run(async () => {
-      const base64 = await fileBase64(file);
-      const created = await management.uploadDocument(kb.id, {
-        fileName: file.name,
-        base64,
-        ...(file.type ? { mediaType: file.type } : {}),
-      });
-      flash(`已上传「${created.title}」，解析中…`);
-      void loadKbs();
-      await loadDocs(kb.id, 1);
-    }).finally(() => { setUploading(false); if (upload.current) upload.current.value = ''; });
-  };
-
-  const reparse = () => {
-    if (!doc) return;
-    void run(async () => {
-      const next = await management.reparseDocument(doc.id);
-      setDoc(next);
-      flash('已提交重新解析，等待解析完成…');
-      if (kb) await loadDocs(kb.id, docsPage);
-    });
-  };
-
-  const submitDeleteDocument = () => {
-    if (confirm?.kind !== 'delete-document') return;
-    const target = confirm.document;
-    void run(async () => {
-      await management.deleteDocument(target.id);
-      setConfirm(undefined);
-      setDoc(undefined);
-      setPreview(undefined);
-      setDeletingId(target.id);
-      flash('删除任务已提交，等待列表刷新…');
-      if (kb) await loadDocs(kb.id, docsPage);
-    });
-  };
-
-  const submitDeleteKb = () => {
-    if (confirm?.kind !== 'delete-kb') return;
-    const target = confirm.kb;
-    void run(async () => {
-      await management.deleteKb(target.id);
-      setConfirm(undefined);
-      setKbDeleteName('');
-      if (kb?.id === target.id) { setKb(undefined); setDoc(undefined); setPreview(undefined); }
-      flash(`知识库「${target.name}」已删除。`);
-      let rows = await management.listKbs();
-      for (let attempt = 0; attempt < 8 && rows.some(row => row.id === target.id); attempt += 1) {
-        await new Promise<void>(resolve => window.setTimeout(resolve, 1200));
-        rows = await management.listKbs();
-      }
-      setKbs(rows);
-    });
-  };
-
   const visibleKbs = filter.trim() ? kbs.filter(item => item.name.toLowerCase().includes(filter.trim().toLowerCase())) : kbs;
   const docsHasNext = docsTotal !== undefined ? docsPage * docsPageSize < docsTotal : docs.length === docsPageSize;
   const chunksHasNext = chunkTotal !== undefined ? chunkPage * chunksPageSize < chunkTotal : chunks.length === chunksPageSize;
@@ -359,8 +238,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
 
   const kbListView = <div className="wd-knowledge-body">
     <div className="wd-knowledge-toolbar">
-      <div><h2>知识库</h2><small>来自 WeKnora 知识库服务</small></div>
-      <div className="wd-knowledge-toolbar-actions"><Button variant="primary" data-testid="create-kb-button" disabled={busy} onClick={openCreate}>新建知识库</Button></div>
+      <div><h2>知识库</h2><small>来自 WeKnora 知识库服务 · 只读</small></div>
     </div>
     {kbs.length === 0
       ? <div className="wd-knowledge-state">还没有可用的知识库。请检查连接设置与凭据。</div>
@@ -384,14 +262,11 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
       <div className="wd-knowledge-toolbar">
         <div><h2>{kb.name}</h2><small>{docsTotal === undefined ? `${kb.knowledgeCount} 篇文档` : `当前共 ${docsTotal} 篇文档`}</small></div>
         <div className="wd-knowledge-toolbar-actions">
-          <Button variant="primary" data-testid="upload-document-button" disabled={busy || uploading} onClick={pickUpload}>{uploading ? '上传中…' : '上传文档'}</Button>
-          <Button tone="danger" data-testid="delete-kb-button" disabled={busy} onClick={() => { setKbDeleteName(''); setConfirm({ kind: 'delete-kb', kb }); }}>删除知识库</Button>
           <Button onClick={() => { setKb(undefined); setDocs([]); }}>返回知识库</Button>
         </div>
       </div>
-      <input ref={upload} className="wd-knowledge-upload" data-testid="upload-input" type="file" multiple={false} accept=".md,.markdown,.txt,.pdf,.docx,.pptx,.csv,.xlsx,.html,.htm,.json" onChange={event => onUpload(event.currentTarget.files)} />
       {docs.length === 0
-        ? <div className="wd-knowledge-state">该知识库当前没有文档。可点击「上传文档」导入文件。</div>
+        ? <div className="wd-knowledge-state">该知识库当前没有文档。文档的导入与删除请在 WeKnora 控制台完成。</div>
         : <div className="wd-knowledge-list" data-testid="doc-list">{docs.map(item => <button key={item.id} type="button" className="wd-knowledge-doc" data-testid="doc-item" onClick={() => openDoc(item)}>
             <span className="wd-knowledge-doc-main">
               <strong>{item.title}</strong>
@@ -411,8 +286,6 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     <div className="wd-knowledge-toolbar">
       <div><h2>{doc.title}</h2><small>{doc.knowledgeBaseName ?? kb?.name ?? doc.knowledgeBaseId}</small></div>
       <div className="wd-knowledge-toolbar-actions">
-        <Button data-testid="reparse-document-button" disabled={busy || isProcessing(doc)} onClick={reparse}>重新解析</Button>
-        <Button tone="danger" data-testid="delete-document-button" disabled={busy} onClick={() => setConfirm({ kind: 'delete-document', document: doc })}>删除文档</Button>
         <Button onClick={() => { setDoc(undefined); setPreview(undefined); }}>返回文档列表</Button>
       </div>
     </div>
@@ -500,7 +373,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
           <option value="">不设置默认知识库</option>
           {kbs.map(item => <option key={item.id} value={item.id}>{item.name}（{item.knowledgeCount} 篇）</option>)}
         </Select>
-        <small>检索与新建知识库的模板默认使用。</small>
+        <small>未设置时，检索使用列表中的第一个知识库。</small>
       </label>
       <label>API Key
         <Input data-testid="settings-api-key" type="password" value={form.apiKey} placeholder={settings?.apiKeyConfigured ? '已配置（留空则保持不变）' : '输入租户 API Key'} onChange={event => setForm({ ...form, apiKey: event.currentTarget.value })} />
@@ -517,8 +390,6 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     : view === 'search' ? searchView
       : doc ? docDetailView : kb ? docListView : kbListView;
 
-  const deletingKb = confirm?.kind === 'delete-kb' ? confirm.kb : undefined;
-
   return <section className="wd-knowledge">
     <style>{knowledgeCss}</style>
     {notice ? <div className="wd-knowledge-toast success" role="status">{notice}</div> : null}
@@ -530,7 +401,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
         <button type="button" className={view === 'search' ? 'active' : ''} data-testid="nav-search" onClick={() => setView('search')}>⌕ <span>检索</span></button>
         <button type="button" className={view === 'settings' ? 'active' : ''} data-testid="nav-settings" onClick={() => setView('settings')}>⚙ <span>设置</span></button>
       </nav>
-      <div className="wd-knowledge-section-title"><span>知识库</span><button type="button" data-testid="create-kb-plus" title="新建知识库" aria-label="新建知识库" onClick={openCreate}>＋</button></div>
+      <div className="wd-knowledge-section-title"><span>知识库</span></div>
       <div className="wd-knowledge-filter"><Input aria-label="筛选知识库" value={filter} placeholder="筛选知识库…" onChange={event => setFilter(event.currentTarget.value)} /></div>
       <div className="wd-knowledge-kbs">
         {visibleKbs.map(item => <button type="button" key={item.id} className={`wd-knowledge-kb${kb?.id === item.id ? ' active' : ''}`} data-testid="kb-item" onClick={() => openKb(item)}>
@@ -542,50 +413,9 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
       <footer>
         <span>{settings ? settings.baseUrl : '连接设置读取中…'}</span>
         <span>{settings ? (settings.apiKeyConfigured ? `凭据已配置（${settings.apiKeySource ?? '凭据服务'}）` : '凭据未配置') : ''}</span>
-        <span>WeKnora · 只读 + 管理（P2）</span>
+        <span>WeKnora · 只读</span>
       </footer>
     </aside>
     <main className="wd-knowledge-content">{content}</main>
-
-    <Modal open={createOpen} label="新建知识库" className="wd-knowledge-dialog" onClose={() => setCreateOpen(false)}>
-      <h2>新建知识库</h2>
-      <p className="wd-knowledge-dialog-hint">新知识库会继承「模板知识库」的向量模型与分块配置，并启用向量 + 关键词索引。</p>
-      <label>名称
-        <Input data-testid="create-kb-name" value={createForm.name} placeholder="例如：WorkDSH 插件联调" onChange={event => setCreateForm({ ...createForm, name: event.currentTarget.value })} />
-      </label>
-      <label>描述（可选）
-        <Textarea data-testid="create-kb-description" rows={3} value={createForm.description} onChange={event => setCreateForm({ ...createForm, description: event.currentTarget.value })} />
-      </label>
-      <label>模板知识库
-        <Select data-testid="create-kb-template" value={createForm.templateKbId} onChange={event => setCreateForm({ ...createForm, templateKbId: event.currentTarget.value })}>
-          {kbs.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </Select>
-      </label>
-      <div className="wd-knowledge-dialog-actions">
-        <Button onClick={() => setCreateOpen(false)}>取消</Button>
-        <Button variant="primary" data-testid="create-kb-submit" disabled={busy || !createForm.name.trim()} onClick={submitCreate}>创建</Button>
-      </div>
-    </Modal>
-
-    <Modal open={confirm?.kind === 'delete-document'} label="删除文档" className="wd-knowledge-dialog" onClose={() => setConfirm(undefined)}>
-      <h2>删除文档</h2>
-      <p>将永久删除「{confirm?.kind === 'delete-document' ? confirm.document.title : ''}」及其分块与索引。删除异步执行且不可恢复。</p>
-      <div className="wd-knowledge-dialog-actions">
-        <Button onClick={() => setConfirm(undefined)}>取消</Button>
-        <Button tone="danger" data-testid="confirm-delete-document" disabled={busy} onClick={submitDeleteDocument}>确认删除</Button>
-      </div>
-    </Modal>
-
-    <Modal open={deletingKb !== undefined} label="删除知识库" className="wd-knowledge-dialog" onClose={() => { setConfirm(undefined); setKbDeleteName(''); }}>
-      <h2>删除知识库</h2>
-      <p>将永久删除知识库「{deletingKb?.name ?? ''}」及其索引，此操作不可恢复。</p>
-      <label>输入知识库名称以确认
-        <Input data-testid="delete-kb-name" value={kbDeleteName} placeholder={deletingKb?.name ?? ''} onChange={event => setKbDeleteName(event.currentTarget.value)} />
-      </label>
-      <div className="wd-knowledge-dialog-actions">
-        <Button onClick={() => { setConfirm(undefined); setKbDeleteName(''); }}>取消</Button>
-        <Button tone="danger" data-testid="confirm-delete-kb" disabled={busy || kbDeleteName.trim() !== (deletingKb?.name ?? '')} onClick={submitDeleteKb}>删除知识库</Button>
-      </div>
-    </Modal>
   </section>;
 }

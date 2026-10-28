@@ -1,21 +1,21 @@
 # workdsh-plugin-knowledge
 
 WorkDSH 的「知识库」一级能力。Host 通过 WeKnora REST `/api/v1` 直连知识库服务，
-Client 提供原生面板：知识库列表 → 文档列表（解析状态）→ 文档详情（预览文本 + 分块）→ 混合/语义/关键词检索，
-以及新建知识库、上传文档、重新解析、删除文档/知识库。
+Client 提供原生面板：知识库列表 → 文档列表（解析状态）→ 文档详情（预览文本 + 分块）→ 混合/语义/关键词检索。
 
-> 状态：`0.1.0-alpha.1`，**P2 读 + 管理**。与现有「资料库」(`workdsh-plugin-library`) 并存，不修改其行为。
-> P2 已包含新建/删除知识库、上传文档（multipart）、重新解析、异步删除与解析状态轮询。
+> 状态：`0.1.0-alpha.1`，**只读**。与现有「资料库」(`workdsh-plugin-library`) 并存，不修改其行为。
+> 插件**不创建、不修改、不删除**任何知识库或文档（理由见「为什么不提供写入」），因此只用到 Key 的 `retrieve` 能力。
+> **当前部署的 Key 保持原样、未做收窄**（WeKnora 侧不为此调整），仍带 `ingest` / `manage_kbs`；
+> 这段多余能力只影响 Key 泄露时的爆炸半径，不影响插件功能。
 
 ## 能力
 
 | 层 | 内容 |
 |---|---|
-| Host 服务 | `src/services/weknora-client.ts`（fetch、`X-API-Key`、超时、写操作不自动重试、错误归一化、分页）、`src/services/knowledge-service.ts`（只读查询 + 建/改/删 KB、上传、重新解析、删除、解析状态轮询） |
+| Host 服务 | `src/services/weknora-client.ts`（fetch、`X-API-Key`、超时、错误归一化、分页；**没有 PUT/DELETE 传输面**）、`src/services/knowledge-service.ts`（只读查询 + 解析状态轮询） |
 | 配置存储 | storage domain `workdsh_knowledge`：`connections`（**组织级**：`baseUrl`、默认 KB、凭据引用、超时，键 = `org_<organizationId>`）、`selections`（按成员 + Session 的知识库绑定）；API Key 值不入库 |
 | 凭据 | 通过 `ctx.credentials` 的引用保存（默认引用 `WEKNORA_API_KEY`），每个操作解析一次；只写不读、不进日志 |
-| Agent 工具（读） | `knowledge_list_kbs`（含 `search_mode`）、`knowledge_list_documents`、`knowledge_search`（结果带 `via`：inline 有 `knowledge_id`/`chunk_id`，wiki 有 `wiki_slug`/`source_knowledge_ids`）、`knowledge_read`、`knowledge_read_wiki`（读 wiki 页正文与来源文档） |
-| Agent 工具（写） | `knowledge_upload`（上传 UTF-8 文本内容并等待解析）、`knowledge_reparse`、`knowledge_delete`（⚠️ 破坏性，必须 `confirm=true`） |
+| Agent 工具 | `knowledge_list_kbs`（含 `search_mode`）、`knowledge_list_documents`、`knowledge_search`（结果带 `via`：inline 有 `knowledge_id`/`chunk_id`，wiki 有 `wiki_slug`/`source_knowledge_ids`）、`knowledge_read`、`knowledge_read_wiki`（读 wiki 页正文与来源文档） |
 | Client | `main` 槽位 key `workdsh-knowledge` + `sidebar.panellist` 一级入口「知识库」，使用 Harness 原生控件与 `workdsh-ui`，跟随主题 |
 | 对话引用 | `@知识库` 提及源 + 输入框左侧入口，绑定当前 Session；`system-prompt/assemble` 每轮注入 `<knowledge-base>` 说明块 |
 
@@ -44,12 +44,9 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | 能力 | 方法 | 路径 |
 |---|---|---|
 | 知识库列表 / 详情 | GET | `/api/v1/knowledge-bases`、`/api/v1/knowledge-bases/:id` |
-| 新建 / 更新 / 删除知识库 | POST / PUT / DELETE | `/api/v1/knowledge-bases`、`/api/v1/knowledge-bases/:id` |
 | 文档列表（支持 `parse_status` 过滤） | GET | `/api/v1/knowledge-bases/:id/knowledge?page=&page_size=&parse_status=` |
-| 上传文档（multipart 字段 `file` + `fileName`） | POST | `/api/v1/knowledge-bases/:id/knowledge/file` |
 | 文档详情（含 `parse_status` / `error_message`） | GET | `/api/v1/knowledge/:id` |
 | 原始文件预览 | GET | `/api/v1/knowledge/:id/preview`（用 `Range` 只取前 4KB） |
-| 重新解析 / 删除文档 | POST / DELETE | `/api/v1/knowledge/:id/reparse`、`/api/v1/knowledge/:id` |
 | 分块列表 | GET | `/api/v1/chunks/:knowledge_id?page=&page_size=` |
 | 统一检索（多库 / 文档或标签限定 / 阈值覆盖） | POST | `/api/v1/knowledge-search` |
 | 单库检索（旧部署回退路径） | POST | `/api/v1/knowledge-bases/:id/hybrid-search` |
@@ -61,7 +58,6 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 响应外层一般为 `{ success, data }`；列表分页字段（`page` / `page_size` / `total`）与 `data` 同级，
 `weknora-client.ts` 的 `readPage` 同时兼容数组、`{data:[]}` 与带分页三种形状。
 语义检索 = `disable_keywords_match: true`，关键词检索 = `disable_vector_match: true`。
-文档删除是**异步任务**（返回 `task_id`），服务提供 `waitForDocumentDeletion` 轮询列表直到消失。
 
 ### 检索面与参数口径（对齐 WeKnora 对话 / 智能体）
 
@@ -117,16 +113,26 @@ wiki 页正文在 Host 侧经 `wikiLinksToText` 把 `[[slug|label]]` 摊平成�
 知识库与资料库是两个入口，图标必须不同：知识库用 `knowledge`（分层索引柱），
 资料库用 `library`（书架）。新增图标需重建 `packages/ui`（`IconName` 来自其 `dist`）。
 
-### 新建知识库的配置来源
+### 为什么不提供写入
 
-WeKnora 的知识库必须在创建时绑定向量模型，否则上传的文档会以
-`failed to get embedding model` 解析失败。面板的「新建知识库」要求选择一个**模板知识库**，
-Host 读取该库的 `embedding_model_id` 与 `chunking_config` 作为创建参数，并固定：
+插件曾经有过完整写入面（建/改/删知识库、上传、重新解析、删除文档），已整体撤除。原因是归属语义不成立：
 
-- `indexing_strategy = { vector: true, keyword: true, wiki: false, graph: false }`
-- `question_generation_config = { enabled: false }`
+- **知识库有 `CreatorID`，但 API Key 路径下它是空的。** WeKnora 在 API Key 认证时挂一个合成的
+  `system-<tenantID>` 用户，并**刻意跳过**写入 `CreatorID`（`internal/application/service/knowledgebase.go`），
+  于是通过插件建的库是「租户所有」。而 `CreatorID == ""` 在所有权守卫里走的是 **Admin+ 分支**——
+  成员在插件里建的库，回到 WeKnora 网页反而改不了。
+- **文档根本没有 `CreatorID`。** 谁传的、谁删的，服务端不记录。
+- 删除是不可逆的异步任务。没有归属的删除，等于一个无法追责的破坏性操作。
 
-这样新文档可以在数秒内解析完成；需要 wiki/图谱/问题生成时在 WeKnora 控制台再打开。
+所以写入统一回到 WeKnora 控制台：那里有真实登录用户、真实 `CreatorID`、真实审计日志和完整 RBAC。
+插件只负责**读**，只调用 Key 的 `retrieve` 能力。
+
+但**现状是这把 Key 没有收窄**：它仍带 `ingest` / `manage_kbs`，只是插件已经不再调用任何写接口。
+收窄是纯控制台运维动作（空间 → API Key），本次不作为交付条件；代价是这把 Key 一旦外泄，
+爆炸半径仍是「全库可改可删」，而插件侧的只读约束只挡误用、挡不住直接拿 Key 打 API。
+
+要把写入拿回来，前置条件是先设计归属：外部身份 → 本地用户的映射、`CreatorID` 的写入规则、
+以及删除的审计链。在这些定下来之前，任何「能跑但说不清谁干的」写入都是负债。
 
 ## 配置（组织级，成员零配置）
 
@@ -143,7 +149,7 @@ Host 读取该库的 `embedding_model_id` 与 `chunking_config` 作为创建参�
 所以非管理员写入在服务层直接抛 `knowledge/forbidden`（HTTP 403）。
 
 面板「设置」中填写：服务地址、默认知识库（可选）、API Key（提交后写入凭据服务，不再回显）。
-默认知识库既用于检索兜底，也作为新建知识库的默认模板。
+默认知识库只用于检索兜底（未在会话里绑定、也未选中某个库时用它）。
 
 读取不会落库：未保存过配置时按「装配参数 → 环境变量 → 常量」实时合成，
 否则第一个打开面板的成员会把当时的 `WEKNORA_BASE_URL` 固化下来，之后改部署配置就不生效了。
@@ -164,13 +170,14 @@ dsh web --profile <profile>
 
 默认值：`baseUrl = http://127.0.0.1:18081`，`apiKeyRef = WEKNORA_API_KEY`，`timeoutMs = 15000`。
 
-### 权限与 Key 分离（生产建议）
+### 部署侧的 Key 只需要 `retrieve`
 
-写入面（建/删 KB、上传、重新解析、删除文档）需要 API Key 具备 `manage_kbs` / `ingest` 能力。
-建议为产品配置两个 Key：默认只读 Key（`retrieve`）用于检索与工具读操作；
-管理操作使用单独的 `retrieve + ingest + manage_kbs` Key，并限制可管理的知识库范围。
-当前插件所有操作复用同一个 Key，面板上的写操作按钮在 Key 缺少能力时会把 WeKnora 的
-`401/403` 归一化为「知识库凭据无效，或当前凭据缺少所需能力」并保持只读可用。
+插件只读，因此这把组织级 Key 的最小能力集就是 `retrieve`。**不要**给它 `ingest` / `manage_kbs`：
+插件永远不会用到，而一旦泄露，多出来的能力就是别人的写权限。
+
+读取能力校验在 `roleOf` / `requireManage` 上：只有 `owner` / `admin` 能改连接设置，
+`member` 只读继承。注意这层判断保护的是**凭据不被指向他处**，不是内容写权限——
+内容写权限已经不在插件这一侧存在了。
 
 ## 开发
 
@@ -181,7 +188,6 @@ corepack pnpm --filter workdsh-plugin-knowledge typecheck
 corepack pnpm --filter workdsh-plugin-knowledge build
 corepack pnpm --filter workdsh-plugin-knowledge test           # 本地 HTTP stub 单测
 corepack pnpm --filter workdsh-plugin-knowledge test:live       # 真实 WeKnora 只读契约
-corepack pnpm --filter workdsh-plugin-knowledge test:live:write # 真实 WeKnora 全写入闭环（自动清理）
 ```
 
 构建产物：`dist/index.js`（Host，ESM）、`dist/client.browser.js`（Client，`window.__ModuleLoader__` 包装）。
@@ -190,7 +196,7 @@ Client bundle 由 `apps/web/scripts/build-knowledge.mjs`（esbuild）生成，�
 ## 安装到隔离 Profile
 
 `cordis.patch.yml` 会 `insert` 一个 `workdsh-knowledge` 插件条目，Host 侧注册
-`workdshKnowledge` 服务 + `/api/workdsh-knowledge` 传输端点 + 七个 Agent 工具。
+`workdshKnowledge` 服务 + `/api/workdsh-knowledge` 传输端点 + 五个 Agent 工具。
 `dsh plugin add` 会把包名自动补进 `dsh.profile.bundles`。
 
 ```bash
@@ -222,8 +228,6 @@ node node_modules/@deepseek-ai/dsh/lib/bin.js --profile kbtest \
 cd apps/web
 node scripts/verify-knowledge-isolated.mjs "<login-url-with-token>"   # P1：11 项 GUI 检查 + 截图
 node scripts/verify-knowledge-tool.mjs "<login-url-with-token>"       # Agent 调用 knowledge_search 并核对出处
-node scripts/verify-knowledge-p2.mjs "<login-url-with-token>"         # P2：新建库/上传/轮询/重解析/删除 + 截图
-node scripts/verify-knowledge-write-tools.mjs "<login-url-with-token>" # P2：Agent 调用 knowledge_upload + knowledge_delete
 node scripts/verify-knowledge-reference.mjs "<login-url-with-token>"  # P3：@知识库 菜单 / chip / Session 绑定写入与读回
 node scripts/verify-knowledge-wiki.mjs "<login-url-with-token>"        # P6.2：图标区隔 / 仅 wiki 标注 / 问句命中 / 展开 wiki 页（10 项）
 node scripts/verify-knowledge-wiki-agent.mjs "<login-url-with-token>"  # P6.2：Agent 走 wiki 检索并给出处
@@ -236,8 +240,7 @@ live 契约检查（不经浏览器，直连 REST）：
 node tests/live-search.mjs   # 不可检索库返回 0 条不报错；可检索库返回带出处命中
 ```
 
-P2 GUI 脚本会在隔离 Profile 中创建临时知识库「WorkDSH 插件联调」，验证完删除，
-并在 finally 中通过 REST 兜底清理，不会改动 能源知识库 / 新型电力系统。
+验收脚本全部只读，不会创建或删除任何知识库与文档，因此不会改动 能源知识库 / 新型电力系统。
 
 > 已实测的本机变通：若 `dsh plugin --profile kbtest install/add` 在非 TTY 环境因
 > `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` 或 copied lockfile 的
@@ -248,16 +251,12 @@ P2 GUI 脚本会在隔离 Profile 中创建临时知识库「WorkDSH 插件联�
 
 ## 边界与风险
 
-- **写入限制**：上传单文件 ≤ 50MB（WeKnora 默认上限），通过 Host JSON+base64 传输；
-  更大文件或批量上传尚未实现，超大请求会占用主进程内存（P3 可改流式/分片）。
-- **写操作不自动重试**：创建/更新/上传/删除在超时后不会重放，避免重复建库或重复上传；
-  失败后由用户重试。重新解析是幂等的，但同样不自动重试。
-- **删除是异步任务**：删除文档后列表可能短暂仍显示该行（状态「删除中」），面板轮询直到消失；
-  文档删除后再删知识库需要等待任务完成（面板会轮询 KB 列表）。
-- **新建库依赖模板库**：没有可继承配置的现有知识库且未显式提供 `embeddingModelId` 时，
-  会返回可操作的错误；纯空租户需要在 WeKnora 控制台先建一个配置好的知识库。
+- **只读**：插件不提供任何写入入口（建/改/删知识库、上传、重新解析、删除文档）。
+  需要导入或清理内容请到 WeKnora 控制台，那里有真实登录用户与审计。理由见「为什么不提供写入」。
+- **传输层只读**：`WeKnoraClient` 只有 GET / POST(检索)，`HttpMethod` 类型即 `'GET' | 'POST'`，
+  单测固定断言 `putJson` / `deleteJson` / `postMultipart` / `postJson` 不存在——写入不可能被未来代码顺手加回来。
 - **解析状态轮询**：文档列表/详情在存在 pending/processing 文档时每 4 秒静默刷新；
-  解析失败展示 `error_message`，可用「重新解析」重试。
+  解析失败展示 `error_message`，需到 WeKnora 控制台重新解析。
 - **preview 端点**返回原始文件字节，插件只取 HTTP Range 前 4KB；文本类文件直接展示原文，
   DOCX/PDF/PPTX 等显示「已解析分块拼接」的文本预览。
 - `knowledge_read` 仅在前 10 页 × 100 块内定位字符偏移；超长文档后续内容需调整 offset。
