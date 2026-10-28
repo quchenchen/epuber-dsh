@@ -44,8 +44,21 @@ const invoke = async <T>(endpoint: string, payload: unknown, signal?: AbortSigna
 export interface KnowledgeSearchRequest {
   readonly query: string;
   readonly kbId?: string;
+  readonly knowledgeBaseIds?: readonly string[];
+  readonly knowledgeIds?: readonly string[];
+  readonly tagIds?: readonly string[];
+  readonly limit?: number;
   readonly matchCount?: number;
   readonly mode?: KnowledgeSearchMode;
+}
+
+/** One base's ability to answer a search, as reported by the service itself. */
+export interface KnowledgeSearchScope {
+  readonly id: string;
+  readonly name: string;
+  readonly chunkCount: number;
+  readonly searchable: boolean;
+  readonly reason?: string;
 }
 
 /** Browser-side typed wrapper over the host's knowledge transport endpoints. */
@@ -70,8 +83,19 @@ export function createKnowledgeClient(lifetime?: AbortSignal) {
     getPreview: (knowledgeId: string, signal?: AbortSignal) => invoke<KnowledgePreview>('get-preview', { knowledgeId }, withLifetime(signal)),
     listChunks: (knowledgeId: string, query: KnowledgeDocumentQuery = {}, signal?: AbortSignal) =>
       invoke<KnowledgePage<KnowledgeChunk>>('list-chunks', { knowledgeId, ...query }, withLifetime(signal)),
-    search: (request: KnowledgeSearchRequest, signal?: AbortSignal) =>
-      invoke<readonly KnowledgeSearchHit[]>('search', request, withLifetime(signal)),
+    search: (request: KnowledgeSearchRequest, signal?: AbortSignal) => invoke<readonly KnowledgeSearchHit[]>('search', {
+      query: request.query,
+      ...(request.knowledgeBaseIds?.length ? { knowledge_base_ids: [...request.knowledgeBaseIds] } : {}),
+      ...(request.kbId ? { kbId: request.kbId } : {}),
+      ...(request.knowledgeIds?.length ? { knowledge_ids: [...request.knowledgeIds] } : {}),
+      ...(request.tagIds?.length ? { tag_ids: [...request.tagIds] } : {}),
+      ...(request.limit === undefined ? {} : { limit: request.limit }),
+      ...(request.matchCount === undefined ? {} : { matchCount: request.matchCount }),
+      ...(request.mode ? { mode: request.mode } : {}),
+    }, withLifetime(signal)),
+    /** Why a search over these bases is or is not able to answer. */
+    searchScope: (knowledgeBaseIds: readonly string[], signal?: AbortSignal) =>
+      invoke<readonly KnowledgeSearchScope[]>('search-scope', { knowledge_base_ids: [...knowledgeBaseIds] }, withLifetime(signal)),
     /** Knowledge bases this conversation currently references. */
     selection: (sessionId: string, signal?: AbortSignal) =>
       invoke<readonly KnowledgeSelectionEntry[]>('selection', { sessionId }, withLifetime(signal)),

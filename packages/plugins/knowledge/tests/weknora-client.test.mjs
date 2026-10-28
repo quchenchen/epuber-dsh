@@ -179,3 +179,23 @@ test('deleteJson surfaces a 404 as knowledge/not-found', async () => {
     await assert.rejects(client.deleteJson('/api/v1/knowledge/missing'), (error) => error instanceof KnowledgeError && error.code === 'knowledge/not-found');
   } finally { await stub.close(); }
 });
+
+test('a zero-hit search is an empty page, not a malformed payload', () => {
+  // WeKnora answers `{data:null,success:true}` when a search ran and matched
+  // nothing (e.g. a base built without vector/keyword indexing).
+  assert.deepEqual(readPage({ success: true, data: null }).items, []);
+  assert.deepEqual(readPage({ success: true, items: null }).items, []);
+  // A non-null but unusable payload still fails loudly.
+  assert.throws(() => readPage({ success: true, data: { unexpected: 1 } }), (error) => error instanceof KnowledgeError && error.code === 'knowledge/malformed');
+});
+
+test('postPage returns no hits for a null search envelope instead of throwing', async () => {
+  const stub = await startStub((_request, response) => json(response, 200, { success: true, data: null }));
+  try {
+    const client = new WeKnoraClient({ baseUrl: stub.baseUrl, apiKey: 'test-key' });
+    const page = await client.postPage('/api/v1/knowledge-search', { query: '新型电力系统', knowledge_base_ids: ['kb-1'], match_count: 10 });
+    assert.deepEqual(page.items, []);
+    assert.equal(stub.requests[0].method, 'POST');
+    assert.deepEqual(JSON.parse(stub.requests[0].body), { query: '新型电力系统', knowledge_base_ids: ['kb-1'], match_count: 10 });
+  } finally { await stub.close(); }
+});

@@ -51,12 +51,41 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | 原始文件预览 | GET | `/api/v1/knowledge/:id/preview`（用 `Range` 只取前 4KB） |
 | 重新解析 / 删除文档 | POST / DELETE | `/api/v1/knowledge/:id/reparse`、`/api/v1/knowledge/:id` |
 | 分块列表 | GET | `/api/v1/chunks/:knowledge_id?page=&page_size=` |
-| 混合/语义/关键词检索 | POST | `/api/v1/knowledge-bases/:id/hybrid-search` |
+| 统一检索（多库 / 文档或标签限定 / 阈值覆盖） | POST | `/api/v1/knowledge-search` |
+| 单库检索（旧部署回退路径） | POST | `/api/v1/knowledge-bases/:id/hybrid-search` |
+| 租户检索策略（默认阈值、rerank） | GET/PUT | `/api/v1/tenants/kv/retrieval-config` —— **需要 system 读权限，普通 `retrieve` Key 返回 403**，插件不依赖它 |
 
 响应外层一般为 `{ success, data }`；列表分页字段（`page` / `page_size` / `total`）与 `data` 同级，
 `weknora-client.ts` 的 `readPage` 同时兼容数组、`{data:[]}` 与带分页三种形状。
 语义检索 = `disable_keywords_match: true`，关键词检索 = `disable_vector_match: true`。
 文档删除是**异步任务**（返回 `task_id`），服务提供 `waitForDocumentDeletion` 轮询列表直到消失。
+
+### 检索面与参数口径（对齐 WeKnora 对话 / 智能体）
+
+WeKnora 自己的对话与 `search_knowledge` 工具走 `/api/v1/knowledge-search`，参数是
+`knowledge_base_ids[]`、`match_count`、`mode`、可选的 `vector_threshold` / `keyword_threshold`、
+`rerank`、`knowledge_ids` / `tag_ids`。插件主路径与之对齐：
+
+- `knowledge_search` 工具：`query`（必填）、`knowledge_base_ids`（多库；省略时用会话绑定库，其次默认库）、
+  `kb_id`（单库兼容）、`limit`（1–30，默认 10，对应 `match_count`）、`mode`。
+- 阈值**不暴露给模型**：WeKnora 官方工具也不暴露，策略由租户配置决定；插件 Key 通常无权读取该配置（403），
+  因此默认不传，由服务端策略生效。
+- 部署没有 `/knowledge-search`（404/405）时自动回退到逐库 `hybrid-search` 合并排序。
+
+**零命中不是错误。** 检索跑通但没命中时，WeKnora 返回 `{"data":null,"success":true}`；
+`readPage` 把它当空页处理（早期版本曾误判为 `knowledge/malformed`，导致工具报“知识库返回了无法识别的数据”
+并诱发模型反复换模式重试）。零命中时工具会附带 `searched_knowledge_bases` 与 `note`，
+区分两种完全不同的情况：
+
+| 情况 | 判据 | 提示 |
+|---|---|---|
+| 知识库不可检索 | `capabilities.vector` 与 `capabilities.keyword` 均为 false（库创建时只开了 wiki） | 明确说明“未启用向量/关键词索引”，不要再换模式空跑 |
+| 可检索但没命中 | 索引已启用 | 建议换更短关键词或换模式、确认文档解析完成 |
+
+`chunk_count` 在部分部署恒为 0（即使检索正常），因此**只作展示、不作判据**。
+面板上不可检索的知识库会带「不可检索」徽标，检索页零命中时展示原因而不是空结果。
+
+`tests/live-search.mjs` 对真实部署固定这两个事实：不可检索的库返回 0 条且不报错、可检索的库返回带出处的命中。
 
 ### 新建知识库的配置来源
 
@@ -146,6 +175,13 @@ node scripts/verify-knowledge-tool.mjs "<login-url-with-token>"       # Agent �
 node scripts/verify-knowledge-p2.mjs "<login-url-with-token>"         # P2：新建库/上传/轮询/重解析/删除 + 截图
 node scripts/verify-knowledge-write-tools.mjs "<login-url-with-token>" # P2：Agent 调用 knowledge_upload + knowledge_delete
 node scripts/verify-knowledge-reference.mjs "<login-url-with-token>"  # P3：@知识库 菜单 / chip / Session 绑定写入与读回
+node scripts/verify-knowledge-search.mjs "<login-url-with-token>"     # P3：不可检索标注 / 零命中原因 / 可检索库命中
+```
+
+live 契约检查（不经浏览器，直连 REST）：
+
+```bash
+node tests/live-search.mjs   # 不可检索库返回 0 条不报错；可检索库返回带出处命中
 ```
 
 P2 GUI 脚本会在隔离 Profile 中创建临时知识库「WorkDSH 插件联调」，验证完删除，

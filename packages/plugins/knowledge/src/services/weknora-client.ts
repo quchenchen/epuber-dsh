@@ -143,6 +143,11 @@ export function readData<T>(value: unknown): T {
  * Read a list response in any of the shapes the deployment returns:
  * a bare array, `{ data: [] }`, or `{ data: [], page, page_size, total }`
  * (the pagination fields sit beside `data`, not inside it).
+ *
+ * `{ data: null, success: true }` is how WeKnora reports **zero matches** for a
+ * search that ran fine (a knowledge base with no vector/keyword index, or a
+ * query nothing scored against). Treating that as malformed turned "no results"
+ * into a hard error, so an explicit null `data` is an empty page, not a failure.
  */
 export function readPage<T>(value: unknown, fallback: { readonly page?: number; readonly pageSize?: number } = {}): Page<T> {
   const page = fallback.page ?? 1;
@@ -150,6 +155,8 @@ export function readPage<T>(value: unknown, fallback: { readonly page?: number; 
   if (Array.isArray(value)) return { items: value as T[], page, pageSize, total: value.length };
   const record = jsonRecord(value);
   if (!record) throw new KnowledgeError('knowledge/malformed', statusMessages['knowledge/malformed']!);
+  if ('data' in record && record.data === null) return { items: [], page, pageSize };
+  if ('items' in record && record.items === null) return { items: [], page, pageSize };
   const nested = jsonRecord(record.data);
   const items = Array.isArray(record.data) ? record.data as T[]
     : Array.isArray(record.items) ? record.items as T[]

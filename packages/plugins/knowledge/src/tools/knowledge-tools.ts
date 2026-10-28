@@ -111,11 +111,12 @@ export function registerKnowledgeTools(ctx: Context): void {
 
   ctx.tools.register(defineTool({
     name: 'knowledge_search',
-    description: '在知识库中做混合检索（hybrid）、语义检索（semantic）或关键词检索（keyword），返回带出处的原文片段：knowledge_title、knowledge_id、chunk_id 与相关度分数。引用知识库内容前应先调用本工具。',
+    description: '在知识库中做混合检索（hybrid）、语义检索（semantic）或关键词检索（keyword），返回带出处的原文片段：knowledge_title、knowledge_id、chunk_id 与相关度分数。引用知识库内容前应先调用本工具。可一次检索多个知识库；返回 0 条时会说明该库是否可检索（未启用向量/关键词索引、或没有已索引分块），不要把它重复当成接口错误来重试。',
     parameters: {
       query: { type: 'string', required: true, description: '检索关键词或自然语言问题。' },
-      kb_id: { type: 'string', description: '知识库 ID；省略时使用设置中的默认知识库，租户只有一个知识库时自动选择。' },
-      match_count: { type: 'integer', description: '返回片段数，1–20，默认 5。' },
+      knowledge_base_ids: { type: 'array', items: { type: 'string' }, description: '要检索的知识库 ID 列表。省略时使用对话中引用的知识库，其次使用设置里的默认知识库。' },
+      kb_id: { type: 'string', description: '单个知识库 ID（与 knowledge_base_ids 等价，保留兼容）。' },
+      limit: { type: 'integer', description: '返回片段数，1–30，默认 10。' },
       mode: { type: 'string', enum: ['hybrid', 'semantic', 'keyword'], description: '检索模式，默认 hybrid。' },
     },
     output: {
@@ -137,20 +138,49 @@ export function registerKnowledgeTools(ctx: Context): void {
               },
             },
           },
+          searched_knowledge_bases: {
+            type: 'array', required: true,
+            items: {
+              type: 'object', additionalProperties: false,
+              properties: {
+                knowledge_base_id: { type: 'string', required: true },
+                name: { type: 'string', required: true },
+                chunk_count: { type: 'integer', required: true },
+                searchable: { type: 'boolean', required: true },
+                reason: { type: 'string' },
+              },
+            },
+          },
+          note: { type: 'string' },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: value.count
-        ? value.hits.map(hit => `【出处：${hit.knowledge_title}｜knowledge_id=${hit.knowledge_id}｜chunk_id=${hit.chunk_id}｜相关度 ${hit.score.toFixed(3)}】\n${hit.excerpt}`).join('\n\n')
-        : '知识库中没有找到匹配内容。' }],
+      render: (_args, value) => {
+        const scope = value.searched_knowledge_bases.length
+          ? `\n检索范围：${value.searched_knowledge_bases.map(kb => `${kb.name}（kb_id=${kb.knowledge_base_id}${kb.chunk_count ? `，分块 ${kb.chunk_count}` : ''}${kb.searchable ? '' : '，不可检索'}）`).join('；')}`
+          : '';
+        const body = value.count
+          ? value.hits.map(hit => `【出处：${hit.knowledge_title}｜knowledge_id=${hit.knowledge_id}｜chunk_id=${hit.chunk_id}｜相关度 ${hit.score.toFixed(3)}】\n${hit.excerpt}`).join('\n\n')
+          : `知识库中没有找到匹配内容。${value.note ?? ''}`;
+        return [{ type: 'text', text: `${body}${scope}` }];
+      },
     },
     async execute(args, exec) {
       const current = await actor(ctx, exec);
-      const hits = await ctx.workdshKnowledge.search(current, {
+      const kbIds = [...(args.knowledge_base_ids ?? []), ...(args.kb_id ? [args.kb_id] : [])];
+      const limit = args.limit;
+      const { hits, scope } = await ctx.workdshKnowledge.searchDetailed(current, {
         query: args.query,
-        ...(args.kb_id ? { kbId: args.kb_id } : {}),
-        ...(args.match_count === undefined ? {} : { matchCount: args.match_count }),
+        ...(kbIds.length ? { kbIds } : {}),
+        ...(limit === undefined ? {} : { matchCount: limit }),
         ...(args.mode ? { mode: args.mode as 'hybrid' | 'semantic' | 'keyword' } : {}),
       }, exec.signal);
+      const searchable = scope.filter(kb => kb.searchable);
+      const unsearchable = scope.filter(kb => !kb.searchable);
+      const note = !hits.length && scope.length
+        ? unsearchable.length === scope.length
+          ? `检索范围内没有任何可检索的知识库：${unsearchable.map(kb => `${kb.name}——${kb.reason ?? '不可检索'}`).join('；')}`
+          : `${searchable.length} 个知识库可检索但本次未命中；可尝试更短的关键词、换 mode（semantic / keyword），或确认文档已解析完成。`
+        : undefined;
       return {
         count: hits.length,
         hits: hits.map(hit => ({
@@ -161,6 +191,14 @@ export function registerKnowledgeTools(ctx: Context): void {
           score: hit.score,
           excerpt: excerpt(hit.content),
         })),
+        searched_knowledge_bases: scope.map(kb => ({
+          knowledge_base_id: kb.id,
+          name: kb.name,
+          chunk_count: kb.chunkCount,
+          searchable: kb.searchable,
+          ...(kb.reason === undefined ? {} : { reason: kb.reason }),
+        })),
+        ...(note === undefined ? {} : { note }),
       };
     },
   }));

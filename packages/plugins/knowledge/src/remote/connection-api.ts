@@ -17,6 +17,9 @@ const fail = (code: string, message: string): ConnectionRpcResult<never> => ({ o
 
 const asString = (value: unknown): string | undefined => typeof value === 'string' ? value : undefined;
 const asInteger = (value: unknown): number | undefined => typeof value === 'number' && Number.isInteger(value) ? value : undefined;
+/** Accept only a real string array; a malformed scope must not silently search everything. */
+const stringList = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0) : [];
 
 const errorMessages: Readonly<Record<string, string>> = {
   'knowledge/aborted': '知识库请求已取消。',
@@ -150,10 +153,20 @@ export function registerKnowledgeConnection(ctx: Context): void {
           }
           return Response.json(ok(await service.search(actor, {
             query: payload.query,
+            ...(stringList(payload.knowledge_base_ids).length ? { kbIds: stringList(payload.knowledge_base_ids) } : {}),
             ...(typeof payload.kbId === 'string' && payload.kbId ? { kbId: payload.kbId } : {}),
-            ...(asInteger(payload.matchCount) === undefined ? {} : { matchCount: asInteger(payload.matchCount)! }),
+            ...(stringList(payload.knowledge_ids).length ? { knowledgeIds: stringList(payload.knowledge_ids) } : {}),
+            ...(stringList(payload.tag_ids).length ? { tagIds: stringList(payload.tag_ids) } : {}),
+            ...(asInteger(payload.limit) === undefined && asInteger(payload.matchCount) === undefined ? {}
+              : { matchCount: asInteger(payload.limit) ?? asInteger(payload.matchCount)! }),
             ...(mode === undefined ? {} : { mode: mode as KnowledgeSearchMode }),
           }, request.signal)));
+        }
+
+        if (endpoint === 'search-scope') {
+          const kbIds = stringList(payload.knowledge_base_ids);
+          if (!kbIds.length) return Response.json(fail('knowledge/invalid-request', '检索范围需要至少一个知识库 ID。'), { status: 400 });
+          return Response.json(ok(await service.describeSearchScope(actor, kbIds, request.signal)));
         }
 
         if (endpoint === 'create-kb') {

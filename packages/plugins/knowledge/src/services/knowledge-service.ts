@@ -30,7 +30,9 @@ declare module '@deepseek-ai/cordis' { interface Context { workdshKnowledge: Kno
 
 const API = '/api/v1';
 const MAX_PAGE_SIZE = 100;
-const MAX_MATCH_COUNT = 20;
+/** WeKnora's own search tool caps chunks per call at 30. */
+const MAX_MATCH_COUNT = 30;
+const DEFAULT_MATCH_COUNT = 10;
 const MAX_READ_LIMIT = 20_000;
 const MAX_READ_PAGES = 10;
 const CREDENTIAL_REF = /^[A-Za-z_][A-Za-z0-9_]{0,127}$/;
@@ -66,8 +68,20 @@ export interface KnowledgeBase {
   readonly name: string;
   readonly description: string;
   readonly knowledgeCount: number;
+  /** Chunks actually indexed; a base with 0 chunks cannot answer any search mode. */
+  readonly chunkCount?: number;
+  /** Which retrieval paths the base was built with; `vector`+`keyword` both false means unsearchable. */
+  readonly capabilities?: KnowledgeCapabilities;
   readonly type?: string;
   readonly updatedAt?: string;
+}
+
+export interface KnowledgeCapabilities {
+  readonly vector: boolean;
+  readonly keyword: boolean;
+  readonly wiki: boolean;
+  readonly faq: boolean;
+  readonly graph: boolean;
 }
 
 export interface KnowledgeDocument {
@@ -128,9 +142,32 @@ export interface KnowledgeReadResult {
 
 export interface KnowledgeSearchInput {
   readonly query: string;
+  /** Bases to search; when empty the default base, then the only base, is used. */
+  readonly kbIds?: readonly string[];
+  /** Single-base shorthand kept for callers of the per-base endpoint. */
   readonly kbId?: string;
+  /** Restrict to specific documents (needs the unified search endpoint). */
+  readonly knowledgeIds?: readonly string[];
+  /** Restrict to tagged documents (needs the unified search endpoint). */
+  readonly tagIds?: readonly string[];
   readonly matchCount?: number;
   readonly mode?: KnowledgeSearchMode;
+  /** 0–1 minimum vector similarity; omitted keeps the tenant retrieval config. */
+  readonly vectorThreshold?: number;
+  /** 0–1 minimum keyword score; omitted keeps the tenant retrieval config. */
+  readonly keywordThreshold?: number;
+}
+
+/** One base's ability to answer a search, as reported by the service itself. */
+export interface KnowledgeSearchScope {
+  readonly id: string;
+  readonly name: string;
+  readonly chunkCount: number;
+  readonly capabilities?: KnowledgeCapabilities;
+  /** True only when an index exists AND chunks were produced. */
+  readonly searchable: boolean;
+  /** Why this base cannot answer, when it cannot. */
+  readonly reason?: string;
 }
 
 /** One knowledge base a conversation asks to reference; `name` is a display cache. */
@@ -275,6 +312,9 @@ const toParseStatus = (value: string | undefined): KnowledgeParseStatus => {
 const clampInteger = (value: number | undefined, minimum: number, maximum: number, fallback: number): number =>
   Math.min(maximum, Math.max(minimum, Number.isInteger(value) ? value! : fallback));
 
+/** Thresholds are 0–1 similarities; anything else is a caller bug, not a reason to fail the search. */
+const clampScore = (value: number): number => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
+
 const fileNameFromDisposition = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
   const encoded = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(value);
@@ -408,9 +448,15 @@ export class KnowledgeService extends Service {
     return { items: result.items.map(raw => this.mapChunk(raw)), page: result.page, pageSize: result.pageSize, ...(result.total === undefined ? {} : { total: result.total }) };
   }
 
+  /**
+   * Per-knowledge-base hybrid search (legacy endpoint). WeKnora's chat and agent
+   * both go through `/knowledge-search` instead, which also accepts several
+   * bases, tag/knowledge scoping and threshold overrides; this stays as the
+   * fallback for deployments that predate that endpoint.
+   */
   async hybridSearch(actor: ActorContext, kbId: string, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<readonly KnowledgeSearchHit[]> {
     const query = this.cleanQuery(input.query);
-    const matchCount = clampInteger(input.matchCount, 1, MAX_MATCH_COUNT, 5);
+    const matchCount = clampInteger(input.matchCount, 1, MAX_MATCH_COUNT, DEFAULT_MATCH_COUNT);
     const mode: KnowledgeSearchMode = input.mode ?? 'hybrid';
     const client = await this.clientFor(actor, signal);
     const result = await client.postPage<unknown>(
@@ -418,6 +464,7 @@ export class KnowledgeService extends Service {
       {
         query_text: query,
         match_count: matchCount,
+        ...this.thresholdBody(input),
         ...(mode === 'semantic' ? { disable_keywords_match: true } : {}),
         ...(mode === 'keyword' ? { disable_vector_match: true } : {}),
       },
@@ -427,18 +474,109 @@ export class KnowledgeService extends Service {
   }
 
   /**
-   * Search with a knowledge-base fallback chain: explicit `kbId`, then the
-   * member's default KB, then the only KB the tenant exposes.
+   * Resolve the bases one search targets: explicit list, then the single-base
+   * field, then the member's default, then the only base the tenant exposes.
+   */
+  private async resolveSearchKbIds(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<string[]> {
+    const explicit = [...(input.kbIds ?? []), ...(input.kbId ? [input.kbId] : [])]
+      .map(value => this.cleanId(value, '知识库 ID'))
+      .filter((value, index, all) => all.indexOf(value) === index);
+    if (explicit.length) return explicit;
+    const preferred = (await this.ensureState(actor, signal)).connection.defaultKbId;
+    if (preferred) return [this.cleanId(preferred, '默认知识库 ID')];
+    const kbs = await this.listKbs(actor, signal);
+    if (kbs.length === 1) return [kbs[0]!.id];
+    if (!kbs.length) throw new KnowledgeError('knowledge/not-found', '知识库服务中没有可检索的知识库。');
+    throw new KnowledgeError('knowledge/invalid-request', '请指定知识库（knowledge_base_ids），或在知识库设置中配置默认知识库。');
+  }
+
+  private thresholdBody(input: KnowledgeSearchInput): Record<string, number> {
+    return {
+      ...(input.vectorThreshold === undefined ? {} : { vector_threshold: clampScore(input.vectorThreshold) }),
+      ...(input.keywordThreshold === undefined ? {} : { keyword_threshold: clampScore(input.keywordThreshold) }),
+    };
+  }
+
+  /**
+   * Search across one or more knowledge bases through WeKnora's unified
+   * `/knowledge-search` endpoint — the same surface its chat and agent use.
+   * Falls back to per-base `hybrid-search` on 404/405 (older deployment).
    */
   async search(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<readonly KnowledgeSearchHit[]> {
-    let kbId = input.kbId?.trim();
-    if (!kbId) kbId = (await this.ensureState(actor, signal)).connection.defaultKbId;
-    if (!kbId) {
-      const kbs = await this.listKbs(actor, signal);
-      if (kbs.length === 1) kbId = kbs[0]!.id;
+    const query = this.cleanQuery(input.query);
+    const matchCount = clampInteger(input.matchCount, 1, MAX_MATCH_COUNT, DEFAULT_MATCH_COUNT);
+    const mode: KnowledgeSearchMode = input.mode ?? 'hybrid';
+    const kbIds = await this.resolveSearchKbIds(actor, input, signal);
+    const scoped = (input.knowledgeIds?.length ?? 0) > 0 || (input.tagIds?.length ?? 0) > 0;
+    const client = await this.clientFor(actor, signal);
+    const body = {
+      query,
+      knowledge_base_ids: kbIds,
+      match_count: matchCount,
+      ...this.thresholdBody(input),
+      ...(scoped ? { knowledge_ids: input.knowledgeIds ?? [], tag_ids: input.tagIds ?? [] } : {}),
+      ...(mode === 'semantic' ? { disable_keywords_match: true } : {}),
+      ...(mode === 'keyword' ? { disable_vector_match: true } : {}),
+    };
+    if (!scoped) {
+      try {
+        const unified = await client.postPage<unknown>(`${API}/knowledge-search`, body, signal);
+        return unified.items.map(raw => this.mapHit(raw));
+      } catch (cause) {
+        if (signal?.aborted) throw cause;
+        const unsupported = cause instanceof KnowledgeError && (cause.status === 404 || cause.status === 405);
+        if (!unsupported) throw cause;
+        // Older deployment without the unified endpoint: search each base on its own.
+      }
     }
-    if (!kbId) throw new KnowledgeError('knowledge/invalid-request', '请指定知识库（kb_id），或在知识库设置中配置默认知识库。');
-    return this.hybridSearch(actor, kbId, input, signal);
+    const merged: KnowledgeSearchHit[] = [];
+    for (const kbId of kbIds) {
+      merged.push(...await this.hybridSearch(actor, kbId, { ...input, kbIds: undefined, kbId }, signal));
+    }
+    return merged.sort((left, right) => right.score - left.score).slice(0, matchCount);
+  }
+
+  /**
+   * Search plus the reason a zero-hit result is zero. Only an empty result pays
+   * for the extra metadata reads, and the caller can then explain a data state
+   * (no index, no chunks) instead of surfacing an error the user cannot act on.
+   */
+  async searchDetailed(actor: ActorContext, input: KnowledgeSearchInput, signal?: AbortSignal): Promise<{ readonly hits: readonly KnowledgeSearchHit[]; readonly scope: readonly KnowledgeSearchScope[] }> {
+    const hits = await this.search(actor, input, signal);
+    if (hits.length) return { hits, scope: [] };
+    return { hits, scope: await this.describeSearchScope(actor, await this.resolveSearchKbIds(actor, input, signal), signal) };
+  }
+
+  /**
+   * Why a search over these bases can or cannot return anything: index
+   * capability and chunk count per base. A base built without vector and
+   * keyword indexing returns zero hits for every mode, which is a data state,
+   * not a failure — the caller needs to say so instead of reporting an error.
+   */
+  async describeSearchScope(actor: ActorContext, kbIds: readonly string[], signal?: AbortSignal): Promise<readonly KnowledgeSearchScope[]> {
+    const scope: KnowledgeSearchScope[] = [];
+    for (const kbId of kbIds) {
+      const id = this.cleanId(kbId, '知识库 ID');
+      try {
+        const kb = await this.getKb(actor, id, signal);
+        // Searchability is decided by the index flags alone: `chunk_count` reads
+        // 0 on deployments that never populate the counter, including bases that
+        // answer searches fine, so it is reported but never gates the verdict.
+        const indexed = kb.capabilities ? kb.capabilities.vector || kb.capabilities.keyword : true;
+        scope.push({
+          id: kb.id,
+          name: kb.name,
+          chunkCount: kb.chunkCount ?? 0,
+          ...(kb.capabilities === undefined ? {} : { capabilities: kb.capabilities }),
+          searchable: indexed,
+          ...(indexed ? {} : { reason: '该知识库创建时未启用向量索引与关键词索引（仅 wiki），因此任何检索模式都不会命中；需要在 WeKnora 控制台重建索引或重新创建知识库。' }),
+        });
+      } catch (cause) {
+        if (signal?.aborted) throw cause;
+        scope.push({ id, name: id, chunkCount: 0, searchable: false, reason: `无法读取知识库元数据（${cause instanceof Error ? cause.message : String(cause)}）。` });
+      }
+    }
+    return scope;
   }
 
   /**
@@ -759,11 +897,21 @@ export class KnowledgeService extends Service {
     const record = jsonRecord(raw) ?? {};
     const id = asString(record.id) ?? asString(record.knowledge_base_id);
     if (!id) throw new KnowledgeError('knowledge/malformed', '知识库列表缺少标识。');
+    const capabilities = jsonRecord(record.capabilities);
+    const flags = capabilities === undefined ? undefined : {
+      vector: capabilities.vector === true,
+      keyword: capabilities.keyword === true,
+      wiki: capabilities.wiki === true,
+      faq: capabilities.faq === true,
+      graph: capabilities.graph === true,
+    };
     return {
       id,
       name: asString(record.name) ?? '未命名知识库',
       description: asString(record.description) ?? '',
       knowledgeCount: asNumber(record.knowledge_count) ?? 0,
+      ...(asNumber(record.chunk_count) === undefined ? {} : { chunkCount: asNumber(record.chunk_count)! }),
+      ...(flags === undefined ? {} : { capabilities: flags }),
       ...(asString(record.type) ? { type: asString(record.type)! } : {}),
       ...(asString(record.updated_at) ? { updatedAt: asString(record.updated_at)! } : {}),
     };

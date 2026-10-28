@@ -40,6 +40,13 @@ const formatTime = (value: string | undefined): string => {
 };
 const modeLabel: Record<KnowledgeSearchMode, string> = { hybrid: '混合检索', semantic: '语义检索', keyword: '关键词检索' };
 const isProcessing = (document: KnowledgeDocument | undefined): boolean => document?.parseStatus === 'pending' || document?.parseStatus === 'processing';
+/**
+ * A base built without vector and keyword indexing cannot answer any search
+ * mode; WeKnora reports that as `capabilities`. Absent capabilities means an
+ * older deployment — assume searchable rather than warning without evidence.
+ */
+const isUnsearchable = (item: KnowledgeBase): boolean =>
+  item.capabilities !== undefined && !item.capabilities.vector && !item.capabilities.keyword;
 
 export function KnowledgePanel({ management, toggleNavigation }: Props) {
   const [view, setView] = useState<View>('kbs');
@@ -60,6 +67,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
   const [mode, setMode] = useState<KnowledgeSearchMode>('hybrid');
   const [hits, setHits] = useState<readonly KnowledgeSearchHit[]>([]);
   const [searched, setSearched] = useState(false);
+  const [searchNote, setSearchNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -194,9 +202,17 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     const text = query.trim();
     if (!text) { setError('请输入检索关键词。'); return; }
     setSearched(true);
+    setSearchNote('');
     void run(async () => {
-      const nextHits = await management.search({ query: text, ...(kb ? { kbId: kb.id } : {}), matchCount: 10, mode });
+      const targets = kb ? [kb.id] : (settings?.defaultKbId ? [settings.defaultKbId] : kbs.slice(0, 1).map(item => item.id));
+      const nextHits = await management.search({ query: text, ...(targets.length ? { knowledgeBaseIds: targets } : {}), limit: 10, mode });
       setHits(nextHits);
+      if (nextHits.length || !targets.length) return;
+      // Zero hits is a state, not an error: ask the Host why, so a base without
+      // an index is never presented as "no matching content".
+      const scope = await management.searchScope(targets).catch(() => []);
+      const reasons = scope.filter(row => !row.searchable).map(row => `${row.name}：${row.reason ?? '不可检索'}`);
+      setSearchNote(reasons.length ? reasons.join('；') : `检索范围内 ${targets.length} 个知识库可检索，但本次未命中；可换关键词或检索模式。`);
     });
   };
 
@@ -314,9 +330,13 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     {kbs.length === 0
       ? <div className="wd-knowledge-state">还没有可用的知识库。请检查连接设置与凭据。</div>
       : <div className="wd-knowledge-kb-grid">{visibleKbs.map(item => <button key={item.id} type="button" className="wd-knowledge-kb-card" data-testid="kb-card" onClick={() => openKb(item)}>
-          <h3>{item.name}</h3>
+          <h3>{item.name}{isUnsearchable(item) ? <span className="wd-knowledge-badge failed" data-testid="kb-unsearchable" title="未启用向量索引与关键词索引，任何检索模式都不会命中">不可检索</span> : null}</h3>
           <p>{item.description || '（无描述）'}</p>
-          <span className="wd-knowledge-kb-meta"><span>{item.knowledgeCount} 篇文档</span>{item.updatedAt ? <span>更新于 {formatTime(item.updatedAt)}</span> : null}</span>
+          <span className="wd-knowledge-kb-meta">
+            <span>{item.knowledgeCount} 篇文档</span>
+            {item.chunkCount ? <span>{item.chunkCount} 个分块</span> : null}
+            {item.updatedAt ? <span>更新于 {formatTime(item.updatedAt)}</span> : null}
+          </span>
         </button>)}</div>}
   </div>;
 
@@ -401,7 +421,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     </form>
     <div className="wd-knowledge-search-mode"><span>模式：{modeLabel[mode]}</span><span>·</span><span>结果带 knowledge_title、相关度与原文片段</span></div>
     {busy && !hits.length ? <div className="wd-knowledge-state">正在检索…</div> : null}
-    {searched && !busy && hits.length === 0 ? <div className="wd-knowledge-state">没有检索到匹配内容。</div> : null}
+    {searched && !busy && hits.length === 0 ? <div className="wd-knowledge-state" data-testid="search-empty">{searchNote ? `没有检索到匹配内容。${searchNote}` : '没有检索到匹配内容。'}</div> : null}
     <div className="wd-knowledge-hits">{hits.map(hit => <article className="wd-knowledge-hit" key={`${hit.knowledgeId}-${hit.chunkId}`} data-testid="search-hit">
       <div className="wd-knowledge-hit-head"><strong>{hit.knowledgeTitle}</strong><span className="wd-knowledge-score" data-testid="hit-score">score {hit.score.toFixed(3)}</span></div>
       <p>{hit.content.length > 420 ? `${hit.content.slice(0, 420)}…` : hit.content}</p>
@@ -452,7 +472,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     <aside className="wd-knowledge-sidebar">
       <header><button type="button" className="wd-knowledge-nav-toggle" aria-label="展开导航" onClick={toggleNavigation}>☰</button><h1>知识库</h1></header>
       <nav className="wd-knowledge-nav">
-        <button type="button" className={view === 'kbs' ? 'active' : ''} data-testid="nav-kbs" onClick={() => setView('kbs')}>▤ <span>知识库</span></button>
+        <button type="button" className={view === 'kbs' ? 'active' : ''} data-testid="nav-kbs" onClick={() => { setView('kbs'); setKb(undefined); setDoc(undefined); }}>▤ <span>知识库</span></button>
         <button type="button" className={view === 'search' ? 'active' : ''} data-testid="nav-search" onClick={() => setView('search')}>⌕ <span>检索</span></button>
         <button type="button" className={view === 'settings' ? 'active' : ''} data-testid="nav-settings" onClick={() => setView('settings')}>⚙ <span>设置</span></button>
       </nav>
