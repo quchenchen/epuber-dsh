@@ -5,9 +5,14 @@ const id = z.string().min(1).max(512);
 const iso = z.string().datetime();
 
 /**
- * Connection settings for one WorkDSH member. The API key itself never enters
- * this record: `apiKeyRef` only names the `ctx.credentials` reference, whose
- * value is owned by the credential provider (environment or provider store).
+ * Connection settings for one WorkDSH organization.
+ *
+ * Scope is deliberate: an endpoint plus a key reference describes where the
+ * tenant's knowledge service lives, not a personal preference. One row serves
+ * every member, so a new member is productive without configuring anything.
+ * The API key itself never enters this record: `apiKeyRef` only names the
+ * `ctx.credentials` reference, whose value is owned by the credential provider
+ * (environment or provider store) and is already shared process-wide.
  */
 export const knowledgeConnectionSchema = z.object({
   baseUrl: z.string().url().max(2048),
@@ -18,14 +23,39 @@ export const knowledgeConnectionSchema = z.object({
 
 export type KnowledgeConnection = z.infer<typeof knowledgeConnectionSchema>;
 
-export const knowledgeStateSchema = z.object({
+/**
+ * Version 1 stored one row per member. Those rows still exist on disk after an
+ * upgrade, and `storageDomain.open` parses every record it finds — an
+ * incompatible schema would therefore fail the whole plugin at startup, not
+ * just that row. Version 1 stays readable but is never addressed again: the key
+ * moved to `org:<id>`, so a legacy row is inert rather than fatal. Two members
+ * could hold different endpoints, so there is no single value to migrate to;
+ * an administrator confirms the shared settings once instead.
+ */
+const knowledgeStateV1Schema = z.object({
   schemaVersion: z.literal(1),
   owner: z.object({ organizationId: id, principalId: id }),
   connection: knowledgeConnectionSchema,
   updatedAt: iso,
 });
 
+export const knowledgeStateSchema = z.object({
+  schemaVersion: z.literal(2),
+  organizationId: id,
+  /** Whoever last wrote the shared settings, for the audit trail in the panel. */
+  updatedBy: id.optional(),
+  connection: knowledgeConnectionSchema,
+  updatedAt: iso,
+});
+
+/** What the domain accepts from disk: a legacy row must never fail the open. */
+export const knowledgeStateStoredSchema = z.discriminatedUnion('schemaVersion', [
+  knowledgeStateV1Schema,
+  knowledgeStateSchema,
+]);
+
 export type KnowledgeConnectionState = z.infer<typeof knowledgeStateSchema>;
+export type KnowledgeConnectionRow = z.infer<typeof knowledgeStateStoredSchema>;
 
 /**
  * One knowledge base a member explicitly added to a conversation. Only the
@@ -56,17 +86,23 @@ export const knowledgeDomainSpec = defineDomain({
   version: 1,
   layout: 'per-record',
   tables: {
-    connections: domainTable<string, KnowledgeConnectionState>(knowledgeStateSchema),
+    connections: domainTable<string, KnowledgeConnectionRow>(knowledgeStateStoredSchema),
     selections: domainTable<string, KnowledgeSelectionState>(knowledgeSelectionSchema),
   },
 });
 
-export const knowledgeStateKey = (organizationId: string, principalId: string): string =>
-  `${organizationId}_${principalId}`.replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 240);
+/**
+ * Settings are organization-scoped, so the key carries no principal: every
+ * member reads the same row. A pre-existing per-member row from version 1 is
+ * simply not addressed any more; the connection falls back to the composed
+ * defaults and is written once by an administrator.
+ */
+export const knowledgeStateKey = (organizationId: string): string =>
+  `org_${organizationId}`.replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 240);
 
-/** Selection records are keyed by member + Session so a Session never reads another's binding. */
+/** Selection records stay member-scoped: a Session binding belongs to its owner. */
 export const knowledgeSelectionKey = (organizationId: string, principalId: string, sessionId: string): string =>
-  `${knowledgeStateKey(organizationId, principalId)}_${sessionId}`.replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 240);
+  `${organizationId}_${principalId}_${sessionId}`.replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 240);
 
 /** Default endpoint of the local WeKnora deployment used during integration. */
 export const DEFAULT_BASE_URL = 'http://127.0.0.1:18081';

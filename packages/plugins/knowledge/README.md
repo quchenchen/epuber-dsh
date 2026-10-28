@@ -12,7 +12,7 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | 层 | 内容 |
 |---|---|
 | Host 服务 | `src/services/weknora-client.ts`（fetch、`X-API-Key`、超时、写操作不自动重试、错误归一化、分页）、`src/services/knowledge-service.ts`（只读查询 + 建/改/删 KB、上传、重新解析、删除、解析状态轮询） |
-| 配置存储 | storage domain `workdsh_knowledge`：`connections`（`baseUrl`、默认 KB、凭据引用、超时）、`selections`（按成员 + Session 的知识库绑定）；API Key 值不入库 |
+| 配置存储 | storage domain `workdsh_knowledge`：`connections`（**组织级**：`baseUrl`、默认 KB、凭据引用、超时，键 = `org_<organizationId>`）、`selections`（按成员 + Session 的知识库绑定）；API Key 值不入库 |
 | 凭据 | 通过 `ctx.credentials` 的引用保存（默认引用 `WEKNORA_API_KEY`），每个操作解析一次；只写不读、不进日志 |
 | Agent 工具（读） | `knowledge_list_kbs`（含 `search_mode`）、`knowledge_list_documents`、`knowledge_search`（结果带 `via`：inline 有 `knowledge_id`/`chunk_id`，wiki 有 `wiki_slug`/`source_knowledge_ids`）、`knowledge_read`、`knowledge_read_wiki`（读 wiki 页正文与来源文档） |
 | Agent 工具（写） | `knowledge_upload`（上传 UTF-8 文本内容并等待解析）、`knowledge_reparse`、`knowledge_delete`（⚠️ 破坏性，必须 `confirm=true`） |
@@ -128,10 +128,30 @@ Host 读取该库的 `embedding_model_id` 与 `chunking_config` 作为创建参�
 
 这样新文档可以在数秒内解析完成；需要 wiki/图谱/问题生成时在 WeKnora 控制台再打开。
 
-## 配置
+## 配置（组织级，成员零配置）
+
+连接设置属于**组织**，不属于个人：一条记录服务全体成员，键为 `org_<organizationId>`，
+不含 `principalId`。管理员配一次，成员打开即用，不需要各配一遍。
+
+| 谁 | 能做什么 |
+|---|---|
+| `owner` / `admin` | 读写：服务地址、默认知识库、API Key、超时 |
+| `member` | 只读继承；面板显示「由组织统一维护」，输入框禁用 |
+
+角色来自 `ctx.workdshIdentity.membership(orgId, principalId).role`。这不是纯 UI 约束：
+**允许成员改 `baseUrl`，等于允许成员把地址指向自己的服务器并收走服务端发过去的 Key**，
+所以非管理员写入在服务层直接抛 `knowledge/forbidden`（HTTP 403）。
 
 面板「设置」中填写：服务地址、默认知识库（可选）、API Key（提交后写入凭据服务，不再回显）。
 默认知识库既用于检索兜底，也作为新建知识库的默认模板。
+
+读取不会落库：未保存过配置时按「装配参数 → 环境变量 → 常量」实时合成，
+否则第一个打开面板的成员会把当时的 `WEKNORA_BASE_URL` 固化下来，之后改部署配置就不生效了。
+
+升级说明：v1 的 `connections` 记录是 per-member 的（`<org>_<principal>`），升级后不再被寻址。
+schema 仍能解析它（`knowledgeStateStoredSchema` 是 v1+v2 联合），因为 `storageDomain.open`
+会校验表内每一条记录——不兼容的 schema 会让整个插件启动失败，而不只是那条记录读不到。
+两个成员当初可能填了不同地址，没有唯一值可迁移，所以由管理员重新确认一次。
 
 也可以完全用环境变量启动：
 
@@ -207,6 +227,7 @@ node scripts/verify-knowledge-write-tools.mjs "<login-url-with-token>" # P2：Ag
 node scripts/verify-knowledge-reference.mjs "<login-url-with-token>"  # P3：@知识库 菜单 / chip / Session 绑定写入与读回
 node scripts/verify-knowledge-wiki.mjs "<login-url-with-token>"        # P6.2：图标区隔 / 仅 wiki 标注 / 问句命中 / 展开 wiki 页（10 项）
 node scripts/verify-knowledge-wiki-agent.mjs "<login-url-with-token>"  # P6.2：Agent 走 wiki 检索并给出处
+node scripts/verify-knowledge-settings.mjs "<login-url-with-token>"   # P7：组织级连接设置（读写往返 / 角色）
 ```
 
 live 契约检查（不经浏览器，直连 REST）：

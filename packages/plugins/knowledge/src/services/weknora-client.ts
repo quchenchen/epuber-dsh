@@ -14,6 +14,7 @@ export type KnowledgeErrorCode =
   | 'knowledge/bad-request'
   | 'knowledge/conflict'
   | 'knowledge/credential-missing'
+  | 'knowledge/forbidden'
   | 'knowledge/invalid-config'
   | 'knowledge/invalid-request'
   | 'knowledge/malformed'

@@ -21,6 +21,7 @@ import {
   knowledgeSelectionKey,
   knowledgeStateKey,
   type KnowledgeConnection,
+  type KnowledgeConnectionRow,
   type KnowledgeConnectionState,
   type KnowledgeSelectionEntry,
   type KnowledgeSelectionState,
@@ -316,6 +317,14 @@ export interface KnowledgeSettings {
   readonly apiKeyConfigured: boolean;
   /** The active provider layer, such as `env` or the provider store. */
   readonly apiKeySource?: string;
+  /** These settings belong to the organization, so one member's write serves everyone. */
+  readonly scope: 'organization';
+  /** Members read them; only owner/admin may change them. */
+  readonly canEdit: boolean;
+  /** The role that decided {@link canEdit}. */
+  readonly role?: 'owner' | 'admin' | 'member';
+  /** Last writer, so a member can tell whom to ask for a change. */
+  readonly updatedBy?: string;
 }
 
 export interface KnowledgeSettingsPatch {
@@ -434,8 +443,8 @@ const fileNameFromDisposition = (value: string | undefined): string | undefined 
  * is resolved from `ctx.credentials` per operation and never persisted here.
  */
 export class KnowledgeService extends Service {
-  static inject = ['storageDomain', 'credentials'];
-  private table?: KvTable<string, KnowledgeConnectionState>;
+  static inject = ['storageDomain', 'credentials', 'workdshIdentity'];
+  private table?: KvTable<string, KnowledgeConnectionRow>;
   private selectionTable?: KvTable<string, KnowledgeSelectionState>;
   private readonly options: KnowledgeServiceOptions;
 
@@ -453,11 +462,14 @@ export class KnowledgeService extends Service {
 
   async settings(actor: ActorContext, signal?: AbortSignal): Promise<KnowledgeSettings> {
     const state = await this.ensureState(actor, signal);
-    return this.settingsView(state.connection);
+    return this.settingsView(actor, state);
   }
 
   async updateSettings(actor: ActorContext, patch: KnowledgeSettingsPatch, signal?: AbortSignal): Promise<KnowledgeSettings> {
     signal?.throwIfAborted();
+    // The record is shared, so a write is a tenant-wide change: gate on the
+    // member's role rather than trusting whoever reached the endpoint.
+    this.requireManage(actor);
     const state = await this.ensureState(actor, signal);
     const current = state.connection;
     const defaultKbId = patch.defaultKbId === null ? undefined
@@ -474,8 +486,15 @@ export class KnowledgeService extends Service {
       if (value) await this.ctx.credentials.set(credentialRef(next.apiKeyRef), value);
     }
     signal?.throwIfAborted();
-    await this.states().put(this.key(actor), { ...state, connection: next, updatedAt: new Date().toISOString() });
-    return this.settingsView(next);
+    const written: KnowledgeConnectionState = {
+      schemaVersion: 2,
+      organizationId: actor.organizationId,
+      updatedBy: actor.principalId,
+      connection: next,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.states().put(this.key(actor), written);
+    return this.settingsView(actor, written);
   }
 
   async listKbs(actor: ActorContext, signal?: AbortSignal): Promise<readonly KnowledgeBase[]> {
@@ -1055,33 +1074,74 @@ export class KnowledgeService extends Service {
     });
   }
 
-  private async settingsView(connection: KnowledgeConnection): Promise<KnowledgeSettings> {
+  private async settingsView(actor: ActorContext, state: KnowledgeConnectionState): Promise<KnowledgeSettings> {
+    const connection = state.connection;
     const info = await this.ctx.credentials.describe(credentialRef(connection.apiKeyRef));
+    const role = this.roleOf(actor);
     return {
       ...connection,
       apiKeyConfigured: info.configured,
       ...(info.source ? { apiKeySource: info.source } : {}),
+      scope: 'organization',
+      canEdit: role === 'owner' || role === 'admin',
+      ...(role === undefined ? {} : { role }),
+      ...(state.updatedBy === undefined ? {} : { updatedBy: state.updatedBy }),
     };
+  }
+
+  /** The caller's role in this organization, or undefined when identity cannot say. */
+  private roleOf(actor: ActorContext): 'owner' | 'admin' | 'member' | undefined {
+    try {
+      return this.ctx.workdshIdentity.membership(actor.organizationId, actor.principalId)?.role;
+    } catch {
+      // An identity provider that is not ready must not crash a settings read;
+      // the undefined role is treated as "cannot manage" by requireManage.
+      return undefined;
+    }
+  }
+
+  /**
+   * Settings are tenant-wide, so changing them is an administrative action.
+   * A member who could repoint `baseUrl` would also be handing the stored API
+   * key to a server of their choosing, which is why this is not merely a UI rule.
+   */
+  private requireManage(actor: ActorContext): void {
+    const role = this.roleOf(actor);
+    if (role === 'owner' || role === 'admin') return;
+    throw new KnowledgeError('knowledge/forbidden', role === 'member'
+      ? '知识库连接设置由组织统一管理，只有所有者或管理员可以修改。'
+      : '无法确认当前成员在组织中的角色，已拒绝修改组织级知识库设置。');
   }
 
   private async ensureState(actor: ActorContext, signal?: AbortSignal): Promise<KnowledgeConnectionState> {
     signal?.throwIfAborted();
     this.validateActor(actor);
-    const key = this.key(actor);
-    const current = this.states().get(key);
+    const current = this.states().get(this.key(actor));
     if (current) {
-      if (current.owner.organizationId !== actor.organizationId || current.owner.principalId !== actor.principalId) throw new KnowledgeError('knowledge/invalid-request', '知识库连接配置归属不一致，无法执行操作。');
-      return current;
+      // A version 1 row can only be reached through a legacy key, but the type
+      // says both shapes are storable, so normalize before comparing owners.
+      const organizationId = current.schemaVersion === 2 ? current.organizationId : current.owner.organizationId;
+      if (organizationId !== actor.organizationId) throw new KnowledgeError('knowledge/invalid-request', '知识库连接配置归属不一致，无法执行操作。');
+      return {
+        schemaVersion: 2,
+        organizationId,
+        ...(current.schemaVersion === 2 && current.updatedBy !== undefined ? { updatedBy: current.updatedBy } : {}),
+        connection: current.connection,
+        updatedAt: current.updatedAt,
+      };
     }
-    const state: KnowledgeConnectionState = {
-      schemaVersion: 1,
-      owner: { organizationId: actor.organizationId, principalId: actor.principalId },
+    // Nothing stored yet: return the composed defaults without persisting. A
+    // read must not pin them, otherwise the first member to open the panel would
+    // freeze whatever WEKNORA_BASE_URL happened to be at that moment and a later
+    // deployment-level change would never take effect.
+    return {
+      schemaVersion: 2,
+      organizationId: actor.organizationId,
       connection: this.defaultConnection(),
       updatedAt: new Date().toISOString(),
     };
-    await this.states().put(key, state);
-    return state;
   }
+
 
   private defaultConnection(): KnowledgeConnection {
     const baseUrl = this.options.baseUrl ?? process.env.WEKNORA_BASE_URL ?? DEFAULT_BASE_URL;
@@ -1269,13 +1329,13 @@ export class KnowledgeService extends Service {
     return ref;
   }
 
-  private key(actor: ActorContext): string { return knowledgeStateKey(actor.organizationId, actor.principalId); }
+  private key(actor: ActorContext): string { return knowledgeStateKey(actor.organizationId); }
   private validateActor(actor: ActorContext): void {
     if (!actor.organizationId?.trim() || !actor.principalId?.trim() || !actor.requestId?.trim() || !actor.resolvedBy?.trim()) {
       throw new KnowledgeError('knowledge/invalid-request', '知识库操作缺少可信身份上下文。');
     }
   }
-  private states(): KvTable<string, KnowledgeConnectionState> {
+  private states(): KvTable<string, KnowledgeConnectionRow> {
     if (!this.table) throw new KnowledgeError('knowledge/unavailable', '知识库存储尚未就绪。');
     return this.table;
   }

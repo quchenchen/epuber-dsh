@@ -483,8 +483,14 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
   </div>;
 
   const settingsView = <div className="wd-knowledge-body">
-    <div className="wd-knowledge-toolbar"><div><h2>连接设置</h2><small>API Key 只写不读，由 Host 凭据服务持有</small></div></div>
-    <div className="wd-knowledge-form">
+    <div className="wd-knowledge-toolbar"><div><h2>连接设置</h2><small>组织级配置，全体成员共用一套；API Key 只写不读，由 Host 凭据服务持有</small></div></div>
+    {settings && !settings.canEdit
+      ? <div className="wd-knowledge-state" data-testid="settings-readonly">
+          当前是{settings.role === 'member' ? '成员' : '未确认'}身份，连接设置由组织所有者或管理员统一维护，你无需配置即可直接使用。
+          {settings.updatedBy ? `最后修改人：${settings.updatedBy}。` : ''}如需更换服务地址或凭据，请联系管理员。
+        </div>
+      : null}
+    <fieldset className="wd-knowledge-form" disabled={!settings?.canEdit}>
       <label>服务地址
         <Input data-testid="settings-base-url" value={form.baseUrl} placeholder="http://127.0.0.1:18081" onChange={event => setForm({ ...form, baseUrl: event.currentTarget.value })} />
         <small>WeKnora REST /api/v1 的部署地址，例如本机 http://127.0.0.1:18081。</small>
@@ -501,10 +507,10 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
         <small>凭据引用 {settings?.apiKeyRef ?? 'WEKNORA_API_KEY'} · {settings ? (settings.apiKeyConfigured ? `已配置（来源：${settings.apiKeySource ?? '未知'}）` : '未配置') : '读取中…'}。也可通过同名环境变量提供，密钥不会写入存储或日志。</small>
       </label>
       <div className="wd-knowledge-form-actions">
-        <Button variant="primary" data-testid="settings-save" disabled={busy} onClick={saveSettings}>保存设置</Button>
+        <Button variant="primary" data-testid="settings-save" disabled={busy || !settings?.canEdit} onClick={saveSettings}>保存设置</Button>
         <span>{busy ? '保存中…' : ''}</span>
       </div>
-    </div>
+    </fieldset>
   </div>;
 
   const content = view === 'settings' ? settingsView

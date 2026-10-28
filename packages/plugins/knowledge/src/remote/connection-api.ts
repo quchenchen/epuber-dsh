@@ -41,6 +41,7 @@ const errorMessages: Readonly<Record<string, string>> = {
 
 const statusFor = (code: string): number => {
   if (code === 'knowledge/unauthorized' || code === 'knowledge/credential-missing') return 401;
+  if (code === 'knowledge/forbidden') return 403;
   if (code === 'knowledge/not-found') return 404;
   if (code === 'knowledge/timeout') return 504;
   if (code === 'knowledge/network' || code === 'knowledge/upstream') return 502;
