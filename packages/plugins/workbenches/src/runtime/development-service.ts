@@ -1,5 +1,5 @@
 import type { DomainFacility } from '@deepseek-ai/dsh-storage-domain';
-import { assertActorContext, type ActorContext, type IdentityService, type WorkbenchInstallationRef, type WorkbenchDevelopment } from 'workdsh-contracts';
+import { assertActorContext, type ActorContext, type IdentityService, type WorkbenchInstallationRef, type WorkbenchDevelopment } from 'epuberdsh-contracts';
 import { WorkbenchDevelopmentIndex } from './development-index.js';
 import type { WorkbenchRequirementsService } from './requirements-service.js';
 

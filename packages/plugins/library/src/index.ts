@@ -14,7 +14,7 @@ export * from './runtime/context-injection.js';
 export * from './remote/connection-api.js';
 export * from './tools/library-tools.js';
 
-export const name = 'workdsh-plugin-library';
+export const name = 'epuberdsh-plugin-library';
 export const inject = ['storageDomain', 'connection', 'tools', 'systemPrompt', 'workdshIdentity'];
 
 export async function apply(ctx: Context, options: LibraryManagerOptions = {}): Promise<void> {

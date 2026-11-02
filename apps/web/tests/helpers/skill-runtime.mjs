@@ -10,6 +10,7 @@ import Sessions from '@deepseek-ai/dsh-session';
 import Projections from '@deepseek-ai/dsh-session-projection';
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
 import Tools from '@deepseek-ai/dsh-tools';
+import * as ToolExecutor from '@deepseek-ai/dsh-tool-executor-native';
 import Llm, { LlmAdapter, createMessage } from '@deepseek-ai/dsh-llm';
 import Skills from '@deepseek-ai/dsh-skill';
 import * as filesystem from '@deepseek-ai/dsh-skill-filesystem';
@@ -33,4 +34,4 @@ export class SkillRequestAdapter extends LlmAdapter {
   }
 }
 
-export { createMessage, Context, Agents, AgentLoop, Sessions, Projections, SystemPrompt, Tools, Llm, Skills, filesystem, skillTool };
+export { createMessage, Context, Agents, AgentLoop, Sessions, Projections, SystemPrompt, Tools, ToolExecutor, Llm, Skills, filesystem, skillTool };

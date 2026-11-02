@@ -88,7 +88,7 @@ test('enterprise project linking uses the existing fixed-member SessionAccessBri
   const task = await manager.linkTask(actor, project.project.id, 'native-enterprise', 'member task');
   assert.equal(authority.owners.get('native-enterprise').ownerPrincipalId, actor.principalId);
   assert.equal((await manager.taskContext(actor, task.sessionId)).project.id, project.project.id);
-}, { enterprise: true }));
+}, { enterprise: true, sessionAccess: false }));
 
 test('a changed owner and a cancelled request cannot reuse a project context', () => withProjects(async (manager, authority) => {
   const project = await manager.create(actor, { name: 'Current owner' });

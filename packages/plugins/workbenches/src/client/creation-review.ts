@@ -1,4 +1,4 @@
-import type {WorkbenchRequirementsDraft,WorkbenchRequirementsRevision} from 'workdsh-contracts';
+import type {WorkbenchRequirementsDraft,WorkbenchRequirementsRevision} from 'epuberdsh-contracts';
 import type {CreationView} from './creation-client.js';
 
 export interface WorkbenchCreationReview {

@@ -5,9 +5,12 @@ import type {Context} from '@deepseek-ai/cordis';
 import type {ProfileContext} from '@deepseek-ai/dsh-app-boot';
 import type {DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import type {HostConnectionHandle} from '@deepseek-ai/dsh-client-connection';
-import type {IdentityService,RuntimeBindingService} from 'workdsh-contracts';
+import type {IdentityService,RuntimeBindingService} from 'epuberdsh-contracts';
 import type {} from '@deepseek-ai/dsh-api-session-controller';
 import type {} from '@deepseek-ai/dsh-api-workspace-controller';
+import type {SessionHeader} from '@deepseek-ai/dsh-session-persistence';
+import type {SessionId} from '@deepseek-ai/dsh-session';
+import {readColdSessionLog} from '@deepseek-ai/dsh-session-query';
 import {WorkbenchCreationService} from './creation-service.js';
 import {createProfileWorkbenchTarget} from './profile-target.js';
 import {createProfileWorkbenchDevelopmentSourceVerifier} from './profile-development-source.js';
@@ -28,8 +31,13 @@ export async function mountWorkbenchCreationHost(ctx:Context,authoring:Awaited<R
   const captured={name:profile.name,dir:profile.dir,home:profile.home};
   const target=await createProfileWorkbenchTarget(ctx);
   const source=createProfileWorkbenchDevelopmentSourceVerifier(ctx);
-  const protectedSessions=ctx.get('workdshSessionAccess') as {create(request:Parameters<Context['sessionController']['create']>[0],signal?:AbortSignal):ReturnType<Context['sessionController']['create']>;inspect:Context['sessionController']['inspect']}|undefined;
-  const sessionAuthority=async(actor:import('workdsh-contracts').ActorContext,id:string,signal?:AbortSignal)=>{
+  const protectedSessions=ctx.get('workdshSessionAccess') as {create(request:Parameters<Context['sessionController']['create']>[0],signal?:AbortSignal):ReturnType<Context['sessionController']['create']>;inspect:(sessionId:SessionId,signal?:AbortSignal)=>Promise<{readonly meta:SessionHeader}>}|undefined;
+  const persistence=ctx.get('sessionPersistence');
+  const coldInspect=async(sessionId:SessionId,signal?:AbortSignal)=>{
+    if(!persistence)throw Error('workbench/session-authority-unavailable');
+    return {meta:(await readColdSessionLog(persistence,sessionId,signal)).header};
+  };
+  const sessionAuthority=async(actor:import('epuberdsh-contracts').ActorContext,id:string,signal?:AbortSignal)=>{
     signal?.throwIfAborted();ctx.fiber.assertActive();
     const actual=await identity.resolve({sessionId:id},signal),owner=access.sessionOwner(id);
     if(actual.principalId!==actor.principalId||actual.organizationId!==actor.organizationId||!owner||owner.ownerPrincipalId!==actor.principalId||owner.organizationId!==actor.organizationId)throw Error('workbench/creation-access-denied');
@@ -57,9 +65,8 @@ export async function mountWorkbenchCreationHost(ctx:Context,authoring:Awaited<R
       const owner=access.sessionOwner(id);
       if(owner&&(owner.ownerPrincipalId!==actor.principalId||owner.organizationId!==actor.organizationId))throw Error('workbench/creation-access-denied');
       if(row.sessionId){
-        const inspector=protectedSessions??ctx.sessionController;
         return resumeWorkbenchCreationSession(actor,row.sessionId,id,directory,{
-          authorize:sessionAuthority,inspect:(sessionId,signal)=>inspector.inspect(sessionId,signal),
+          authorize:sessionAuthority,inspect:(sessionId,signal)=>protectedSessions?protectedSessions.inspect(sessionId as SessionId,signal):coldInspect(sessionId as SessionId,signal),
           projections:(request,signal)=>ctx.sessionController.projections(request,signal),
         },check,signal);
       }
@@ -70,7 +77,7 @@ export async function mountWorkbenchCreationHost(ctx:Context,authoring:Awaited<R
       if(String(native.sessionId)!==id||native.agentPreset!=='cordis')throw Error('workbench/development-creator-required');
       if(!access.sessionOwner(id)&&identity.profile().organization.kind==='personal')await access.bindSession(actor,{sessionId:id},signal);
       await sessionAuthority(actor,id,signal);check();
-      const inspected=await (protectedSessions??ctx.sessionController).inspect(id as never);check();
+      const inspected=await coldInspect(id as SessionId);check();
       if(!inspected.meta.cwd||await realpath(inspected.meta.cwd)!==directory)throw Error('workbench/session-workspace-mismatch');
       return id;
     },

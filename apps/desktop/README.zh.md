@@ -55,8 +55,8 @@ corepack yarn check:desktop-dsh-alignment
 
 先构建共享功能及其必要支撑包。`pack-workdsh-profile.mjs` 在 `build/workdsh-profile-release` 生成不可变制品与版本/哈希清单；其他候选通过 `WORKDSH_RELEASE_DIRECTORY` 显式选择。运行时准备安装固定官方版本，生成可移植锁文件，并携带 pnpm JavaScript CLI 支持显式插件操作。`scripts/workdsh-package-boundary.mjs` 中的包清单定义经核对的默认 bundle 与必要支撑包，企业插件不包含在基础安装包中。同一 Profile 保留固定的 SkillHub 0.2.16 和 dshmarket 1.66.8 目录集成，不代表目录内容全部安装或经 WorkDSH 审核。不打包正在使用的用户配置或凭据。
 
-`upstream.json` 按用户明确要求，将 Desktop 与 Web 实际使用的 Host、Client 和 SDK npm 包统一固定为官方 **DSH 0.2.1-rc.3**。产品构建使用已发布包，不导入或编译官方源码。既有应用与 Profile 的实际版本需单独核验；版本一致性、Desktop 检查与打包运行时验收全部通过后才能宣布升级完成，Web 预览证据不能代替。默认选择经过验证的官方稳定版。
+`upstream.json` 按用户明确要求，将 Desktop 与 Web 实际使用的 Host、Client 和 SDK npm 包统一固定为官方 **DSH 0.2.2-alpha.2**。产品构建使用已发布包，不导入或编译官方源码。既有应用与 Profile 的实际版本需单独核验；版本一致性、Desktop 检查与打包运行时验收全部通过后才能宣布升级完成，Web 预览证据不能代替。默认选择经过验证的官方稳定版。
 
-官方 Desktop 归档单独提供 Node、pnpm、Python、Office 资源和预编译命令工具，每个目标记录实际归档版本、URL、大小和 SHA-512。上游尚未发布 Intel `rc.2` 归档，因此 Intel 工具明确使用官方 `0.2.1-rc.1` 归档并保留原始运行时元数据。这不会降级 DSH npm 包，也不启用自动回退；Intel 发行仍须通过实际安装包 x64 Resources 的验证。
+官方 Desktop 归档单独提供 Node、pnpm、Python、Office 资源和预编译命令工具，每个目标记录实际归档版本、URL、大小和 SHA-512。上游按分支分别发版，最新构建不一定对应最高版本号：`dsh-v0.2.1-rc.5` 是 0.2.1 分支的热修，版本号低于本仓库使用的 `0.2.2-alpha.2` npm 包。因此每个目标各自固定在它最新发布的归档上——Intel 为 `0.2.1-rc.4`，Apple Silicon 与 Windows 为 `0.2.1-rc.5`——并保留原始运行时元数据。这不会降级 DSH npm 包，也不启用自动回退。
 
 外壳源码与打包脚本位于本目录，共享 WorkDSH 功能源码位于仓库 `packages/`。官方 DSH 通过已发布包接入，不检出其源码。企业管理与模型转发由独立的 WorkDSH Admin 仓库负责。参见 [Desktop 归属](../../docs/desktop-boundaries.md)。

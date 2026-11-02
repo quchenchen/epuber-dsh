@@ -64,8 +64,8 @@ async function authenticate(address) {
   return cookie;
 }
 try {
-  await command(pnpm, ['--filter', 'workdsh-plugin-skills', 'pack', '--pack-destination', artifacts]);
-  await command(pnpm, ['--filter', 'workdsh-bundle', 'pack', '--pack-destination', artifacts]);
+  await command(pnpm, ['--filter', 'epuberdsh-plugin-skills', 'pack', '--pack-destination', artifacts]);
+  await command(pnpm, ['--filter', 'epuberdsh-bundle', 'pack', '--pack-destination', artifacts]);
   await command(dsh, ['--profile', 'probe', '--from-default-profile', 'web', '--dump-config']);
   // Official Profile composition explicitly installs feature layers. The product
   // bundle does not secretly initialize or own the Skill plugin.
@@ -78,7 +78,7 @@ try {
   assert.ok(config.includes("name: '@deepseek-ai/dsh-experimental-browser-use-playwright-mcp'"));
   assert.ok(config.includes("name: '@deepseek-ai/dsh-experimental-auto-review'"));
   assert.equal(config.split('id: workdsh-skills').length - 1, 1);
-  const installed = JSON.parse(readFileSync(resolve(home, 'profiles/probe/node_modules/workdsh-bundle/package.json'), 'utf8'));
+  const installed = JSON.parse(readFileSync(resolve(home, 'profiles/probe/node_modules/epuberdsh-bundle/package.json'), 'utf8'));
   assert.equal(installed.version, version);
   if (process.argv.includes('--browser')) {
     // Browser coverage needs one selectable official Workspace. Seed only the
@@ -128,7 +128,7 @@ try {
     const fixturePath = resolve(home, 'agents/skills/workdsh-browser-fixture/SKILL.md');
     const fixtureBefore = readFileSync(fixturePath, 'utf8');
     await stopServer();
-    await command(dsh, ['plugin', '--profile', 'probe', 'remove', 'workdsh-plugin-skills']);
+    await command(dsh, ['plugin', '--profile', 'probe', 'remove', 'epuberdsh-plugin-skills']);
     startServer();
     await until(() => serverOutput.includes('[workdsh:probe] activated') && /http:\/\/127\.0\.0\.1:\d+/.test(serverOutput), 'product without Skill');
     const shellAddress = serverOutput.match(/http:\/\/127\.0\.0\.1:\d+/)[0];
@@ -141,7 +141,7 @@ try {
   }
   // Bundle composition is validated across a stopped Host. Live removal is a separate capability.
   await stopServer();
-  await command(dsh, ['plugin', '--profile', 'probe', 'remove', 'workdsh-bundle']);
+  await command(dsh, ['plugin', '--profile', 'probe', 'remove', 'epuberdsh-bundle']);
   const removed = await command(dsh, ['--profile', 'probe', '--dump-config']);
   assert.ok(!removed.includes('workdsh-installation-probe'));
   assert.ok(!removed.includes("name: '@deepseek-ai/dsh-computer-use'"));

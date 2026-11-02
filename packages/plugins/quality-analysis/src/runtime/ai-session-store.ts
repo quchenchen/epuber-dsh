@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {defineDomain,type Domain,type DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import {z} from 'zod';
-import {assertActorContext,type ActorContext} from 'workdsh-contracts';
+import {assertActorContext,type ActorContext} from 'epuberdsh-contracts';
 import type {QualityReportDraftSummary} from '../domain/report-draft.js';
 import {qualityReportIdentifierSchema,qualityReportRevisionIdSchema} from '../domain/report-document.js';
 import {qualityFocusSelectionSchema,type QualityFocusSelection} from '../domain/analysis-focus.js';

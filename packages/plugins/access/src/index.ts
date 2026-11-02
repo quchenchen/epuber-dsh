@@ -7,6 +7,8 @@ import type {
 } from '@deepseek-ai/dsh-api-session-controller';
 import { defineDomain, domainTable, type KvTable } from '@deepseek-ai/dsh-storage-domain';
 import type { SessionId } from '@deepseek-ai/dsh-session';
+import { SessionPersistenceNotFoundError, type SessionInspection } from '@deepseek-ai/dsh-session-persistence';
+import { readColdSessionLog } from '@deepseek-ai/dsh-session-query';
 import type { PreToolDecision, ToolExecution, ToolExecutionResult, ToolExecutionToken } from '@deepseek-ai/dsh-tools';
 import { z } from 'zod';
 import {
@@ -30,7 +32,7 @@ import type {
   RuntimeBindingRequest,
   RuntimeBindingService,
   SessionOwnerBinding,
-} from 'workdsh-contracts';
+} from 'epuberdsh-contracts';
 
 type SessionAgentResult = Awaited<ReturnType<Context['sessionController']['resolveAgent']>>;
 
@@ -396,7 +398,7 @@ export interface SessionAccessBridgeConfig {
 
 /** Trusted Host ingress for WorkDSH Session creation and resume. */
 export class SessionAccessBridge extends Service {
-  static inject = ['sessionController', 'workdshIdentity', 'workdshAccess', 'workdshAudit'];
+  static inject = ['sessionController', 'sessionPersistence', 'workdshIdentity', 'workdshAccess', 'workdshAudit'];
   private readonly runtimeId: string;
   private readonly isolation: RuntimeBindingRequest['isolation'];
 
@@ -413,10 +415,10 @@ export class SessionAccessBridge extends Service {
     if (request.sessionId !== undefined && !this.ctx.workdshAccess.sessionOwner(String(sessionId))) {
       let exists = false;
       try {
-        await this.ctx.sessionController.inspect(sessionId, signal);
+        await readColdSessionLog(this.ctx.sessionPersistence, sessionId, signal);
         exists = true;
       } catch (error) {
-        if (!(error instanceof ApiSessionNotFound) && !hasErrorCode(error, 'session/not-found')) throw error;
+        if (!(error instanceof SessionPersistenceNotFoundError) && !(error instanceof ApiSessionNotFound) && !hasErrorCode(error, 'session/not-found')) throw error;
       }
       if (exists) {
         await this.audit(actor, 'session.create', 'denied', 'access/unbound-session-adoption');
@@ -445,7 +447,7 @@ export class SessionAccessBridge extends Service {
   }
 
   /** Private enterprise Session reads never inherit admin or material-sharing grants. */
-  async inspect(sessionId: SessionId, signal?: AbortSignal): Promise<Awaited<ReturnType<Context['sessionController']['inspect']>>> {
+  async inspect(sessionId: SessionId, signal?: AbortSignal): Promise<SessionInspection> {
     signal?.throwIfAborted();
     const actor = await this.ctx.workdshIdentity.resolve({ sessionId: String(sessionId) }, signal);
     const personal = this.ctx.workdshIdentity.profile().organization.kind === 'personal';
@@ -453,8 +455,17 @@ export class SessionAccessBridge extends Service {
     if (!personal && !(unbound && this.canBindFixedMemberSession(actor))) {
       this.assertPrivateSessionOwner(actor, String(sessionId));
     }
-    const result = await this.ctx.sessionController.inspect(sessionId, signal);
+    let log;
+    try {
+      log = await readColdSessionLog(this.ctx.sessionPersistence, sessionId, signal);
+    } catch (error) {
+      // The Controller used to raise ApiSessionNotFound for an absent log; keep
+      // that single taxonomy so absence and denial stay indistinguishable.
+      if (error instanceof SessionPersistenceNotFoundError || hasErrorCode(error, 'session/not-found')) throw new ApiSessionNotFound('Session not found');
+      throw error;
+    }
     signal?.throwIfAborted();
+    const result: SessionInspection = { meta: log.header, inheritedEventCount: log.inheritedEventCount, events: log.events };
     if (!personal) {
       const current = await this.ctx.workdshIdentity.resolve({ sessionId: String(sessionId) }, signal);
       if (current.principalId !== actor.principalId || current.organizationId !== actor.organizationId) throw new ApiSessionNotFound('Session not found');
@@ -604,7 +615,7 @@ export class ToolAccessBridge extends Service {
     } catch (error) {
       const code = error instanceof GovernanceContractError ? error.code : 'access/tool-policy-failed';
       if (actor) await this.auditTool(actor, exec, 'denied', code);
-      return { kind: 'deny', reason: `WorkDSH denied this tool call (${code}).` };
+      return { kind: 'deny', reason: `AI融媒中心 拒绝了这次工具调用（${code}）。` };
     }
     return next();
   }

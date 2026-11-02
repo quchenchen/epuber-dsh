@@ -107,7 +107,7 @@
       "src/client/components",
       "src/harness",
       "tests",
-      "resources/skills/workdsh-skill-creator",
+      "resources/skills/skill-creator",
       "resources/templates",
       "src/services/discovery",
       "src/services/preferences"

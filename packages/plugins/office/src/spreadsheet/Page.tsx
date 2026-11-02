@@ -3,7 +3,7 @@ import {createUniver,LocaleType,mergeLocales} from "@univerjs/presets";
 import {UniverSheetsCorePreset} from "@univerjs/preset-sheets-core";
 import ZhCN from "@univerjs/preset-sheets-core/locales/zh-CN";
 import sheetsCss from "@univerjs/preset-sheets-core/lib/index.css";
-import type {OfficeSpreadsheetSnapshot,OfficeSpreadsheetEditInput} from "workdsh-contracts/office";
+import type {OfficeSpreadsheetSnapshot,OfficeSpreadsheetEditInput} from "epuberdsh-contracts/office";
 import type {OfficeClient} from "../live/model.js";
 import {univerSnapshot,stateFromUniver} from "./adapter.js";
 import {downloadSpreadsheet} from "./xlsx.js";

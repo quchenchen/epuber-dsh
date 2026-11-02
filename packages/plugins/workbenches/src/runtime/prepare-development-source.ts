@@ -3,7 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, open, realpath, writeFile, lstat, link, rm } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import { parseWorkbenchSystemDefinition, type WorkbenchSystemDefinition, parseWorkbenchDescriptor, type WorkbenchDevelopment, type WorkbenchDescriptor } from 'workdsh-contracts';
+import { parseWorkbenchSystemDefinition, type WorkbenchSystemDefinition, parseWorkbenchDescriptor, type WorkbenchDevelopment, type WorkbenchDescriptor } from 'epuberdsh-contracts';
 
 /** Publish complete bytes without replacing a developer-owned destination. */
 async function writeNewSourceFile(directory:string,name:string,content:string,check:()=>void){

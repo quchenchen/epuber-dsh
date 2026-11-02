@@ -1,4 +1,4 @@
-import type { ActorContext, LibraryService } from 'workdsh-contracts';
+import type { ActorContext, LibraryService } from 'epuberdsh-contracts';
 import type { QualityCsvImporter } from './csv-import';
 import type {QualityXlsxImporter} from './xlsx-import';
 

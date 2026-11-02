@@ -7,7 +7,7 @@ const slotRequire = createRequire(new URL('../../workbench/package.json', import
 const react = createRequire(new URL('../../../ui/package.json', import.meta.url));
 const { SlotCore } = await import(pathToFileURL(slotRequire.resolve('@deepseek-ai/dsh-client-ui-slots')).href);
 const { build } = web('esbuild');
-const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/native-authoring.tsx', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { react: fileURLToPath(new URL('.', pathToFileURL(react.resolve('react')))), 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/index.ts', import.meta.url)) } });
+const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/native-authoring.tsx', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { react: fileURLToPath(new URL('.', pathToFileURL(react.resolve('react')))), 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/index.ts', import.meta.url)) } });
 const { mountNativeWorkbenchAuthoring: mount, WORKBENCH_AUTHORING_PANEL: key } = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 test('authoring native Slots withdraw together and active navigation returns to Conversation', () => {
  const core = new SlotCore(); core.register({ name: 'root', children: { main: { kind: 'keyed', scope: 'root' }, 'sidebar.panellist': { kind: 'list', scope: 'root' } } }, () => null);

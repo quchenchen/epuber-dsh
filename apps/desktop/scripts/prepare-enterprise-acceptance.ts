@@ -10,7 +10,7 @@ const { profile } = materializeRuntimeProfile(join(resources, 'profiles/workdsh'
 const file = join(profile, 'package.json')
 const pkg = JSON.parse(readFileSync(file, 'utf8'))
 pkg.dependencies ??= {}
-pkg.dependencies['workdsh-provider-identity-enterprise'] = 'file:' + resolve(identity)
-pkg.dependencies['workdsh-plugin-enterprise-collaboration'] = 'file:' + resolve(collaboration)
+pkg.dependencies['epuberdsh-provider-identity-enterprise'] = 'file:' + resolve(identity)
+pkg.dependencies['epuberdsh-plugin-enterprise-collaboration'] = 'file:' + resolve(collaboration)
 writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n', { mode: 0o600 })
 execFileSync(join(resources, 'primary-runtime/dependencies/node/bin/node'), [join(resources, 'primary-runtime/dependencies/pnpm/bin/pnpm.cjs'), '--dir', profile, 'install', '--prod'], { stdio: 'pipe', timeout: 240000 })

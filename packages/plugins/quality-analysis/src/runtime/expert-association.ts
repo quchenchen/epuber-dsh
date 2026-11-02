@@ -1,5 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis';
-import type { ExpertsService, ExecutionCreation, IdentityService, RuntimeBindingService } from 'workdsh-contracts';
+import type { ExpertsService, ExecutionCreation, IdentityService, RuntimeBindingService } from 'epuberdsh-contracts';
+import { qualitySessionInspector } from './session-inspector.js';
 
 export interface QualityExpertAssociation {
   readonly recordId: string;
@@ -57,11 +58,10 @@ export async function readQualityExpertInterpretation(
   if (binding.expertRevisionRef.expertId !== association.expertId || binding.expertRevisionRef.revisionId !== association.expertRevisionId || binding.compositionDigest !== association.compositionDigest || binding.creationOperationId !== association.creationOperationId) throw Error('quality/service/expert-binding-conflict');
   const creation = { sessionId: association.sessionId, binding, handoffId: '' };
   await verifyQualityExpertAssociation(ctx, association, creation, verifyRun, signal);
-  type Inspector = { inspect(sessionId: string, signal?: AbortSignal): Promise<{ events: readonly unknown[] }> };
-  const protectedSessions = ctx.get('workdshSessionAccess') as Inspector | undefined;
-  const native = ctx.get('sessionController') as Inspector | undefined;
+  const protectedSessions = ctx.get('workdshSessionAccess');
+  const native = ctx.get('sessionController');
   if (!native || (identity.profile().organization.kind !== 'personal' && !protectedSessions)) throw Error('quality/service/session-unavailable');
-  const inspected = await (protectedSessions ?? native).inspect(association.sessionId, signal);
+  const inspected = await qualitySessionInspector(ctx)(association.sessionId, signal);
   const verified = await verifyQualityExpertAssociation(ctx, association, creation, verifyRun, signal);
   const { readQualityInterpretationCandidate } = await import('./interpretation-candidate.js');
   const candidate = readQualityInterpretationCandidate({ recordId: association.recordId, runId: association.runId, contentHash: association.contentHash, sessionId: association.sessionId }, inspected.events);

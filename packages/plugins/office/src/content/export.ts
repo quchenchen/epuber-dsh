@@ -2,7 +2,7 @@ import {pdfBytes} from "../pdf/encode.js";
 import {spreadsheetXlsx} from "../spreadsheet/xlsx.js";
 import type { Context } from "@deepseek-ai/cordis";
 import type { ToolRunContext } from "@deepseek-ai/dsh-tools";
-import type { OfficeContentSnapshot } from "workdsh-contracts/office";
+import type { OfficeContentSnapshot } from "epuberdsh-contracts/office";
 import { documentDocx } from "../live/docx.js";
 import { parsePresentation } from "../presentation/native-deck.js";
 import { createHash } from "node:crypto";
@@ -68,11 +68,16 @@ export async function exportAndPresent(
   for(const [index,command] of commands.entries()) {
     exec.signal.throwIfAborted();
     let write;
-    try { write = await ctx.tools.execute({
-      name:"bash",arguments:{command,description:`Export current document as ${format}${commands.length>1?` (${index+1}/${commands.length})`:""}`,timeoutMs:30000},
-      callId:`${exec.callId}:office-write${index?`-${index}`:""}` as typeof exec.callId,
-      rootCallId:exec.rootCallId,parent:exec.token,agent:exec.agent,signal:exec.signal,
-    }); } catch {
+    try { const batch = await ctx.tools.execute({
+      calls: [{
+        type: "tool-call",
+        id:`${exec.callId}:office-write${index?`-${index}`:""}` as typeof exec.callId,
+        name:"bash",
+        arguments:JSON.stringify({command,description:`Export current document as ${format}${commands.length>1?` (${index+1}/${commands.length})`:""}`,timeoutMs:30000}),
+      }],
+      agent:exec.agent,signal:exec.signal,
+    }); write = batch.results[0]?.result;
+    if(write===undefined)throw new Error('no result'); } catch {
       throw new Error(`${format} 写入结果未知：${path}。未交付文件；重试 content_export 时使用同一 documentId 和 baseRevision ${snapshot.revision}，先核对已有文件，不覆盖原件。`);
     }
     for(const context of write.additionalContexts??[])exec.deferContext(context);
@@ -80,22 +85,24 @@ export async function exportAndPresent(
   }
   exec.signal.throwIfAborted();
   let present;
-  try { present = await ctx.tools.execute({
-    name: "present",
-    arguments: {
-      files: [
-        {
-          path,
-          description: `${snapshot.title} · ${format} · 修订 ${snapshot.revision}`,
-        },
-      ],
-    },
-    callId: `${exec.callId}:office-present` as typeof exec.callId,
-    rootCallId: exec.rootCallId,
-    parent: exec.token,
+  try { const batch = await ctx.tools.execute({
+    calls: [{
+      type: "tool-call",
+      id: `${exec.callId}:office-present` as typeof exec.callId,
+      name: "present",
+      arguments: JSON.stringify({
+        files: [
+          {
+            path,
+            description: `${snapshot.title} · ${format} · 修订 ${snapshot.revision}`,
+          },
+        ],
+      }),
+    }],
     agent: exec.agent,
     signal: exec.signal,
-  }); } catch {
+  }); present = batch.results[0]?.result;
+  if(present===undefined)throw new Error('no result'); } catch {
     throw new Error(`${format} 已导出到 ${path}，但原生交付结果未知，请核对卡片后对该路径重试 present。`);
   }
   for (const context of present.additionalContexts ?? [])

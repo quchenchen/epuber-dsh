@@ -43,7 +43,7 @@ test('Skill service waits, activates independently, disposes consumers and resto
     await settle(() => skillFiber.state === 2);
     await ctx.plugin(filesystem, { dshHome: process.env.DSH_HOME, agentsHome: process.env.DSH_AGENTS_HOME, watch: false });
     assert.equal(ctx.workdshSkills.contractVersion, 1);
-    const workbenchSkill = await ctx.skills.get('workdsh-workbench-dev', { cwd: home });
+    const workbenchSkill = await ctx.skills.get('workbench-dev', { cwd: home });
     assert.ok(workbenchSkill, 'workbench development resource is registered through official Skills');
     assert.match(workbenchSkill.content, /官方.*install_bundle/);
     assert.equal(workbenchSkill.resourceBase.kind, 'directory');
@@ -89,8 +89,8 @@ test('Skill service waits, activates independently, disposes consumers and resto
     assert.equal((await (await uploading).json()).error.code, 'skill/request-cancelled');
     assert.ok(cancelled, 'disposal cancels and drains the active upload');
     await settle(() => routes.size === 0 && ctx.workdshSkills === undefined && disposed.length === 4);
-    assert.equal(await ctx.skills.get('workdsh-skill-creator'), undefined);
-    for (const name of ['workdsh-ppt-design', 'workdsh-word-design', 'workdsh-excel-design', 'workdsh-web-design']) {
+    assert.equal(await ctx.skills.get('skill-creator'), undefined);
+    for (const name of ['ppt-design', 'word-design', 'excel-design', 'web-design']) {
       assert.equal(await ctx.skills.get(name), undefined, 'bundled authoring guidance is revoked with its owner');
     }
     assert.ok(ctx.unrelatedFeature.healthy);

@@ -1,4 +1,4 @@
-import type {LibraryOriginalRevisionInput, LibraryTreeEntry} from 'workdsh-contracts/library';
+import type {LibraryOriginalRevisionInput, LibraryTreeEntry} from 'epuberdsh-contracts/library';
 import type {QualityLibraryChoice} from './QualityLibraryImport.js';
 import {qualityLibraryChoice} from './library-choice.js';
 const digest=async(bytes:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes))),v=>v.toString(16).padStart(2,'0')).join('');

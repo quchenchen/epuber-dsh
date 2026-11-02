@@ -1,3 +1,4 @@
+import {installedCordis} from './support/cordis-version.mjs';
 import {preflightExternals} from './support/preflight-externals.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,7 +20,7 @@ const {build:esbuildBuild} =createRequire(join(rootPath,'apps/web/package.json')
 const build=options=>esbuildBuild({...options,plugins:[preflightExternals,...(options.plugins??[])]});
 async function loadOwned(relative) {
  const built=await build({entryPoints:[join(rootPath,'packages/plugins/workbenches/src/runtime',relative)],bundle:true,platform:'node',format:'esm',write:false,
-  alias:{'workdsh-contracts':join(rootPath,'packages/contracts/src/index.ts')},
+  alias:{'epuberdsh-contracts':join(rootPath,'packages/contracts/src/index.ts')},
   plugins:[{name:'published-storage',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|@deepseek-ai\/dsh-app-boot|zod)$/},args=>({path:pathToFileURL(officialRequire.resolve(args.path)).href,external:true}));}}]});
  return import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 }
@@ -73,7 +74,7 @@ test('official manager installs, updates and removes a local archive without eva
    let verifiedCommits=0;
    const request={installationRoot:profile,archivePath:archive,
     expected:{packageName:'workdsh-install-probe',version,workbenchId:descriptor.id},
-    host:{harnessVersion:'0.2.1-rc.1',cordisVersion:'4.0.5'},isCompatible:()=>true,authorize:()=>{},
+    host:{harnessVersion:'0.2.1-rc.1',cordisVersion:installedCordis},isCompatible:()=>true,authorize:()=>{},
     install:async (retained,signal,beforeInstall)=>{
      assert.notEqual(retained,archive);
      const before=await readFile(join(profile,'package.json'),'utf8');
@@ -179,12 +180,12 @@ test('official manager installs, updates and removes a local archive without eva
   const entries=[{title:'安装探针',development:{id:'service-development',workbenchId:descriptor.id,packageName:'workdsh-install-probe',iterationId:'service-iteration',requirementsRevision:'service-requirements',target}}];
   const archives={resolve:()=>{throw new Error('workbench/installation-archive-unavailable');},retainVerified:async facts=>verifyInstalledWorkbenchArtifact(profile,facts.path,facts)};
   try {
-   const service=await mountProfileWorkbenchImportHost(ctx,{list:async()=>principal===actor.principalId?entries:[]},()=>true,'4.0.5',archives);
+   const service=await mountProfileWorkbenchImportHost(ctx,{list:async()=>principal===actor.principalId?entries:[]},()=>true,installedCordis,archives);
    assert.equal(provided.get('workdshWorkbenchImport'),service);
    const request={developmentId:'service-development',intent:{id:'service-install',iterationId:'service-iteration',kind:'install',target,inputHash:expected.sha256},expected,archivePath:uploaded.path};
    await assert.rejects(service.run({...request,developmentId:'foreign-development'}),/development-owner-mismatch/);
    await assert.rejects(service.run({...request,expected:{...expected,packageName:'other-package'}}),/development-owner-mismatch/);
-   const prepareInput={installationRoot:profile,expected,host:{harnessVersion:'0.2.1-rc.1',cordisVersion:'4.0.5'},archives,isCompatible:()=>true,authorize:()=>{}};
+   const prepareInput={installationRoot:profile,expected,host:{harnessVersion:'0.2.1-rc.1',cordisVersion:installedCordis},archives,isCompatible:()=>true,authorize:()=>{}};
    assert.equal((await prepareWorkbenchImport(prepareInput)).kind,'install');
    const installed=await service.run(request);
    assert.equal(installed.state,'succeeded');assert.deepEqual(installed.receipt.package,candidate.receipt);

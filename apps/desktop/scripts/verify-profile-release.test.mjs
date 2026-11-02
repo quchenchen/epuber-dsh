@@ -72,24 +72,24 @@ test('rejects an older WorkDSH release instead of relabeling its compatibility',
 
 test('rejects a WorkDSH package built against another DSH version', () => {
   assert.doesNotThrow(() => verifyPackageDshReferences({
-    name: 'workdsh-plugin-experts',
+    name: 'epuberdsh-plugin-experts',
     peerDependencies: { '@deepseek-ai/dsh-agent': DSH_VERSION },
   }, DSH_VERSION))
   assert.throws(() => verifyPackageDshReferences({
-    name: 'workdsh-plugin-experts',
+    name: 'epuberdsh-plugin-experts',
     peerDependencies: { '@deepseek-ai/dsh-agent': '0.1.6-alpha.1' },
-  }, DSH_VERSION), /workdsh-plugin-experts references @deepseek-ai\/dsh-agent/)
+  }, DSH_VERSION), /epuberdsh-plugin-experts references @deepseek-ai\/dsh-agent/)
 })
 
 test('requires release package changes to be reviewed before Desktop bundles them', () => {
   assert.doesNotThrow(() => verifyProfileRelease({
     harness: DSH_VERSION,
-    packages: [{ name: 'workdsh-plugin-experts' }],
-  }, DSH_VERSION, ['workdsh-plugin-experts']))
+    packages: [{ name: 'epuberdsh-plugin-experts' }],
+  }, DSH_VERSION, ['epuberdsh-plugin-experts']))
   assert.throws(() => verifyProfileRelease({
     harness: DSH_VERSION,
-    packages: [{ name: 'workdsh-plugin-experts' }, { name: 'new-plugin' }],
-  }, DSH_VERSION, ['workdsh-plugin-experts']), /package set changed/)
+    packages: [{ name: 'epuberdsh-plugin-experts' }, { name: 'new-plugin' }],
+  }, DSH_VERSION, ['epuberdsh-plugin-experts']), /package set changed/)
 })
 
 function defaultProfile() {
@@ -101,11 +101,11 @@ function defaultProfile() {
 }
 
 test('Desktop ships the workbench platform with its default features and keeps business and enterprise plugins external', () => {
-  assert.deepEqual(PRODUCT_PACKAGES, ['workdsh-plugin-connectors', 'workdsh-plugin-experts', 'workdsh-plugin-library', 'workdsh-plugin-projects', 'workdsh-plugin-skills', 'workdsh-plugin-workbenches'])
-  assert.deepEqual(ENTERPRISE_PACKAGES, ['workdsh-provider-identity-enterprise', 'workdsh-plugin-enterprise-collaboration', 'workdsh-enterprise-connection'])
+  assert.deepEqual(PRODUCT_PACKAGES, ['epuberdsh-plugin-connectors', 'epuberdsh-plugin-experts', 'epuberdsh-plugin-library', 'epuberdsh-plugin-projects', 'epuberdsh-plugin-skills', 'epuberdsh-plugin-workbenches'])
+  assert.deepEqual(ENTERPRISE_PACKAGES, ['epuberdsh-provider-identity-enterprise', 'epuberdsh-plugin-enterprise-collaboration', 'epuberdsh-enterprise-connection'])
   assert.equal(RELEASE_PACKAGES.length, 13)
   assert.doesNotThrow(() => verifyDefaultProfile(defaultProfile()))
-  for (const name of ['workdsh-plugin-office', 'workdsh-plugin-notifications', 'workdsh-plugin-quality-analysis', ...ENTERPRISE_PACKAGES]) {
+  for (const name of ['epuberdsh-plugin-office', 'epuberdsh-plugin-notifications', 'epuberdsh-plugin-quality-analysis', ...ENTERPRISE_PACKAGES]) {
     const profile = defaultProfile()
     profile.optionalDependencies[name] = 'file:../external.tgz'
     assert.throws(() => verifyDefaultProfile(profile), /owned dependency closure changed/)
@@ -117,11 +117,11 @@ test('Desktop archives close every declared owned runtime dependency and include
   for (const name of RELEASE_PACKAGES) {
     const manifest = JSON.parse(readFileSync(join(desktop, PACKAGE_DIRECTORIES[name], 'package.json'), 'utf8'))
     assert.equal(manifest.name, name)
-    for (const dependency of Object.keys(requiredRuntimeDependencies(manifest)).filter(name => name.startsWith('workdsh-'))) {
+    for (const dependency of Object.keys(requiredRuntimeDependencies(manifest)).filter(name => name.startsWith('epuberdsh-'))) {
       assert.ok(RELEASE_PACKAGES.includes(dependency), `${name} requires an unshipped owned package: ${dependency}`)
     }
   }
-  const sdk = JSON.parse(readFileSync(join(desktop, PACKAGE_DIRECTORIES['workdsh-plugin-workbenches'], 'package.json'), 'utf8'))
+  const sdk = JSON.parse(readFileSync(join(desktop, PACKAGE_DIRECTORIES['epuberdsh-plugin-workbenches'], 'package.json'), 'utf8'))
   assert.equal(sdk.exports['./delivery'], './scripts/run-delivery.mjs')
   assert.equal(sdk.exports['./startup-check'], './scripts/check-startup.mjs')
   assert.ok(sdk.files.includes('scripts/run-delivery.mjs'))
@@ -136,9 +136,9 @@ test('enterprise delivery cannot activate or expose enterprise identity in the d
   exposed.dependencies[ENTERPRISE_PACKAGES[0]] = exposed.optionalDependencies[ENTERPRISE_PACKAGES[0]]
   delete exposed.optionalDependencies[ENTERPRISE_PACKAGES[0]]
   assert.throws(() => verifyDefaultProfile(exposed), /direct features changed/)
-  assert.doesNotThrow(() => verifyDefaultComposition('- id: workdsh-identity-local\n  name: workdsh-provider-identity-local\n'))
-  assert.throws(() => verifyDefaultComposition('- insert:\n    - id: workdsh-identity-enterprise\n      name: workdsh-provider-identity-enterprise\n'), /active in the default personal composition/)
-  assert.throws(() => verifyDefaultComposition('- name: workdsh-provider-identity-enterprise/desktop\n'), /active in the default personal composition/)
+  assert.doesNotThrow(() => verifyDefaultComposition('- id: workdsh-identity-local\n  name: epuberdsh-provider-identity-local\n'))
+  assert.throws(() => verifyDefaultComposition('- insert:\n    - id: workdsh-identity-enterprise\n      name: epuberdsh-provider-identity-enterprise\n'), /active in the default personal composition/)
+  assert.throws(() => verifyDefaultComposition('- name: epuberdsh-provider-identity-enterprise/desktop\n'), /active in the default personal composition/)
 })
 
 test('default Profile rejects a missing or duplicate feature and exposed infrastructure', () => {
@@ -149,8 +149,8 @@ test('default Profile rejects a missing or duplicate feature and exposed infrast
   duplicate.dsh.profile.bundles.push(PRODUCT_PACKAGES[0])
   assert.throws(() => verifyDefaultProfile(duplicate), /selected features changed/)
   const infrastructure = defaultProfile()
-  infrastructure.dependencies['workdsh-plugin-access'] = infrastructure.optionalDependencies['workdsh-plugin-access']
-  delete infrastructure.optionalDependencies['workdsh-plugin-access']
+  infrastructure.dependencies['epuberdsh-plugin-access'] = infrastructure.optionalDependencies['epuberdsh-plugin-access']
+  delete infrastructure.optionalDependencies['epuberdsh-plugin-access']
   assert.throws(() => verifyDefaultProfile(infrastructure), /direct features changed/)
 })
 
@@ -158,7 +158,7 @@ test('release archives reject changed bytes and unsafe metadata before installat
   const directory = mkdtempSync(join(tmpdir(), 'workdsh-release-check-'))
   try {
     const bytes = Buffer.from('owned archive fixture')
-    const item = { name: 'workdsh-plugin-experts', filename: 'experts.tgz', sha256: createHash('sha256').update(bytes).digest('hex') }
+    const item = { name: 'epuberdsh-plugin-experts', filename: 'experts.tgz', sha256: createHash('sha256').update(bytes).digest('hex') }
     writeFileSync(join(directory, item.filename), bytes)
     assert.doesNotThrow(() => verifyReleaseArchives({ packages: [item] }, directory))
     writeFileSync(join(directory, item.filename), 'changed archive')

@@ -3,7 +3,7 @@ import{createWorkbenchCatalogClient,type WorkbenchCatalogEntry}from'./catalog-cl
 import{createWorkbenchActivationClient}from'./activation-client.js';
 import{createWorkbenchDevelopmentClient}from'./development-client.js';
 import{workbenchDeliveryState}from'./delivery-state.js';
-import type{WorkbenchDevelopmentIndexEntry}from'workdsh-contracts';
+import type{WorkbenchDevelopmentIndexEntry}from'epuberdsh-contracts';
 import type{AcceptanceBinding}from'../runtime/acceptance-service.js';
 type Review={binding?:AcceptanceBinding;ready:boolean;criteria?:string;accepted?:{acceptedAt:string}};
 export function WorkbenchDelivery({entry,criteria,refreshToken,canOpen,onOpen,onPackage,onFeedback,onContinue,submitting,submissionMessage,submissionError}:{submitting?:boolean;submissionMessage?:string;submissionError?:string;entry:WorkbenchDevelopmentIndexEntry;criteria?:string;refreshToken:number;canOpen?:(id:string)=>boolean;onOpen?:(id:string)=>void;onPackage:()=>void;onFeedback:()=>void;onContinue:()=>void}){

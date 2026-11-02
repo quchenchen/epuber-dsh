@@ -23,7 +23,7 @@ test('instruction carries stable identity and module impact without inventing so
   assert.deepEqual(context.adjustment.affectedModuleIds, ['data', 'report']);
   assert.equal(context.requirementsRevision, 'req-1');
   assert.match(text, /cordis-plugin-development/);
-  assert.match(text, /workdsh-workbench-dev/);
+  assert.match(text, /workbench-dev/);
   assert.match(text, /官方创造模式/);
   assert.ok(text.length < 3000, 'handoff references packaged rules instead of copying them into a huge prompt');
 });

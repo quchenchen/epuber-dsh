@@ -34,21 +34,21 @@ const groupVersion = manifest.runtimeOverrides?.['@deepseek-ai/cordis-plugin-gro
 if (typeof groupVersion !== 'string' || !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/.test(groupVersion)) throw new Error('Release manifest must pin the exact official Cordis group version.');
 const packages = new Map(manifest.packages.map(item => [item.name, item]));
 const defaultInstallOrder = [
-  'workdsh-provider-identity-local',
-  'workdsh-provider-browser-session',
-  'workdsh-plugin-audit',
-  'workdsh-plugin-access',
-  'workdsh-plugin-skills',
+  'epuberdsh-provider-identity-local',
+  'epuberdsh-provider-browser-session',
+  'epuberdsh-plugin-audit',
+  'epuberdsh-plugin-access',
+  'epuberdsh-plugin-skills',
   // The experts layer installs and activates the three official DSH Agent Team modules.
-  'workdsh-plugin-experts',
-  'workdsh-plugin-connectors',
-  'workdsh-plugin-library',
-  'workdsh-plugin-workbenches',
-  'workdsh-bundle',
+  'epuberdsh-plugin-experts',
+  'epuberdsh-plugin-connectors',
+  'epuberdsh-plugin-library',
+  'epuberdsh-plugin-workbenches',
+  'epuberdsh-bundle',
 ];
 
 const optionalFeatures = {
-  office:'workdsh-plugin-office',projects:'workdsh-plugin-projects',activity:'workdsh-plugin-activity','quality-analysis':'workdsh-plugin-quality-analysis',
+  office:'epuberdsh-plugin-office',projects:'epuberdsh-plugin-projects',activity:'epuberdsh-plugin-activity','quality-analysis':'epuberdsh-plugin-quality-analysis',
 };
 const requested = value('--with','');
 if (typeof requested !== 'string') throw new Error('--with requires comma-separated feature names');
@@ -179,7 +179,7 @@ execute(['plugin', '--profile', profile, 'add', `@deepseek-ai/dsh-base@${expecte
 if (!dryRun) {
   const profilePackage = JSON.parse(readFileSync(profileManifest, 'utf8'));
   const bundles = profilePackage.dsh?.profile?.bundles ?? [];
-  for (const name of installOrder) if (name !== 'workdsh-provider-browser-session' && !bundles.includes(name)) bundles.push(name);
+  for (const name of installOrder) if (name !== 'epuberdsh-provider-browser-session' && !bundles.includes(name)) bundles.push(name);
   profilePackage.dsh = { ...profilePackage.dsh, profile: { ...profilePackage.dsh?.profile, bundles } };
   writeFileSync(profileManifest, JSON.stringify(profilePackage, null, 2) + '\n');
 }

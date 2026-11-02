@@ -1,7 +1,7 @@
 import type {createQualityExpertTasks} from './expert-tasks.js';
 import type {QualityExpertAssociation} from './expert-association.js';
 import type {QualityInterpretationCandidate} from './interpretation-candidate.js';
-import type { LibraryService, ProjectService } from 'workdsh-contracts';
+import type { LibraryService, ProjectService } from 'epuberdsh-contracts';
 import {qualityCleaningRequestSchema,qualityConfigurationRequestSchema,qualityAnalyzeRequestSchema,qualityLibraryImportRequestSchema} from './configuration-request.js';
 import type {QualityAnalysisExecutor} from './analysis-executor.js';
 import type {QualityAnalysisRunService,QualityLibraryInputPorts} from './run-service.js';

@@ -13,7 +13,7 @@ import { handleWorkbenchUploadRequest, workbenchUploadPath } from './upload-rpc.
 import type { Context } from '@deepseek-ai/cordis';
 import type { ProfileContext } from '@deepseek-ai/dsh-app-boot';
 import type { DomainFacility } from '@deepseek-ai/dsh-storage-domain';
-import { assertActorContext, type IdentityService, type WorkbenchDescriptor } from 'workdsh-contracts';
+import { assertActorContext, type IdentityService, type WorkbenchDescriptor } from 'epuberdsh-contracts';
 import { WorkbenchDevelopmentOperations, type WorkbenchOperationIntent } from './development-operations.js';
 import { WorkbenchOperationRunner } from './operation-runner.js';
 import { createProfileWorkbenchInstaller } from './profile-installer.js';

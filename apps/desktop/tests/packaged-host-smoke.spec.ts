@@ -4,16 +4,16 @@ import { inspectStartedHost, hostSmokeEnvironment, waitForPackagedHostReady } fr
 
 describe('packaged full Host startup', () => {
   it('requires initialized selected products while allowing optional lazy official plugins', () => {
-    const profile = { startedBundles: ['workdsh-plugin-workbenches'], installAnchor: '/actual/resources/profile-installation.json' }
+    const profile = { startedBundles: ['epuberdsh-plugin-workbenches'], installAnchor: '/actual/resources/profile-installation.json' }
     const values = new Map<string, unknown>([['profileContext', profile], ['workdshWorkbenchRegistration', {}], ['storageDomain', {}]])
     const mandatory = { name: 'workdsh-workbenches', fibers: [{ state: 2 }] }
     const ctx = { fiber: { state: 2 }, get: (key: string) => values.get(key), registry: new Map([['owned', mandatory], ['optional-model', { name: 'optional-model', fibers: [{ state: 0 }] }]]) }
-    expect(inspectStartedHost(ctx, { 'workdsh-plugin-workbenches': 'workdshWorkbenchRegistration' }, ['storageDomain']).services).toEqual(['workdshWorkbenchRegistration'])
+    expect(inspectStartedHost(ctx, { 'epuberdsh-plugin-workbenches': 'workdshWorkbenchRegistration' }, ['storageDomain']).services).toEqual(['workdshWorkbenchRegistration'])
     mandatory.fibers[0]!.state = 0
-    expect(() => inspectStartedHost(ctx, { 'workdsh-plugin-workbenches': 'workdshWorkbenchRegistration' }, ['storageDomain'])).toThrow('initialization is incomplete')
+    expect(() => inspectStartedHost(ctx, { 'epuberdsh-plugin-workbenches': 'workdshWorkbenchRegistration' }, ['storageDomain'])).toThrow('initialization is incomplete')
     mandatory.fibers[0]!.state = 2
     values.delete('workdshWorkbenchRegistration')
-    expect(() => inspectStartedHost(ctx, { 'workdsh-plugin-workbenches': 'workdshWorkbenchRegistration' }, ['storageDomain'])).toThrow('service is unavailable')
+    expect(() => inspectStartedHost(ctx, { 'epuberdsh-plugin-workbenches': 'workdshWorkbenchRegistration' }, ['storageDomain'])).toThrow('service is unavailable')
   })
 
   it('does not inherit credentials, real Home or user DSH state', () => {
@@ -35,7 +35,7 @@ describe('packaged full Host startup', () => {
   })
 
   it('waits for both official ready and product service receipt', async () => {
-    const child = spawn(process.execPath, ['-e', `process.send({kind:'workdsh-packaged-host-ready',products:['workdsh-plugin-workbenches'],services:['workdshWorkbenchRegistration'],installAnchor:'/actual/anchor'});setTimeout(()=>console.log('http://127.0.0.1:12345/?token=private-process-token'),20);setTimeout(()=>{},3000);`], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] })
+    const child = spawn(process.execPath, ['-e', `process.send({kind:'workdsh-packaged-host-ready',products:['epuberdsh-plugin-workbenches'],services:['workdshWorkbenchRegistration'],installAnchor:'/actual/anchor'});setTimeout(()=>console.log('http://127.0.0.1:12345/?token=private-process-token'),20);setTimeout(()=>{},3000);`], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] })
     try {
       const startup = waitForPackagedHostReady(child, { timeoutMs: 2000 })
       const result = await startup.ready

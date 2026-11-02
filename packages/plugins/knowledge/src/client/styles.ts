@@ -1,4 +1,4 @@
-import { controlsCss, modalCss } from 'workdsh-ui';
+import { controlsCss, modalCss } from 'epuberdsh-ui';
 
 /**
  * The knowledge panel reuses the shared control styles and the Harness theme
@@ -30,7 +30,11 @@ ${controlsCss}
 .wd-knowledge-kb-glyph{flex:0 0 24px;height:24px;display:grid;place-items:center;border-radius:6px;background:var(--dsw-alias-bg-layer-2);font-size:13px}
 .wd-knowledge-kb-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wd-knowledge-kb-count{color:var(--dsw-alias-label-tertiary);font-size:12px}
-.wd-knowledge-sidebar footer{padding:12px 18px;border-top:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-tertiary);font-size:12px;display:grid;gap:3px;word-break:break-all}
+.wd-knowledge-sidebar footer{padding:12px 18px;border-top:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-tertiary);font-size:12px;display:grid;gap:2px;min-width:0}
+.wd-knowledge-conn-meta{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--dsw-alias-label-tertiary)}
+.wd-knowledge-conn-meta.action{border:0;padding:0;background:transparent;font:inherit;font-size:11px;color:var(--dsw-alias-label-tertiary);text-align:left;cursor:pointer}
+.wd-knowledge-conn-action{color:var(--dsw-alias-label-secondary);text-decoration:underline;text-underline-offset:2px}
+.wd-knowledge-conn-meta.action:hover .wd-knowledge-conn-action{color:var(--dsw-alias-label-primary)}
 .wd-knowledge-content{min-width:0;min-height:0;overflow:auto;position:relative;background:var(--dsw-alias-bg-base)}
 .wd-knowledge-header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;height:64px;padding:0 26px;border-bottom:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base);backdrop-filter:blur(12px)}
 .wd-knowledge-header-left{display:flex;align-items:center;gap:10px;min-width:0}

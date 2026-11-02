@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import type {Context} from '@deepseek-ai/cordis';
 import {defineTool,type ToolRunContext} from '@deepseek-ai/dsh-tools';
 import type {DomainFacility} from '@deepseek-ai/dsh-storage-domain';
-import {assertActorContext,type ActorContext,type IdentityService,type LibraryService,type RuntimeBindingService} from 'workdsh-contracts';
+import {assertActorContext,type ActorContext,type IdentityService,type LibraryService,type RuntimeBindingService} from 'epuberdsh-contracts';
 import {z} from 'zod';
 import {QualityAiSessionStore,qualityAiReportTargetSchema,type QualityAiContext,type QualityAiReportTarget} from './ai-session-store.js';
 import type {QualityAnalysisRunService} from './run-service.js';

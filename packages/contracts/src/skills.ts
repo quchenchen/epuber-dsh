@@ -168,7 +168,7 @@ export interface StagedSkillImport {
   readonly expiresAt: string;
 }
 
-export type SkillManagementEndpoint = 'list' | 'detail' | 'update' | 'resource' | 'write-resource' | 'set-enabled' | 'dependency-impact' | 'uninstall' | 'batch' | 'trash-list' | 'restore' | 'commit-import' | 'discard-import' | 'catalog' | 'install-catalog';
+export type SkillManagementEndpoint = 'list' | 'detail' | 'update' | 'resource' | 'write-resource' | 'set-enabled' | 'dependency-impact' | 'uninstall' | 'batch' | 'trash-list' | 'restore' | 'commit-import' | 'discard-import' | 'catalog' | 'install-catalog' | 'repair-identity';
 export interface SkillManagementFailure { readonly code: string; readonly message: string; }
 export type SkillManagementResult<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: SkillManagementFailure };
 
@@ -186,6 +186,8 @@ export interface SkillManagementService extends SkillRevisionProvider {
   detail(name: string, signal?: AbortSignal): Promise<ManagedSkillDetail | undefined>;
   readResource(name: string, path: string): Promise<ManagedSkillResource>;
   update(request: SkillWriteRequest): Promise<ManagedSkillDetail>;
+  /** Repairs a missing or non-kebab identity, moving the original display name into `title`. */
+  repairIdentity(name: string): Promise<ManagedSkillDetail>;
   writeResource(request: SkillResourceWriteRequest): Promise<ManagedSkillResource>;
   validateDocument(document: string, expectedName?: string): SkillValidationResult;
   saveDraft(request: SkillDraftWriteRequest): Promise<SkillDraft>;

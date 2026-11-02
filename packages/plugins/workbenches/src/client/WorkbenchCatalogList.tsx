@@ -1,6 +1,6 @@
 import {WorkbenchMenu} from './WorkbenchMenu.js';
 import React from 'react';
-import type {WorkbenchDevelopmentIndexEntry} from 'workdsh-contracts';
+import type {WorkbenchDevelopmentIndexEntry} from 'epuberdsh-contracts';
 import type {WorkbenchCatalogEntry} from './catalog-client.js';
 import {catalogStatus} from './catalog-status.js';
 

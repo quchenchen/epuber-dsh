@@ -14,12 +14,12 @@ const load=name=>import(pathToFileURL(runtime.resolve(name)).href);
 const {Context}=await load('@deepseek-ai/cordis');const {default:Storage}=await load('@deepseek-ai/dsh-storage');
 const JsonStorage=await load('@deepseek-ai/dsh-storage-json');const StorageDomain=await load('@deepseek-ai/dsh-storage-domain');
 const nativeLoad=name=>import(pathToFileURL(web.resolve(name)).href);
-const [Agents,AgentLoop,Sessions,Projections,SystemPrompt,Tools,Llm]=await Promise.all(['dsh-agent','dsh-agent-loop','dsh-session','dsh-session-projection','dsh-system-prompt','dsh-tools','dsh-llm'].map(name=>nativeLoad('@deepseek-ai/'+name)));
+const [Agents,AgentLoop,Sessions,Projections,SystemPrompt,Tools,ToolExecutor,Llm]=await Promise.all(['dsh-agent','dsh-agent-loop','dsh-session','dsh-session-projection','dsh-system-prompt','dsh-tools','dsh-tool-executor-native','dsh-llm'].map(name=>nativeLoad('@deepseek-ai/'+name)));
 const actor={principalId:'member.a',organizationId:'org',requestId:'quality-ai-test',resolvedBy:'trusted-fixture'};
 const compiled=await build({stdin:{contents:"export * from './ai-tools';export * from './run-service';export * from './analysis-run';export * from './analysis-executor';export * from './record-rpc';export {LibraryManager} from '../../../library/src/services/library-manager';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,
- alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'shared-published-runtime',setup(b){
+ alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'shared-published-runtime',setup(b){
   b.onResolve({filter:/^(?:@deepseek-ai\/cordis|@deepseek-ai\/dsh-storage-domain|zod)$/},a=>({path:pathToFileURL(runtime.resolve(a.path)).href,external:true}));
-  b.onResolve({filter:/^(?:@deepseek-ai\/dsh-tools|workdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},a=>({path:pathToFileURL(libraryRequire.resolve(a.path)).href,external:true}));
+  b.onResolve({filter:/^(?:@deepseek-ai\/dsh-tools|epuberdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},a=>({path:pathToFileURL(libraryRequire.resolve(a.path)).href,external:true}));
  }}]});
 function proxy(object,overrides){return new Proxy(object,{get(target,key){if(Object.hasOwn(overrides,key))return overrides[key];const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});}
 
@@ -32,9 +32,17 @@ async function fixture(t,{rows,fault,filter,decisions,actualWorker=false,nativeA
   f.ctx=new Context();await f.ctx.plugin(Storage);await f.ctx.plugin(JsonStorage,{root:join(root,'storage')});await f.ctx.plugin(StorageDomain,{backend:'json'});await f.ctx.plugin(source.LibraryManager,{root:join(root,'library')});f.library=f.ctx.workdshLibrary;
   f.ctx.provide('workdshAccess',{sessionOwner(){return state.owner;}});
   if(nativeAgent){
-   for(const module of [SystemPrompt,Tools,Llm,Sessions,Agents,Projections])await f.ctx.plugin(module.default);
+   for(const module of [SystemPrompt,Tools,ToolExecutor,Llm,Sessions,Agents,Projections])await f.ctx.plugin(module.default??module);
    await f.ctx.plugin(AgentLoop.default,{agents:[]});
-   f.agentHandle=await f.ctx.agents.create({sessionId:Sessions.SessionId(f.sessionId),meta:{cwd:root}});f.agent=f.agentHandle.agent;
+   // dsh-agent-loop 0.2.2 activates on the next turn; the real Host boots asynchronously,
+   // so wait for the service instead of assuming it is ready when plugin() returns.
+   for(let attempt=0;attempt<200&&!f.ctx.get('agentLoop');attempt++)await new Promise(resolve=>setImmediate(resolve));
+   if(!f.ctx.get('agentLoop'))throw new Error('fixture/agent-loop-not-active');
+   // dsh-agent-loop 0.2.2 refuses to open a turn without a provider/model, so the
+   // fixture registers a deterministic adapter; these tests never assert model text.
+   class FixtureAdapter extends Llm.LlmAdapter{async *stream(){yield {type:'block-start',index:0,blockType:'text'};yield {type:'block-end',index:0,block:{type:'text',text:'fixture'}};yield {type:'finish',reason:{kind:'stop'}};}}
+   f.ctx.llm.registerAdapter(['fixture'],new FixtureAdapter());
+   f.agentHandle=await f.ctx.agents.create({sessionId:Sessions.SessionId(f.sessionId),meta:{cwd:root},agentOptions:{provider:'fixture',model:'fixture',cwd:root}});f.agent=f.agentHandle.agent;
   }
   const storage=proxy(f.ctx.storageDomain,{open:async spec=>{
    const domain=await f.ctx.storageDomain.open(spec);if(!spec.name.startsWith('workdsh_quality_ai_'))return domain;

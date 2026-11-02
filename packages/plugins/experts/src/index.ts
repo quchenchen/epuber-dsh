@@ -20,13 +20,13 @@ export * from './runtime/execution-guard.js';
  * Host plugin entry for WorkDSH experts (D04 / P1-02, expert module 0.1).
  *
  * This is an independent, Loader-recognised entry: `cordis.patch.yml` inserts
- * `workdsh-plugin-experts`, and the official Loader calls `apply(ctx)` after the
+ * `epuberdsh-plugin-experts`, and the official Loader calls `apply(ctx)` after the
  * injected services resolve. It does NOT rely on the bundle calling a shared
  * helper, so experts owns its own service, transport, tools and bundled skill and
  * can be disposed completely without touching other plugins.
  */
 
-export const name = 'workdsh-plugin-experts';
+export const name = 'epuberdsh-plugin-experts';
 
 /** Every service `apply` and `ExpertsManager` require, resolved before load. */
 export const inject = [

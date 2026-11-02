@@ -77,7 +77,7 @@ const client = await build({
 });
 await writeFile(
   new URL("dist/client.browser.js", root),
-  `window.__ModuleLoader__.load({id:"workdsh-plugin-office",factory:function(require){const module={exports:{}};${client.outputFiles[0].text}\nreturn module.exports;}});`,
+  `window.__ModuleLoader__.load({id:"epuberdsh-plugin-office",factory:function(require){const module={exports:{}};${client.outputFiles[0].text}\nreturn module.exports;}});`,
 );
 const host = await build({
   metafile: true,

@@ -28,6 +28,15 @@ export class WorkbenchInstallationArchives {
     try {store.read();return store;} catch(cause) {await store.close();throw cause;}
   }
   async retainVerified(input:Omit<z.infer<typeof entrySchema>,'verifiedAt'>, authorize:()=>void, signal?:AbortSignal) {
+    return this.retain(input,authorize,signal,false);
+  }
+  /** Installer seed path only: replace a retained receipt for the same version
+   * when its archive can no longer certify the installed bytes. The candidate
+   * archive is verified against those bytes before it supersedes the old one. */
+  async supersedeVerified(input:Omit<z.infer<typeof entrySchema>,'verifiedAt'>, authorize:()=>void, signal?:AbortSignal) {
+    return this.retain(input,authorize,signal,true);
+  }
+  private async retain(input:Omit<z.infer<typeof entrySchema>,'verifiedAt'>, authorize:()=>void, signal:AbortSignal|undefined, supersede:boolean) {
     this.assertOpen();
     const captured=entrySchema.parse({...input,verifiedAt:new Date().toISOString()});
     const pending=this.queue.then(async()=>{
@@ -35,7 +44,7 @@ export class WorkbenchInstallationArchives {
       await verifyInstalledWorkbenchArtifact(this.root,captured.path,captured,signal);
       signal?.throwIfAborted();authorize();
       const state=this.read(), existing=state.entries.find(row=>row.packageName===captured.packageName && row.version===captured.version);
-      if (existing && (existing.sha256!==captured.sha256 || existing.workbenchId!==captured.workbenchId)) throw new Error('workbench/installation-version-conflict');
+      if (existing && (existing.workbenchId!==captured.workbenchId || (!supersede && existing.sha256!==captured.sha256))) throw new Error('workbench/installation-version-conflict');
 
       if (state.entries.length>=4096) throw new Error('workbench/installation-archive-limit');
       const retainedPath=await retainWorkbenchArtifact(this.root,captured.path,captured,signal);

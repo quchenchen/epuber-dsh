@@ -9,7 +9,7 @@ import { Context } from '@deepseek-ai/cordis';
 import { createScope } from '@deepseek-ai/dsh-scope';
 import Tools from '@deepseek-ai/dsh-tools';
 import { registerExpertManagementTools } from '../../../../packages/plugins/experts/dist/tools/management-tools.js';
-import { FileSystem, LocalFileSystem, WorkingDirectory, createMessage, Agents, AgentLoop, Sessions, Projections, SystemPrompt, Llm, skillTool, SkillRequestAdapter } from '../helpers/skill-runtime.mjs';
+import { FileSystem, LocalFileSystem, WorkingDirectory, createMessage, Agents, AgentLoop, Sessions, Projections, SystemPrompt, ToolExecutor, Llm, skillTool, SkillRequestAdapter } from '../helpers/skill-runtime.mjs';
 import Storage from '@deepseek-ai/dsh-storage';
 import * as JsonStorage from '@deepseek-ai/dsh-storage-json';
 import * as StorageDomain from '@deepseek-ai/dsh-storage-domain';
@@ -241,8 +241,8 @@ test('AT-01 experts list seeds defaults, searches, filters, pages and stays owne
   try {
     const a = actor('owner-a');
     const first = await h.experts.list(a, {});
-    assert.equal(first.total, 3, 'the three shipped defaults seed on first read');
-    assert.deepEqual(first.items.map((item) => item.origin), ['default', 'default', 'default']);
+    assert.equal(first.total, 8, 'every shipped default seeds on first read');
+    assert.deepEqual(first.items.map((item) => item.origin), Array(8).fill('default'));
     assert.ok(first.items.every((item) => item.readiness === 'ready'), 'compiled default presets are healthy');
     assert.ok(first.items.every((item) => item.canUse && item.canManage && !item.canEdit), 'defaults are usable/manageable but not directly editable');
     assert.ok(first.items.every((item) => item.publishedRevisionRef !== undefined), 'defaults are published');
@@ -259,14 +259,21 @@ test('AT-01 experts list seeds defaults, searches, filters, pages and stays owne
     const byOrigin = await h.experts.list(a, { origin: 'personal' });
     assert.equal(byOrigin.total, 0, 'no personal experts yet');
 
-    const page1 = await h.experts.list(a, { limit: 2 });
-    assert.equal(page1.items.length, 2);
+    const page1 = await h.experts.list(a, { limit: 3 });
+    assert.equal(page1.items.length, 3);
     assert.ok(page1.nextCursor, 'a partial page yields a next cursor');
-    const page2 = await h.experts.list(a, { limit: 2, cursor: page1.nextCursor });
-    assert.equal(page2.items.length, 1);
-    assert.equal(page2.catalogRevision, page1.catalogRevision, 'catalog revision is stable across pages');
-    const seen = new Set([...page1.items, ...page2.items].map((item) => item.id));
-    assert.equal(seen.size, 3, 'paging visits every row exactly once');
+    const seen = new Set(page1.items.map((item) => item.id));
+    let cursor = page1.nextCursor;
+    let pages = 1;
+    while (cursor) {
+      const page = await h.experts.list(a, { limit: 3, cursor });
+      assert.equal(page.catalogRevision, page1.catalogRevision, 'catalog revision is stable across pages');
+      for (const item of page.items) seen.add(item.id);
+      cursor = page.nextCursor;
+      pages += 1;
+    }
+    assert.equal(pages, 3, 'eight rows page into 3 + 3 + 2');
+    assert.equal(seen.size, 8, 'paging visits every row exactly once');
     await assert.rejects(h.experts.list(a, { cursor: 'not-base64-json' }), (err) => err.code === 'experts/cursor-stale');
 
     // A different principal in the same org cannot see owner-a's personal defaults.
@@ -278,6 +285,46 @@ test('AT-01 experts list seeds defaults, searches, filters, pages and stays owne
 
     const events = h.ctx.workdshAudit.snapshot();
     assert.ok(events.some((event) => event.action === 'experts.list' && event.outcome === 'succeeded'));
+  } finally { await h.cleanup(); }
+});
+
+// ── Media centre defaults: shipped roles, idempotent seeding ───────────────────
+
+test('media defaults cover the content pipeline and seeding stays idempotent', async () => {
+  const h = await boot();
+  try {
+    const a = actor('owner-a');
+    await h.experts.list(a, {});
+    const media = await h.experts.list(a, { categoryId: 'media' });
+    assert.deepEqual(media.items.map((item) => item.id).sort(), [
+      'media-multiplatform-editor',
+      'media-news-writer',
+      'media-public-opinion-analyst',
+      'media-topic-planner',
+      'media-video-scripter',
+    ], 'one default per stage of the media pipeline');
+    for (const item of media.items) {
+      assert.equal(item.origin, 'default');
+      assert.ok(item.description.length > 20, `${item.id} explains what it does`);
+      assert.ok(item.publishedRevisionRef, `${item.id} is published and usable`);
+    }
+
+    // The shipped media roles carry a complete authored Agent MD, not only the
+    // four legacy prose fields, so the persona the model sees is the real one.
+    for (const id of ['media-topic-planner', 'media-news-writer', 'media-video-scripter', 'media-multiplatform-editor', 'media-public-opinion-analyst']) {
+      const detail = await h.experts.get(a, id);
+      const document = detail.draft.definition.agentDocument;
+      assert.ok(document?.startsWith('---\n'), `${id} ships Agent MD frontmatter`);
+      assert.match(document, /## 工作流程/, `${id} states an executable workflow`);
+      assert.match(document, /## 输出规范/, `${id} fixes its output contract`);
+      assert.ok(!document.includes('{{'), `${id} carries no template braces`);
+    }
+
+    // A second read must not recreate or duplicate anything: seeding is keyed by
+    // template id, so an existing row is never replaced.
+    const again = await h.experts.list(a, {});
+    assert.equal(again.total, 8, 're-reading the catalog adds no second copy');
+    assert.equal(again.catalogRevision, (await h.experts.list(a, {})).catalogRevision, 'catalog revision is stable when nothing changed');
   } finally { await h.cleanup(); }
 });
 
@@ -672,9 +719,10 @@ test('authoring tool content preserves full definitions, CAS tokens and draft li
     h.ctx.workdshIdentity.resolve = async () => actor('owner-a');
     h.ctx.provide('systemPrompt', { tools() {}, section() {}, getSectionOrder() { return 0; } });
     await h.ctx.plugin(Tools);
+    await h.ctx.plugin(ToolExecutor);
     registerExpertManagementTools(h.ctx);
     let call = 0;
-    const run = (name, args) => h.ctx.tools.execute({ callId: `author-${++call}`, name, arguments: args, signal: new AbortController().signal });
+    const run = async (name, args) => (await h.ctx.tools.execute({ calls: [{ type: 'tool-call', id: `author-${++call}`, name, arguments: JSON.stringify(args) }], signal: new AbortController().signal })).results[0]?.result;
     const definition = fullDefinition('Authoring fixture');
     const { skillRequirements, futureRequirements, ...prose } = definition;
     const drafted = await run('workdsh_expert_create_draft', { definition: { ...prose, skill_requirements: [], future_requirements: [] } });
@@ -730,7 +778,7 @@ test('published expert persona and frozen Skill reach the official Agent Loop wi
     const personaConfig = rows.find(row => row.name === '@deepseek-ai/dsh-persona').config;
     const skillConfig = rows.find(row => row.name === '@deepseek-ai/dsh-skill-filesystem').config;
     const persona = await import(pathToFileURL(packageRequire.resolve('@deepseek-ai/dsh-persona')).href);
-    for (const plugin of [LocalFileSystem, WorkingDirectory, Sessions, Projections, SystemPrompt, Tools, Llm, Agents, AgentLoop]) await h.ctx.plugin(plugin);
+    for (const plugin of [LocalFileSystem, WorkingDirectory, Sessions, Projections, SystemPrompt, Tools, ToolExecutor, Llm, Agents, AgentLoop]) await h.ctx.plugin(plugin);
     // Alter the dynamic source after publication: the expert must consume its snapshot.
     await writeFile(join(h.agentsHome, 'skills/sample-skill/SKILL.md'), '---\nname: sample-skill\ndescription: Changed dynamic fixture\n---\nDYNAMIC_SOURCE_AFTER_PUBLISH\n');
     class PublishedSkillAdapter extends SkillRequestAdapter {
@@ -968,10 +1016,11 @@ test('expert tools use live fixed-member admission and deny expiry or foreign id
   try {
     h.ctx.provide('systemPrompt', { tools() {}, section() {}, getSectionOrder() { return 0; } });
     await h.ctx.plugin(Tools);
+    await h.ctx.plugin(ToolExecutor);
     const member = fixedMemberAdmission(h.ctx);
     const agent = { id: 'member-session' };
     registerExpertManagementTools(h.ctx);
-    const run = () => h.ctx.tools.execute({ callId: 'member-list', name: 'workdsh_expert_list', arguments: {}, agent, signal: new AbortController().signal });
+    const run = async () => (await h.ctx.tools.execute({ calls: [{ type: 'tool-call', id: 'member-list', name: 'workdsh_expert_list', arguments: '{}' }], agent, signal: new AbortController().signal })).results[0]?.result;
     assert.equal((await run()).isError, false);
     member.revoke(); const expired = await run(); assert.equal(expired.isError, true); assert.match(expired.error.message, /Expired/);
     member.restore(); member.foreign(); const foreign = await run(); assert.equal(foreign.isError, true); assert.match(foreign.error.message, /identity mismatch/);

@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-agent';
 import type {} from '@deepseek-ai/dsh-system-prompt';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import type { KnowledgeSelectionEntry } from '../storage/domain.js';
 import type {} from '../services/knowledge-service.js';
 

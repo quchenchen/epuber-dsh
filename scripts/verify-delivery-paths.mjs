@@ -9,7 +9,7 @@ for(const name of RELEASE_PACKAGES){
  if(!existsSync(resolve(directory,'package.json')))fail('missing package directory '+name);
  const pkg=JSON.parse(readFileSync(resolve(directory,'package.json'),'utf8'));
  for(const [peer] of Object.entries(pkg.peerDependencies??{})){
-  if(peer.startsWith('workdsh-')&&!pkg.peerDependenciesMeta?.[peer]?.optional&&!RELEASE_PACKAGES.includes(peer))fail(name+' requires unshipped '+peer);
+  if(peer.startsWith('epuberdsh-')&&!pkg.peerDependenciesMeta?.[peer]?.optional&&!RELEASE_PACKAGES.includes(peer))fail(name+' requires unshipped '+peer);
  }
 }
 const files=execFileSync('git',['ls-files','--','apps','scripts','.github'],{cwd:root,encoding:'utf8'}).trim().split('\n');

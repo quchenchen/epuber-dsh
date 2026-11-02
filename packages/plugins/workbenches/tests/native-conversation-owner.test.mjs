@@ -123,8 +123,8 @@ test('uncertain native submission is not replayed by retry or remount',async()=>
  owner.dispose();owner=new Owner(f.native,'session-1','tenant:user');await owner.prepareDraft(r);assert.equal(f.calls.filter(c=>c[0]==='submit').length,1);owner.dispose();
 });
 
-const devPrompt='/cordis-plugin-development /workdsh-workbench-dev\n\n开发指令';
-const skillChips=[{occurrenceId:1,source:'skill',ref:'/cordis-plugin-development',clipboardText:'/cordis-plugin-development',offset:0,length:'/cordis-plugin-development'.length,label:'cordis-plugin-development'},{occurrenceId:2,source:'skill',ref:'/workdsh-workbench-dev',clipboardText:'/workdsh-workbench-dev',offset:'/cordis-plugin-development '.length,length:'/workdsh-workbench-dev'.length,label:'workdsh-workbench-dev'}];
+const devPrompt='/cordis-plugin-development /workbench-dev\n\n开发指令';
+const skillChips=[{occurrenceId:1,source:'skill',ref:'/cordis-plugin-development',clipboardText:'/cordis-plugin-development',offset:0,length:'/cordis-plugin-development'.length,label:'cordis-plugin-development'},{occurrenceId:2,source:'skill',ref:'/workbench-dev',clipboardText:'/workbench-dev',offset:'/cordis-plugin-development '.length,length:'/workbench-dev'.length,label:'workbench-dev'}];
 test('native skill chips created during initialization do not block explicit development start',async()=>{
  const f=fixture({initializedOccurrences:skillChips}),owner=new Owner(f.native,'session-1','tenant:user');await owner.prepareDraft({id:'dev-with-skills',instruction:devPrompt,submit:true});assert.equal(f.calls.filter(c=>c[0]==='submit').length,1);owner.dispose();
 });

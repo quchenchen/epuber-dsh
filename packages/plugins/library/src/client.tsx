@@ -1,4 +1,4 @@
-import type { ComposerHandoff, ComposerHandoffSource } from 'workdsh-contracts/composer';
+import type { ComposerHandoff, ComposerHandoffSource } from 'epuberdsh-contracts/composer';
 declare module '@deepseek-ai/cordis' { interface Events { 'workdsh/composer-handoff'(handoff: ComposerHandoff): Promise<void>; } }
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-client-connection/client';
@@ -21,7 +21,7 @@ import { LibraryPicker } from './client/LibraryPicker.js';
 import { LibraryReferencePage } from './client/LibraryReferencePage.js';
 import { createLibraryPreviewRegistry } from './client/preview-registry.js';
 import {returnToLibraryPanel} from './client/original-panel.js';
-import type { LibraryOriginalPreviewRegistry, LibraryComposerReference } from 'workdsh-contracts/library';
+import type { LibraryOriginalPreviewRegistry, LibraryComposerReference } from 'epuberdsh-contracts/library';
 
 declare module '@deepseek-ai/cordis' { interface Context { workdshLibraryPreview: LibraryOriginalPreviewRegistry; } }
 declare module '@deepseek-ai/dsh-client-ui-sidebar-right/client' { interface SidebarRightTabParamsMap { 'workdsh-library-preview': { assetId: string; revisionId: string; name: string; kind: string; returnPanelId?:string;returnLabel?:string;saveOriginal?:boolean }; } }
@@ -79,7 +79,7 @@ export function apply(ctx: Context): void {
       ?? workspaces.find(row => row.path === (currentId ? state.byId[currentId]?.cwd : undefined))
       ?? workspaces[0];
   };
-  const startConversation = async (entry: import('workdsh-contracts/library').LibraryTreeEntry): Promise<void> => {
+  const startConversation = async (entry: import('epuberdsh-contracts/library').LibraryTreeEntry): Promise<void> => {
     if (!entry.asset || !entry.revision) throw new Error('文件夹不能添加到对话。');
     const workspace = resolveWorkspace();
     if (!workspace) throw new Error('请先选择工作空间。');
@@ -163,7 +163,7 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'workdsh-library', inject: () => ({ management, previewRegistry, toggleNavigation: () => ctx.layout.toggleSidebar(), startConversation }) }, LibraryPanel));
   ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
     name: 'conversation.input.left', id: 'workdsh-library-picker', order: 35,
-    inject: () => ({ management, openLibrary: () => ctx.layout.selectPanel('workdsh-library' as Parameters<typeof ctx.layout.selectPanel>[0]), addReference: (sessionId: string, entry: import('workdsh-contracts/library').LibraryTreeEntry) => entry.asset && entry.revision ? insertReference(sessionId, { assetId: entry.asset.id, revisionId: entry.revision.id, nodeId: entry.id, name: entry.name, kind: entry.asset.kind }) : false }),
+    inject: () => ({ management, openLibrary: () => ctx.layout.selectPanel('workdsh-library' as Parameters<typeof ctx.layout.selectPanel>[0]), addReference: (sessionId: string, entry: import('epuberdsh-contracts/library').LibraryTreeEntry) => entry.asset && entry.revision ? insertReference(sessionId, { assetId: entry.asset.id, revisionId: entry.revision.id, nodeId: entry.id, name: entry.name, kind: entry.asset.kind }) : false }),
   }, LibraryPicker));
 }
 
@@ -173,6 +173,6 @@ export type { LibraryAssetPickerProps } from './client/LibraryPicker.js';
 export { createLibraryClient } from './client/management.js';
 export type { LibraryClient } from './client/management.js';
 export {createLibraryOriginalPanelClient,createLibraryNativeFileClient} from './client/original-panel.js';
-export type {LibraryOriginalPanelClient,LibraryOriginalPanelInput} from 'workdsh-contracts/library';
+export type {LibraryOriginalPanelClient,LibraryOriginalPanelInput} from 'epuberdsh-contracts/library';
 export {LibraryOriginalSurface} from './client/LibraryOriginalSurface.js';
 export type {LibraryOriginalSurfaceProps} from './client/LibraryOriginalSurface.js';

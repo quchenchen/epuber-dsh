@@ -10,7 +10,7 @@ const plugin = join(root, '../../packages/plugins/library');
 const destination = join(root, '.artifacts/library-release');
 await rm(destination, { recursive: true, force: true });
 await mkdir(destination, { recursive: true });
-execFileSync('corepack', ['pnpm', '--filter', 'workdsh-plugin-library', 'build'], { cwd: root, stdio: 'inherit' });
+execFileSync('corepack', ['pnpm', '--filter', 'epuberdsh-plugin-library', 'build'], { cwd: root, stdio: 'inherit' });
 const stage = await mkdtemp(join(destination, 'package-'));
 const manifest = JSON.parse(await readFile(join(plugin, 'package.json'), 'utf8'));
 delete manifest.devDependencies; delete manifest.scripts;
@@ -29,7 +29,7 @@ await writeFile(join(destination, 'SHA256SUMS.txt'), `${sha256}  ${filename}\n`)
 await writeFile(join(destination, 'release-manifest.json'), `${JSON.stringify({
   name: manifest.name, version: manifest.version, harness: project.devDependencies['@deepseek-ai/dsh'], filename, sha256, bytes: bytes.length,
   storage: manifest.workdshRelease.storage, formats: manifest.workdshRelease.formats,
-  limitations: ['Local personal space only', 'Scanned PDF OCR is not included', 'DOCX/PPTX original preview requires the optional workdsh-plugin-office client'],
+  limitations: ['Local personal space only', 'Scanned PDF OCR is not included', 'DOCX/PPTX original preview requires the optional epuberdsh-plugin-office client'],
 }, null, 2)}\n`);
 await rm(stage, { recursive: true, force: true });
 console.log(`Library release candidate: ${filename}; files: ${(await readdir(destination)).sort().join(', ')}`);

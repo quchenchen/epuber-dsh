@@ -1,7 +1,7 @@
 import type {Context} from '@deepseek-ai/cordis';
 import type {DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import type {HostConnectionHandle} from '@deepseek-ai/dsh-client-connection';
-import type {IdentityService} from 'workdsh-contracts';
+import type {IdentityService} from 'epuberdsh-contracts';
 import {readWorkbenchRequestBody} from './request-body.js';
 import {WorkbenchShortcutsService} from './shortcuts-service.js';
 export function mountWorkbenchShortcutsHost(ctx:Context,available:(id:string)=>boolean){

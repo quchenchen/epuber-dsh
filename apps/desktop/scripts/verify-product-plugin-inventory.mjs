@@ -35,7 +35,7 @@ try {
     root.loader.builtins.manager = PluginManager
   })
   const allBundles = await ctx.pluginManager.listBundles()
-  const bundles = allBundles.filter(row => row.name.startsWith('workdsh-'))
+  const bundles = allBundles.filter(row => row.name.startsWith('epuberdsh-'))
   const names = bundles.map(row => row.name).sort()
   if (JSON.stringify(names) !== JSON.stringify(expected)) {
     throw new Error(`Plugin manager exposes ${names.join(', ') || '(none)'}; expected ${expected.join(', ')}`)

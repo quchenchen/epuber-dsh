@@ -4,7 +4,7 @@ import { assetBytes, packagePath, type PackageAssets } from '../authoring/packag
 import { buildExport } from '../services/portability.js';
 import type { Context } from '@deepseek-ai/cordis';
 import { defineTool, type ToolRunContext } from '@deepseek-ai/dsh-tools';
-import type { ActorContext, DomainIssue, ExpertDefinition, ExpertDetail, ExpertListQuery } from 'workdsh-contracts';
+import type { ActorContext, DomainIssue, ExpertDefinition, ExpertDetail, ExpertListQuery } from 'epuberdsh-contracts';
 import type { ExpertsManager } from '../services/experts-manager.js';
 import { expertDraftUrl } from '../domain/navigation.js';
 import { authoringDocuments, definitionFromDocuments } from '../authoring/documents.js';
@@ -269,10 +269,16 @@ function renderResult(summary: string, value: unknown, draftUrl?: string) {
 
 function shellQuote(value: string): string { return "'" + value.replaceAll("'", "'\\''") + "'"; }
 async function nativeTool(ctx: Context, exec: ToolRunContext, name: string, args: object, suffix: string) {
-  const result = await ctx.tools.execute({ name, arguments: args, agent: exec.agent, signal: exec.signal, parent: exec.token, rootCallId: exec.rootCallId, callId: `${exec.callId}-${suffix}` as ToolRunContext['callId'] });
-  if (result.isError) throw new ExpertsError('experts/forbidden', `原生工具${name}拒绝操作：${result.error.message}`);
-  for (const context of result.additionalContexts ?? []) exec.deferContext(context);
-  return result;
+  const batch = await ctx.tools.execute({
+    calls: [{ type: 'tool-call', id: `${exec.callId}-${suffix}` as ToolRunContext['callId'], name, arguments: JSON.stringify(args) }],
+    signal: exec.signal,
+    agent: exec.agent,
+  });
+  const settled = batch.results[0];
+  if (settled === undefined) throw new ExpertsError('experts/forbidden', `原生工具${name}没有返回结果。`);
+  if (settled.result.isError) throw new ExpertsError('experts/forbidden', `原生工具${name}拒绝操作：${settled.result.error.message}`);
+  for (const context of batch.additionalContexts) exec.deferContext(context);
+  return settled.result;
 }
 async function workspaceTarget(ctx: Context, exec: ToolRunContext, path: string) {
   const cwd = exec.agent?.session.header.cwd;

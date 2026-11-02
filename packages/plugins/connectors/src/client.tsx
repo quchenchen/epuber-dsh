@@ -1,4 +1,4 @@
-import type { ComposerHandoff, ComposerHandoffSource } from 'workdsh-contracts/composer';
+import type { ComposerHandoff, ComposerHandoffSource } from 'epuberdsh-contracts/composer';
 declare module '@deepseek-ai/cordis' { interface Events { 'workdsh/composer-handoff'(handoff: ComposerHandoff): Promise<void>; } }
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-client-connection/client';

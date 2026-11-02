@@ -11,7 +11,7 @@ const webRequire=createRequire(new URL('../../../../apps/web/package.json',impor
 const runtimeRequire=createRequire(new URL('../../projects/package.json',import.meta.url));
 const {build}=webRequire('esbuild');
 const built=await build({stdin:{contents:"export * from '../client/run-view';export * from './analysis-run';export * from './run-service';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,
- alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},
+ alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},
  plugins:[{name:'official-storage',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));}}]});
 const {parseQualityRunView,createQualityAnalysisRun,QualityAnalysisRunService}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const load=name=>import(pathToFileURL(runtimeRequire.resolve(name)).href);

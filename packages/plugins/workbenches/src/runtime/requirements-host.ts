@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type { DomainFacility } from '@deepseek-ai/dsh-storage-domain';
 import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import { WorkbenchRequirementsService } from './requirements-service.js';
 import { handleWorkbenchRequirementsRequest, workbenchRequirementsPath } from './requirements-rpc.js';
 

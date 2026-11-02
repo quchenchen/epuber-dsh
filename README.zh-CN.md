@@ -4,7 +4,7 @@
 <p align="center">参考 WorkBuddy 的工作体验，基于 DeepSeek Harness 的开放插件体系：个人开箱使用，安装企业连接插件后接入公司模型、协作与 @同事。</p>
 <p align="center"><a href="#下载桌面版">下载桌面版</a> · <a href="#从资料到成果">了解工作流</a> · <a href="#个人与企业使用">个人与企业</a> · <a href="docs/user-guide.md">使用指南</a> · <a href="README.md">English</a></p>
 
-[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.3-176BFF)](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) [![GitHub stars](https://img.shields.io/github/stars/techflag/workdsh?label=stars)](https://github.com/techflag/workdsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.3-0B6FE0)](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) [![GitHub stars](https://img.shields.io/github/stars/techflag/workdsh?label=stars)](https://github.com/techflag/workdsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [![GitHub Actions](https://github.com/techflag/workdsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/techflag/workdsh/actions/workflows/ci.yml) [![Gitee stars](https://gitee.com/techflag/workdsh/badge/star.svg?theme=dark)](https://gitee.com/techflag/workdsh/stargazers) [![Gitee forks](https://gitee.com/techflag/workdsh/badge/fork.svg?theme=dark)](https://gitee.com/techflag/workdsh/members)
 
@@ -66,7 +66,7 @@ WorkDSH 参考 WorkBuddy 按项目组织资料、专家、技能和连接器的�
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
-import type { EnterpriseService } from 'workdsh-contracts/enterprise'
+import type { EnterpriseService } from 'epuberdsh-contracts/enterprise'
 
 declare module '@deepseek-ai/cordis' {
   interface Context { workdshEnterprise: EnterpriseService }
@@ -87,7 +87,7 @@ export default {
 }
 ```
 
-以上请求映射到公司后台的 `POST /api/extensions/reports/list`。开发者实现该业务接口并检查权限即可，不需要再开发一套登录。此能力从 Desktop `2.0.6-alpha.3`、企业连接包 `0.1.0-alpha.2` 开始提供。`workdsh-contracts` 当前未发布公共 npm SDK，类型包的构建与打包方式、接口限制见[企业业务插件认证接入](docs/ENTERPRISE-PLUGIN-AUTH.md)。
+以上请求映射到公司后台的 `POST /api/extensions/reports/list`。开发者实现该业务接口并检查权限即可，不需要再开发一套登录。此能力从 Desktop `2.0.6-alpha.3`、企业连接包 `0.1.0-alpha.2` 开始提供。`epuberdsh-contracts` 当前未发布公共 npm SDK，类型包的构建与打包方式、接口限制见[企业业务插件认证接入](docs/ENTERPRISE-PLUGIN-AUTH.md)。
 
 ### 从资料到成果
 
@@ -308,7 +308,7 @@ scripts/        产品构建与发布检查
 
 ## 社区与致谢
 
-感谢 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 社区提供运行时与插件底座；[腾讯 SkillHub](https://github.com/Tencent/skillhub) 提供公开的技能目录 API；[@cocofhu/skillhub](https://github.com/cocofhu/skillhub) 提供随桌面版集成的 DSH SkillHub 插件；[dsh-market](https://github.com/dsh-market/dsh-market) 与 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 社区提供插件市场与目录。WorkBuddy 是工作台设计参考。内置 skill-creator 的改编保留了原 [Apache-2.0 来源说明](packages/plugins/skills/resources/skills/workdsh-skill-creator/NOTICE.md)。反馈与参与：[GitHub Issues](https://github.com/techflag/workdsh/issues) · [参与贡献](CONTRIBUTING.md)
+感谢 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 社区提供运行时与插件底座；[腾讯 SkillHub](https://github.com/Tencent/skillhub) 提供公开的技能目录 API；[@cocofhu/skillhub](https://github.com/cocofhu/skillhub) 提供随桌面版集成的 DSH SkillHub 插件；[dsh-market](https://github.com/dsh-market/dsh-market) 与 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 社区提供插件市场与目录。WorkBuddy 是工作台设计参考。内置 skill-creator 的改编保留了原 [Apache-2.0 来源说明](packages/plugins/skills/resources/skills/skill-creator/NOTICE.md)。反馈与参与：[GitHub Issues](https://github.com/techflag/workdsh/issues) · [参与贡献](CONTRIBUTING.md)
 
 WorkDSH 采用 [MIT License](LICENSE)，是独立社区项目，与 DeepSeek 或 WorkBuddy 不存在隶属、合作、授权或背书关系。相关名称仅用于说明技术来源、兼容性与设计参考。GitHub Contributors 中的上游贡献者来自继承和同步的提交历史，不表示其参与本仓库维护。
 

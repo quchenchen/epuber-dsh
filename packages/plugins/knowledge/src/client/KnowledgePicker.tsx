@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
-import { Icon } from 'workdsh-ui';
+import { Icon } from 'epuberdsh-ui';
 import type { KnowledgeBase } from '../services/knowledge-service.js';
 import type { KnowledgeClient } from './management.js';
 

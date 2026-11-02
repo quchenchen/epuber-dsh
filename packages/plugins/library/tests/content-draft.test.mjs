@@ -14,7 +14,7 @@ const built=await build({
  stdin:{contents:"export {LibraryManager} from './library-manager';export {libraryStateSchema} from '../storage/domain';",resolveDir:fileURLToPath(new URL('../src/services/',import.meta.url)),loader:'ts'},
  bundle:true,platform:'node',format:'esm',write:false,
  plugins:[{name:'published-runtime-owner',setup(builder){
-  builder.onResolve({filter:/^(?:@deepseek-ai\/cordis|@deepseek-ai\/dsh-storage-domain|zod|workdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},args=>({path:pathToFileURL(libraryRequire.resolve(args.path)).href,external:true}));
+  builder.onResolve({filter:/^(?:@deepseek-ai\/cordis|@deepseek-ai\/dsh-storage-domain|zod|epuberdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},args=>({path:pathToFileURL(libraryRequire.resolve(args.path)).href,external:true}));
  }}],
 });
 const bundleRoot=await mkdtemp(join(tmpdir(),'library-content-draft-bundle-'));

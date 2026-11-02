@@ -1,4 +1,4 @@
-import type {LibraryTreeEntry} from 'workdsh-contracts/library';
+import type {LibraryTreeEntry} from 'epuberdsh-contracts/library';
 import type {QualityLibraryChoice} from './QualityLibraryImport.js';
 import type {QualitySourceDescription,QualityConfigurationView} from './configuration-view.js';
 import type {QualityCleaningPage} from './cleaning-rows.js';

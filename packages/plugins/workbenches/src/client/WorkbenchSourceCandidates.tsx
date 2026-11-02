@@ -1,6 +1,6 @@
 import {packageCheckMessage} from './package-check-message.js';
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {parseWorkbenchDescriptor} from 'workdsh-contracts';
+import {parseWorkbenchDescriptor} from 'epuberdsh-contracts';
 import {WorkbenchPackagePreview,type WorkbenchCandidatePreview} from './WorkbenchPackagePreview.js';
 import {createWorkbenchDevelopmentClient} from './development-client.js';
 import {assertWorkbenchCandidateIdentity,readWorkbenchCandidateDevelopment,type WorkbenchCandidateDevelopment} from './candidate-development.js';

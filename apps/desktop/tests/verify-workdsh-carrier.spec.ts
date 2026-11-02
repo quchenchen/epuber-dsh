@@ -28,7 +28,7 @@ describe('final copied public SDK exports', () => {
     const source = join(root, 'build/workdsh-runtime')
     const resources = join(root, 'WorkDSH.app/Contents/Resources/workdsh-runtime')
     const relativeProfile = 'profiles/workdsh'
-    const sdk = 'workdsh-plugin-workbenches'
+    const sdk = 'epuberdsh-plugin-workbenches'
     const relativePackage = join(relativeProfile, 'node_modules', sdk)
     try {
       const files: Record<string, string> = {

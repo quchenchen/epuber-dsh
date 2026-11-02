@@ -4,11 +4,11 @@
 
 ## 独立插件调用
 
-以下代码在插件的 Host 入口执行，不在浏览器页面直接执行。类型从 `workdsh-contracts/enterprise` 导入，Cordis 版本和 DSH 版本须与当前发行包一致。
+以下代码在插件的 Host 入口执行，不在浏览器页面直接执行。类型从 `epuberdsh-contracts/enterprise` 导入，Cordis 版本和 DSH 版本须与当前发行包一致。
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
-import type { EnterpriseService } from 'workdsh-contracts/enterprise'
+import type { EnterpriseService } from 'epuberdsh-contracts/enterprise'
 
 declare module '@deepseek-ai/cordis' {
   interface Context { workdshEnterprise: EnterpriseService }
@@ -30,7 +30,7 @@ export default {
 }
 ```
 
-`workdsh-contracts` 当前是仓库内的私有包，并非已发布 npm SDK。仓库内使用 workspace 依赖；独立项目可构建并打包该包，再使用生成的 tgz 作为类型依赖。不要运行 `npm install workdsh-contracts` 并假设公共 registry 已发布。企业插件运行包按现有 GitHub Releases 独立交付。
+`epuberdsh-contracts` 当前是仓库内的私有包，并非已发布 npm SDK。仓库内使用 workspace 依赖；独立项目可构建并打包该包，再使用生成的 tgz 作为类型依赖。不要运行 `npm install epuberdsh-contracts` 并假设公共 registry 已发布。企业插件运行包按现有 GitHub Releases 独立交付。
 
 ## 后台接口约定
 

@@ -1,21 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import { Context, Service } from '@deepseek-ai/cordis';
 import type { KvTable } from '@deepseek-ai/dsh-storage-domain';
-import type { ActorContext } from 'workdsh-contracts';
-import type { CreateProjectInput, Project, ProjectActivity, ProjectAssetRef, ProjectCapabilityRef, ProjectConfig, ProjectConfigRevision, ProjectInputRef, ProjectService, ProjectSnapshot, ProjectTaskContext, ProjectTaskLink, ProjectTemplate, ProjectWorkItem } from 'workdsh-contracts/projects';
+import type { ActorContext } from 'epuberdsh-contracts';
+import type { CreateProjectInput, Project, ProjectActivity, ProjectAssetRef, ProjectCapabilityRef, ProjectConfig, ProjectConfigRevision, ProjectInputRef, ProjectService, ProjectSnapshot, ProjectTaskContext, ProjectTaskLink, ProjectTemplate, ProjectWorkItem } from 'epuberdsh-contracts/projects';
 import { PROJECT_INSTRUCTION_TOKEN_BUDGET, estimateProjectInstructionTokens } from '../instruction-budget.js';
 import { projectDomainSpec, projectStateKey, type ProjectState } from '../storage/domain.js';
-import { assertActorContext } from 'workdsh-contracts';
+import { assertActorContext } from 'epuberdsh-contracts';
 import { assertSessionAssociationAccess, sameTaskBinding } from '../runtime/session-association.js';
 declare module '@deepseek-ai/cordis' { interface Context { workdshProjects: ProjectService; } }
 const timestamp = () => new Date().toISOString();
 const clean = (value: string, code = 'projects/invalid-name', max = 10_000) => { const next = value.trim(); if (!next || next.length > max) throw new Error(code); return next; };
 const templates: readonly ProjectTemplate[] = [
-  { id: 'product', name: '产品需求全流程', description: '从需求规划、PRD 到研发测试验收', instruction: '围绕产品目标维护需求、计划、任务、资产和决策记录。' },
-  { id: 'research', name: '市场调研与竞品分析', description: '深度调研、竞品拆解、报告评审', instruction: '引用可核验资料，区分事实、推断与建议，持续沉淀研究资产。' },
-  { id: 'knowledge', name: '团队知识库', description: '持续沉淀 SOP、经验和 FAQ', instruction: '优先复用项目资产，输出可维护、可追溯的团队知识。' },
-  { id: 'delivery', name: '项目交付', description: '管理客户需求、计划、风险和周报', instruction: '跟踪交付范围、负责人、时间、风险和验收证据。' },
-  { id: 'bugs', name: 'Bug 跟踪/测试验收', description: '持续跟踪 Bug、测试用例和验收', instruction: '问题必须关联复现步骤、负责人、优先级、状态和验证证据。' },
+  { id: 'topic', name: '选题会与线索池', description: '线索归集、选题评估、立项与派题', instruction: '本项目管理选题会与线索池。每条线索按「来源—目标平台—受众价值—时效等级—可核验证据」登记，缺少来源或证据的线索不得进入选题评估；每个选题必须写明报道角度、目标平台、预期形态（图文/短视频/直播/专题）、责任记者与截稿时间；评估结论只有立项、补证、毙稿三种，毙稿须记录原因；涉及未公开数据、涉密信息与个人隐私的内容一律标记待审；对外表述以编辑部确认口径为准。' },
+  { id: 'special', name: '重大主题报道', description: '专题与系列报道，节点倒排到日', instruction: '本项目管理重大主题报道（专题、系列、连续报道）。先定主题、主线与统一口径，再拆成子选题分工到人，各节点按发稿日倒排到日；全部稿件共用同一份事实清单与引用口径，关键数据、机构名称、人物职务不得各自改写；每稿标注所属子选题、目标平台与版本号；图文、视频、海报、H5 各形态保持标题与核心信息一致；每日同步进度与风险，发布前完成三审三校与合规核对。' },
+  { id: 'review', name: '三审三校与签发', description: '稿件逐级审校、留痕、签发的质量闸门', instruction: '本项目的目标是让稿件安全、准确地签发。流程固定为初审（事实与导向）→复审（结构与表述）→终审（口径与风险）→签发。每条修改意见必须写明位置、问题类型（事实/表述/合规/格式）与处理结果，未闭环的意见不得进入下一级；事实性内容必须有可追溯来源，机构名、职务、时间、数字四项逐一核对；审校环节不得新增未经核实的材料；签发后如需改动，另开修订并重新走终审。' },
+  { id: 'distribute', name: '多平台分发', description: '一稿多版、排期发布、数据回流', instruction: '本项目管理同一内容的多平台分发。主稿定稿后按平台拆版，标题、导语、配图比例、话题标签、时长各自适配，但事实与核心口径必须一致；每个版本标注目标平台、发布时间、责任人与发布状态；发布前核对平台规则（涉政涉敏、版权、外链与二维码限制）；发布后 24 小时与 72 小时回收阅读、完播、互动与转发数据，形成回流记录并给出下一轮调整建议；同一事件各平台表述冲突时以主稿为准。' },
+  { id: 'sentiment', name: '舆情监测与研判', description: '监测、研判、应对、复盘的闭环', instruction: '本项目管理舆情监测与研判。监测数据须注明平台、时间窗、样本量与采集方式，禁止用单条极端个案代表整体态势；研判区分事实、推断、建议三层，给出传播路径、关键节点与情绪分布；应对口径经确认后方可使用，一线不得自行回应；每个事件建立时间线，记录处置动作与效果；复盘输出可复用的判断规则与预警阈值，沉淀为项目资产。' },
+  { id: 'video', name: '短视频生产', description: '脚本、分镜、素材到成片发布', instruction: '本项目管理短视频从脚本到发布。每条视频先定一个核心信息与开场三秒的留人点，再出分镜（镜号、画面、台词字幕、时长、素材来源），脚本未确认不得进入剪辑；素材必须可溯源并注明授权范围，禁用未授权音乐、影视片段与他人肖像；字幕与配音口径与主稿一致，数据与引语必须核对；成片交付竖版、横版、方版三种比例及封面标题，标题不得夸大或断章取义；发布后回收完播率与互动数据并记录改进点。' },
 ];
 type Stored = ProjectState & { projects: Record<string, Project>; configs: Record<string, ProjectConfigRevision>; workItems: Record<string, ProjectWorkItem>; assets: Record<string, ProjectAssetRef>; tasks: Record<string, ProjectTaskLink>; activity: Record<string, ProjectActivity> };
 export class ProjectManager extends Service implements ProjectService {

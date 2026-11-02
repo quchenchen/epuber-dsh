@@ -1,6 +1,6 @@
 import {fileBase64} from './file-base64.js';
 import type { Context } from '@deepseek-ai/cordis';
-import type { LibraryOriginalRevisionInput, LibraryAssetStatus, LibraryDraft, LibraryNode, LibrarySearchFilters, LibrarySearchHit, LibrarySpace, LibraryTaskReference, LibraryTreeEntry } from 'workdsh-contracts/library';
+import type { LibraryOriginalRevisionInput, LibraryAssetStatus, LibraryDraft, LibraryNode, LibrarySearchFilters, LibrarySearchHit, LibrarySpace, LibraryTaskReference, LibraryTreeEntry } from 'epuberdsh-contracts/library';
 
 const path = '/api/workdsh-library';
 const invoke = async <T>(endpoint: string, payload: unknown, signal?: AbortSignal): Promise<T> => {

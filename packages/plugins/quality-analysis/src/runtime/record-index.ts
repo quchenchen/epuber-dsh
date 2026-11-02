@@ -1,7 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {defineDomain,type Domain,type DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import {z} from 'zod';
-import {assertActorContext,type ActorContext} from 'workdsh-contracts';
+import {assertActorContext,type ActorContext} from 'epuberdsh-contracts';
 const recordSchema=z.object({id:z.string(),title:z.string(),createdAt:z.string(),operationId:z.string()});
 const stateSchema=z.object({organizationId:z.string(),principalId:z.string(),records:z.array(recordSchema)});
 function spec(actor:ActorContext){const key=createHash('sha256').update(JSON.stringify([actor.organizationId,actor.principalId])).digest('hex').slice(0,40);

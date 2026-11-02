@@ -277,7 +277,7 @@ export function apply(ctx){ctx.effect(()=>ctx.connection.fetch.register({path:'/
   if(!resolved.agent)throw Error('agent unavailable');
   const actor=await ctx.workdshIdentity.resolve({sessionId:r.sessionId},request.signal);
   const docs=await ctx.workdshOfficeContent.list(actor,request.signal);
-  const inspected=await ctx.sessionController.inspect(r.sessionId,request.signal);
+  const inspected=await ctx.workdshSessionAccess.inspect(r.sessionId,request.signal);
   value={events:inspected.events.filter(e=>['user/message','assistant/message','deliverables/presented'].includes(e.type)),status:resolved.agent.status,deliveries:inspected.events.filter(e=>e.type==='deliverables/presented'),trace:inspected.events.filter(e=>['tool/call','step/start','turn/end'].includes(e.type)).map(e=>({type:e.type,time:e.time,name:e.type==='tool/call'?e.data.name:undefined})),documents:await Promise.all(docs.map(d=>ctx.workdshOfficeContent.read(actor,d.documentId,request.signal)))};
  }else if(r.action==='guide'){
   const resolved=await ctx.workdshSessionAccess.resolveAgent(r.sessionId,request.signal);
@@ -294,8 +294,8 @@ export function apply(ctx){ctx.effect(()=>ctx.connection.fetch.register({path:'/
   if(!['content_open','content_read','content_capabilities','content_edit','content_present','content_export'].includes(r.name))throw Error('tool not allowed');
   const resolved=await ctx.workdshSessionAccess.resolveAgent(r.sessionId,request.signal);
   if(!resolved.agent)throw Error(JSON.stringify(resolved));
-  const result=await ctx.tools.execute({name:r.name,arguments:r.args,callId:r.callId,agent:resolved.agent,signal:request.signal});
-  if(result.isError)throw Error(JSON.stringify(result));value=result.value;
+  const batch=await ctx.tools.execute({calls:[{type:'tool-call',id:r.callId,name:r.name,arguments:JSON.stringify(r.args)}],agent:resolved.agent,signal:request.signal});
+  const result=batch.results[0]?.result;if(!result||result.isError)throw Error(JSON.stringify(result));value=result.value;
  }else throw Error('unknown probe action');
  return Response.json({ok:true,value});
  }catch(e){return Response.json({ok:false,error:String(e)})}}}));}`,
@@ -507,7 +507,7 @@ export function apply(ctx){ctx.effect(()=>ctx.connection.fetch.register({path:'/
       await api(host,{action:"tool",sessionId:sid,name:"content_edit",args:{input:{documentId:doc.documentId,baseRevision:doc.revision,operationId:randomUUID(),operations:[{op:"document.replaceBlock",blockId:doc.state.blockIds[0],expectedText:"",block:{type:"paragraph",runs:[{text:savedText,marks:[]}]}}]}},callId:randomUUID()});
       await browser.close(); browser = undefined;
       await stop();
-      await cli("plugin", "--profile", "office", "remove", "workdsh-plugin-office");
+      await cli("plugin", "--profile", "office", "remove", "epuberdsh-plugin-office");
       host = await start();
       const without = await api(host,{action:"visible-tools",sessionId:sid});
       assert.ok(!without.some(name=>name.startsWith("content_")));

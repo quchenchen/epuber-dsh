@@ -1,4 +1,4 @@
-import type { WorkbenchDescriptor } from 'workdsh-contracts';
+import type { WorkbenchDescriptor } from 'epuberdsh-contracts';
 import { verifyInstalledWorkbenchArtifact } from './installed-artifact.js';
 import type { WorkbenchInstallationArchives } from './installation-archives.js';
 export interface WorkbenchBundleManager {

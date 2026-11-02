@@ -11,7 +11,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client';
 import type { ReferenceInsert } from '@deepseek-ai/dsh-client-ui-conversation/client';
 import type {} from '@deepseek-ai/dsh-client-ui-session/client';
 import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client';
-import { Icon, type IconName } from 'workdsh-ui';
+import { Icon, type IconName } from 'epuberdsh-ui';
 import type { KnowledgeBase } from './services/knowledge-service.js';
 import { createKnowledgeClient } from './client/management.js';
 import { KnowledgePanel } from './client/KnowledgePanel.js';

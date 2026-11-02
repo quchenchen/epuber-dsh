@@ -31,7 +31,9 @@ test('successful CLI completion does not report an installation failure', async 
 
 test('timeout terminates its owned process and preserves its specific reason', async () => {
   const options = fixture(`console.error('install started'); setInterval(() => {}, 1000)`)
-  await expect(runOfficialCommand({ ...options, timeoutMs: 150 })).rejects.toThrow('插件依赖更新超时')
+  // The assertion below is about retained output, so the budget must comfortably clear a
+  // cold Node start: at 150 ms a loaded parallel run kills the child before it can write.
+  await expect(runOfficialCommand({ ...options, timeoutMs: 1_500 })).rejects.toThrow('插件依赖更新超时')
   expect(readFileSync(join(options.logDirectory, 'plugin-operation-failure.log'), 'utf8')).toContain('install started')
 }, integrationTimeout)
 

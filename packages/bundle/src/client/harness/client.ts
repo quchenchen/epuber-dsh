@@ -1,5 +1,6 @@
 import { ShellAppearance } from '../components/ShellAppearance.js';
 import { installFreshSessionNavigation } from './fresh-session.js';
+import { syncProductTitle } from './product-title.js';
 import { communityMarketView, type MarketHost } from '../components/CommunityMarket.js';
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-remotes/client';
@@ -10,8 +11,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client';
 import type {} from '@deepseek-ai/dsh-client-ui-session/client';
 import type {} from '@deepseek-ai/dsh-api-session-controller/client';
 import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client';
-import * as workbench from 'workdsh-plugin-workbench';
-import { BrandMark, BrandName, DiagnosticsMark } from '../components/Brand.js';
+import * as workbench from 'epuberdsh-plugin-workbench';
+import { BrandMark, BrandName, DiagnosticsMark, HeroMark } from '../components/Brand.js';
 import { DiagnosticsPanel, type Inventory } from '../components/DiagnosticsPanel.js';
 import { NavigationLocation } from '../components/NavigationLocation.js';
 import { AgentBrowserPage, agentBrowserKind, readAgentBrowserFrame } from '../components/AgentBrowserPage.js';
@@ -59,7 +60,7 @@ export function apply(ctx: Context): void {
     // inventory rather than making a request to a route that may not exist.
     void ctx.remote.pluginInventory.list().then(response => {
       if (disposed || !response.ok) return;
-      const provider = response.value.entries.find(row => row.moduleName === 'workdsh-provider-browser-session');
+      const provider = response.value.entries.find(row => row.moduleName === 'epuberdsh-provider-browser-session');
       if (!provider?.enabled) registerLegacy();
     }).catch(() => { /* Unknown inventory is not evidence that a provider is absent. */ });
     return () => { disposed = true; unregister?.(); };
@@ -122,6 +123,12 @@ export function apply(ctx: Context): void {
   ctx.plugin(workbench);
   ctx.slots.inject('sidebar.brand.name', () => ctx.slots.register({ name: 'sidebar.brand.name', priority: -10 }, BrandName));
   ctx.slots.inject('sidebar.brand.mark', () => ctx.slots.register({ name: 'sidebar.brand.mark', priority: -10 }, BrandMark));
+  // The hero mark ships with the official whale as its fallback; register the
+  // product mark so the conversation hero carries this build's identity too.
+  ctx.slots.inject('conversation.hero.brand.mark', () => ctx.slots.register({
+    name: 'conversation.hero.brand.mark', priority: -10,
+  }, HeroMark));
+  ctx.effect(() => syncProductTitle());
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({
     name: 'shell.overlay', id: 'workdsh-location', inject: () => ({ panelToView, selectView }),
   }, NavigationLocation));
@@ -133,7 +140,7 @@ export function apply(ctx: Context): void {
           const response = await ctx.remote.pluginInventory.list();
           if (!response.ok) throw new Error(response.error.code);
           return { total: response.value.entries.length, modules: response.value.entries
-            .filter(row => row.moduleName.startsWith('workdsh-'))
+            .filter(row => row.moduleName.startsWith('epuberdsh-'))
             .map(row => ({ module: row.moduleName, phase: row.fiberPhase })) };
         },
         returnToConversation: () => ctx.layout.selectPanel(null),
@@ -142,6 +149,6 @@ export function apply(ctx: Context): void {
     return dispose;
   });
   if (diagnostics) ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
-    name: 'sidebar.panellist', id: 'workdsh-probe', label: 'WorkDSH 接入验证', order: 90,
+    name: 'sidebar.panellist', id: 'workdsh-probe', label: 'AI融媒中心 接入验证', order: 90,
   }, DiagnosticsMark));
 }

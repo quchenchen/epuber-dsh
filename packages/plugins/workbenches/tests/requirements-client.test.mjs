@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(new URL('../../../../apps/web/package.json', import.meta.url));
 const { build } = require('esbuild');
-const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/requirements-client.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
+const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/requirements-client.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
 const { createWorkbenchRequirementsClient } = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const draft = { title: '质量', scenario: '分析', users: '工程师', dataSources: 'CSV', workflow: '导入分析', firstIteration: '指标', acceptance: '复算' };
 test('client preserves optimistic revision and conflict code without retrying a write', async () => {

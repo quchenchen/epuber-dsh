@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import ExcelJS from "exceljs";
-import type { OfficeSnapshot, OfficeBlockInput, OfficeChart } from "workdsh-contracts/office";
+import type { OfficeSnapshot, OfficeBlockInput, OfficeChart } from "epuberdsh-contracts/office";
+import { MATERIAL_FORMAT, MATERIAL_HEADINGS } from "./material-format.js";
 const xml = (text: string) =>
   text
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "")
@@ -27,7 +28,7 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
     const legend=chart.legend==="none"?"":`<c:legend><c:legendPos val="${({top:"t",right:"r",bottom:"b",left:"l"} as const)[chart.legend ?? "bottom"]}"/><c:layout/><c:overlay val="0"/></c:legend>`;
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:date1904 val="0"/><c:lang val="zh-CN"/><c:roundedCorners val="0"/><c:chart>${chart.title?titleXml(chart.title):""}<c:autoTitleDeleted val="${chart.title?0:1}"/><c:plotArea><c:layout/>${body}${["pie","doughnut"].includes(chart.chartType)?"":axes}<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr></c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/><c:showDLblsOverMax val="0"/></c:chart><c:externalData r:id="rId1"><c:autoUpdate val="0"/></c:externalData></c:chartSpace>`;
   }
-  function paragraphXml(block:OfficeBlockInput):string {
+  function paragraphXml(block:OfficeBlockInput, noFirstLineIndent = false):string {
       const paragraph: string[] = [];
       if (block.type === "heading")
         paragraph.push(`<w:pStyle w:val="Heading${block.level}"/>`);
@@ -71,9 +72,12 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
       }
       const left =
         (list ? 720 * (list.depth + 1) : 0) + (style?.indent ?? 0) * 360;
-      if (left)
+      // The body default carries a two-character first-line indent. Lists,
+      // table cells and drawings must reset it explicitly, otherwise every
+      // such paragraph would start indented under the material format.
+      if (left || list || noFirstLineIndent)
         paragraph.push(
-          `<w:ind w:left="${left}"${list && !list.continuation ? ' w:hanging="360"' : ""}/>`,
+          `<w:ind${left ? ` w:left="${left}"` : ""}${list && !list.continuation ? ' w:hanging="360"' : ""}${list || noFirstLineIndent ? ' w:firstLine="0"' : ""}/>`,
         );
       const runs = block.runs
         .map((run) => {
@@ -116,11 +120,11 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
       const image=block.image!, id=`image${images.length+1}`, extension=image.src.startsWith("data:image/png;") ? "png" : "jpeg";
       images.push({id,extension,data:image.src.split(",")[1]!});
       const cx=Math.round(image.width*9525),cy=Math.round(image.height*9525),n=images.length;
-      return `<w:p><w:pPr><w:jc w:val="${image.alignment ?? "left"}"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="${id}" descr="${xml(image.alt ?? "")}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${n}" name="${id}" descr="${xml(image.alt ?? "")}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+      return `<w:p><w:pPr><w:jc w:val="${image.alignment ?? "left"}"/><w:ind w:firstLine="0"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="${id}" descr="${xml(image.alt ?? "")}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${n}" name="${id}" descr="${xml(image.alt ?? "")}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
     }
     if(block.type==="chart") {
       const chart=block.chart!,id=`chart${charts.length+1}`,n=images.length+charts.length+1,cx=Math.round(chart.width*9525),cy=Math.round(chart.height*9525);charts.push({id,chart});
-      return `<w:p><w:pPr><w:jc w:val="${chart.alignment ?? "left"}"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${n}" name="${xml(chart.title ?? id)}"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart r:id="${id}"/></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+      return `<w:p><w:pPr><w:jc w:val="${chart.alignment ?? "left"}"/><w:ind w:firstLine="0"/></w:pPr><w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${n}" name="${xml(chart.title ?? id)}"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart r:id="${id}"/></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
     }
     if(block.type!=="table") return paragraphXml(block);
     listStack.length=0;
@@ -133,7 +137,7 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
     return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblLayout w:type="fixed"/><w:tblBorders>${["top","left","bottom","right","insideH","insideV"].map(side=>`<w:${side} w:val="single" w:sz="4" w:color="C7CED8"/>`).join("")}</w:tblBorders></w:tblPr><w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${grid.map(row=>{
       const cells:string[]=[];for(let x=0;x<width;){const {cell,origin}=row[x]!;const props=`<w:tcW w:w="${widths.slice(x,x+cell.colspan).reduce((a,b)=>a+b,0)}" w:type="dxa"/>${cell.colspan>1 ? `<w:gridSpan w:val="${cell.colspan}"/>` : ""}${cell.rowspan>1 ? `<w:vMerge${origin ? ' w:val="restart"' : ""}/>` : ""}${cell.header ? '<w:shd w:fill="F0F3F8"/>' : ""}`;
       listStack.length=0;
-      cells.push(`<w:tc><w:tcPr>${props}</w:tcPr>${origin ? cell.paragraphs.map(paragraphXml).join("") : "<w:p/>"}</w:tc>`);x+=cell.colspan;}
+      cells.push(`<w:tc><w:tcPr>${props}</w:tcPr>${origin ? cell.paragraphs.map(paragraph => paragraphXml(paragraph, true)).join("") : "<w:p/>"}</w:tc>`);x+=cell.colspan;}
       return `<w:tr>${row.every(slot=>slot?.cell.header) ? '<w:trPr><w:tblHeader/></w:trPr>' : ""}${cells.join("")}</w:tr>`;
     }).join("")}</w:tbl>`;
   }
@@ -149,7 +153,7 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
   }
   zip.file(
     "[Content_Types].xml",
-    `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="xlsx" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>${charts.map(({id})=>`<Override PartName="/word/charts/${id}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`).join("")}${numbers.length ? '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' : ""}</Types>`,
+    `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="xlsx" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>${charts.map(({id})=>`<Override PartName="/word/charts/${id}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`).join("")}${numbers.length ? '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' : ""}</Types>`,
   );
   zip.file(
     "_rels/.rels",
@@ -157,7 +161,7 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
   );
   zip.file(
     "word/_rels/document.xml.rels",
-    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${images.map(image=>`<Relationship Id="${image.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${image.id}.${image.extension}"/>`).join("")}${charts.map(({id})=>`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="charts/${id}.xml"/>`).join("")}${numbers.length ? '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>' : ""}</Relationships>`,
+    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${images.map(image=>`<Relationship Id="${image.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${image.id}.${image.extension}"/>`).join("")}${charts.map(({id})=>`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="charts/${id}.xml"/>`).join("")}${numbers.length ? '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>' : ""}<Relationship Id="rIdFooter" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>`,
   );
   if (numbers.length)
     zip.file(
@@ -166,11 +170,18 @@ export async function documentDocx(snapshot: OfficeSnapshot): Promise<Blob> {
     );
   zip.file(
     "word/document.xml",
-    `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/></w:sectPr></w:body></w:document>`,
+    `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><w:body>${body}<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="${MATERIAL_FORMAT.page.widthTwips}" w:h="${MATERIAL_FORMAT.page.heightTwips}"/><w:pgMar w:top="${MATERIAL_FORMAT.page.marginTopTwips}" w:right="${MATERIAL_FORMAT.page.marginRightTwips}" w:bottom="${MATERIAL_FORMAT.page.marginBottomTwips}" w:left="${MATERIAL_FORMAT.page.marginLeftTwips}" w:header="${MATERIAL_FORMAT.page.headerTwips}" w:footer="${MATERIAL_FORMAT.page.footerTwips}" w:gutter="0"/></w:sectPr></w:body></w:document>`,
+  );
+  // Page numbers follow the material format: an em-dash wrapped PAGE field,
+  // centred in the footer, 宋体 14pt.
+  const footerRunProps = `<w:rFonts w:ascii="${MATERIAL_FORMAT.latinFont}" w:hAnsi="${MATERIAL_FORMAT.latinFont}" w:eastAsia="${MATERIAL_FORMAT.footer.eastAsiaFont}"/><w:sz w:val="${MATERIAL_FORMAT.footer.sizeHalfPoints}"/><w:szCs w:val="${MATERIAL_FORMAT.footer.sizeHalfPoints}"/>`;
+  zip.file(
+    "word/footer1.xml",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:ind w:left="0" w:right="0" w:firstLine="0"/></w:pPr><w:r><w:rPr>${footerRunProps}</w:rPr><w:t xml:space="preserve">— </w:t></w:r><w:fldSimple w:instr=" PAGE  \\* MERGEFORMAT "><w:r><w:rPr>${footerRunProps}</w:rPr><w:t>1</w:t></w:r></w:fldSimple><w:r><w:rPr>${footerRunProps}</w:rPr><w:t xml:space="preserve"> —</w:t></w:r></w:p></w:ftr>`,
   );
   zip.file(
     "word/styles.xml",
-    `<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="等线"/><w:sz w:val="24"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="360" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>${[1, 2, 3, 4, 5, 6].map((level) => `<w:style w:type="paragraph" w:styleId="Heading${level}"><w:name w:val="heading ${level}"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="160"/><w:outlineLvl w:val="${level - 1}"/></w:pPr><w:rPr><w:b/><w:sz w:val="${[40, 32, 28, 26, 24, 24][level - 1]}"/></w:rPr></w:style>`).join("")}</w:styles>`,
+    `<?xml version="1.0" encoding="UTF-8"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${MATERIAL_FORMAT.latinFont}" w:hAnsi="${MATERIAL_FORMAT.latinFont}" w:eastAsia="${MATERIAL_FORMAT.body.eastAsiaFont}" w:cs="${MATERIAL_FORMAT.latinFont}"/><w:sz w:val="${MATERIAL_FORMAT.body.sizeHalfPoints}"/><w:szCs w:val="${MATERIAL_FORMAT.body.sizeHalfPoints}"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:before="${MATERIAL_FORMAT.body.beforeTwips}" w:after="${MATERIAL_FORMAT.body.afterTwips}" w:line="${MATERIAL_FORMAT.body.lineTwips}" w:lineRule="exact"/><w:ind w:left="0" w:right="0" w:firstLine="${MATERIAL_FORMAT.body.firstLineTwips}"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>${MATERIAL_HEADINGS.map((heading, index) => `<w:style w:type="paragraph" w:styleId="Heading${index + 1}"><w:name w:val="heading ${index + 1}"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="${heading.beforeTwips}" w:after="${heading.afterTwips}" w:line="${MATERIAL_FORMAT.body.lineTwips}" w:lineRule="exact"/><w:ind w:left="0" w:right="0" w:firstLine="${heading.firstLineTwips}"/><w:jc w:val="${heading.align}"/><w:outlineLvl w:val="${index}"/></w:pPr><w:rPr><w:rFonts w:ascii="${MATERIAL_FORMAT.latinFont}" w:hAnsi="${MATERIAL_FORMAT.latinFont}" w:eastAsia="${heading.eastAsiaFont}"/><w:b/><w:sz w:val="${heading.sizeHalfPoints}"/><w:szCs w:val="${heading.sizeHalfPoints}"/></w:rPr></w:style>`).join("")}</w:styles>`,
   );
   // Fixed metadata makes a frozen semantic revision produce the same bytes on retries.
   zip.forEach((_path, entry) => {entry.date = new Date(1980, 0, 1, 0, 0, 0);});

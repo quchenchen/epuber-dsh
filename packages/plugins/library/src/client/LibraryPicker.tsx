@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
-import { Icon } from 'workdsh-ui';
-import type { LibraryTreeEntry } from 'workdsh-contracts/library';
+import { Icon } from 'epuberdsh-ui';
+import type { LibraryTreeEntry } from 'epuberdsh-contracts/library';
 import type { LibraryClient } from './management.js';
 import { libraryPickerRequestedEvent } from './selection-events.js';
 

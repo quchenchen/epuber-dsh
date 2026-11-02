@@ -1,1 +1,1 @@
-export { extractTabularText } from 'workdsh-tabular';
+export { extractTabularText } from 'epuberdsh-tabular';

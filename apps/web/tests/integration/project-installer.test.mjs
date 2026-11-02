@@ -10,9 +10,9 @@ const root = resolve(import.meta.dirname, '../..');
 const installer = join(root, 'scripts/install-project-release.mjs');
 const harnessVersion = '0.2.1-rc.1';
 const packageNames = [
-  'workdsh-provider-identity-local', 'workdsh-provider-browser-session', 'workdsh-plugin-audit', 'workdsh-plugin-access',
-  'workdsh-plugin-skills', 'workdsh-plugin-experts', 'workdsh-plugin-connectors',
-  'workdsh-plugin-workbenches', 'workdsh-plugin-activity', 'workdsh-plugin-office', 'workdsh-plugin-library', 'workdsh-plugin-projects', 'workdsh-bundle',
+  'epuberdsh-provider-identity-local', 'epuberdsh-provider-browser-session', 'epuberdsh-plugin-audit', 'epuberdsh-plugin-access',
+  'epuberdsh-plugin-skills', 'epuberdsh-plugin-experts', 'epuberdsh-plugin-connectors',
+  'epuberdsh-plugin-workbenches', 'epuberdsh-plugin-activity', 'epuberdsh-plugin-office', 'epuberdsh-plugin-library', 'epuberdsh-plugin-projects', 'epuberdsh-bundle',
 ];
 
 async function fixture(version = harnessVersion) {
@@ -147,12 +147,12 @@ test('installer resolves required official peers without fetching bundled worksp
     await writeFile(join(dir, 'package.json'), '{}');
     await writeFile(join(dir, 'pnpm-workspace.yaml'), 'packages: []\n');
     await writeFile(join(consumer, 'package.json'), JSON.stringify({peerDependencies: {
-      '@deepseek-ai/dsh-scope': '^0.1.7-alpha.1', 'workdsh-ui': '*', '@deepseek-ai/dsh-optional': '*',
+      '@deepseek-ai/dsh-scope': '^0.1.7-alpha.1', 'epuberdsh-ui': '*', '@deepseek-ai/dsh-optional': '*',
     }, peerDependenciesMeta: {'@deepseek-ai/dsh-optional': {optional: true}}}));
     const result = run(input, 'peers');
     assert.equal(result.status, 0, result.stderr);
     const recorded = await calls(input);
     assert.ok(recorded.some(args => args.includes(`@deepseek-ai/dsh-scope@${harnessVersion}`)));
-    assert.ok(recorded.every(args => !args.some(arg => arg.startsWith('workdsh-ui@') || arg.startsWith('@deepseek-ai/dsh-optional@'))));
+    assert.ok(recorded.every(args => !args.some(arg => arg.startsWith('epuberdsh-ui@') || arg.startsWith('@deepseek-ai/dsh-optional@'))));
   } finally { await rm(input.home, {recursive: true, force: true}); }
 });

@@ -3,7 +3,7 @@ import { open } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { createGunzip } from 'node:zlib';
 import { setImmediate } from 'node:timers/promises';
-import type { WorkbenchPackageReceipt } from 'workdsh-contracts';
+import type { WorkbenchPackageReceipt } from 'epuberdsh-contracts';
 import { parseInstalledWorkbenchManifest, type InstalledWorkbenchManifest } from './manifest.js';
 const MAX_ARCHIVE = 8 * 1024 * 1024, MAX_EXPANDED = 64 * 1024 * 1024, MAX_FILE = 16 * 1024 * 1024, MAX_MANIFEST = 256 * 1024;
 export interface WorkbenchPackageArtifact {

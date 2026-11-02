@@ -8,8 +8,10 @@ import {patchNativeWorkbenchFrame,ensureNativeWorkbenchFrame,verifyNativeWorkben
 const require=createRequire(new URL('../../../../packages/plugins/quality-analysis/package.json',import.meta.url));
 const manifestPath=require.resolve('@deepseek-ai/dsh-client-ui-conversation/package.json');
 const source=await readFile(join(dirname(manifestPath),'lib/client.js'),'utf8');
-test('authorized rc.2 seam preserves the native subtree and refuses unknown bytes',async()=>{
- assert.equal(JSON.parse(await readFile(manifestPath,'utf8')).version,'0.2.1-rc.2');
+// The locked adapter JSON is the single source of truth for the pinned version and digests.
+const spec=JSON.parse(await readFile(new URL('../../../../scripts/native-workbench-frame-patch.json',import.meta.url),'utf8'));
+test('authorized seam preserves the native subtree and refuses unknown bytes',async()=>{
+ assert.equal(JSON.parse(await readFile(manifestPath,'utf8')).version,spec.version);
  const patched=patchNativeWorkbenchFrame(source);
  assert.notEqual(patched,source);assert.equal(patchNativeWorkbenchFrame(patched),patched);
  assert.match(patched,/const conversation = renderSlot\("main.conversation", \{\}\)/);
@@ -26,15 +28,15 @@ test('local copy applies idempotently, rolls back exactly and rejects unknown ve
   await assert.rejects(verifyNativeWorkbenchFrame(profile),/adapter is missing/);
   await ensureNativeWorkbenchFrame(profile);assert.equal(await readFile(join(pkg,'lib/client.js'),'utf8'),patchNativeWorkbenchFrame(source));
   const verified=await verifyNativeWorkbenchFrame(profile);
-  assert.equal(verified.version,'0.2.1-rc.2');assert.equal(verified.sha256,'aafebc0109b8d60eb1e1b5e1f3a686c72b86eaf7a3dae8fdd699e1756debc80f');
+  assert.equal(verified.version,spec.version);assert.equal(verified.sha256,spec.patchedSha256);
   assert.equal(await readFile(untouched,'utf8'),source,'other hardlinked installations must remain unmodified');
   await ensureNativeWorkbenchFrame(profile);await ensureNativeWorkbenchFrame(profile,{rollback:true});
   assert.equal(await readFile(join(pkg,'lib/client.js'),'utf8'),source);
   await assert.rejects(verifyNativeWorkbenchFrame(profile),/adapter is missing/);
-  await writeFile(join(pkg,'package.json'),JSON.stringify({...manifest,version:'0.2.1-rc.1'}));
+  await writeFile(join(pkg,'package.json'),JSON.stringify({...manifest,version:'0.0.0-previous'}));
   await assert.rejects(ensureNativeWorkbenchFrame(profile),/version mismatch/);
   await assert.rejects(verifyNativeWorkbenchFrame(profile),/version mismatch/);
-  assert.equal(await readFile(join(pkg,'lib/client.js'),'utf8'),source,'identical rc.1 bytes do not bypass the exact rc.2 package-version guard');
+  assert.equal(await readFile(join(pkg,'lib/client.js'),'utf8'),source,'identical bytes from another version do not bypass the exact package-version guard');
   await writeFile(join(pkg,'package.json'),JSON.stringify({...manifest,version:'0.0.0-unknown'}));
   await assert.rejects(ensureNativeWorkbenchFrame(profile),/version mismatch/);
   assert.equal(await readFile(join(pkg,'lib/client.js'),'utf8'),source);
@@ -56,8 +58,8 @@ test('packaged verification reads copied Resources bytes and refuses missing, ch
   await assert.rejects(verifyNativeWorkbenchFrame(packaged),/adapter is missing/);
   await writeFile(join(copied,'lib/client.js'),patchNativeWorkbenchFrame(source)+'\n');
   await assert.rejects(verifyNativeWorkbenchFrame(packaged),/unsupported packaged runtime bytes/);
-  assert.equal((await verifyNativeWorkbenchFrame(sourceProfile)).sha256,'aafebc0109b8d60eb1e1b5e1f3a686c72b86eaf7a3dae8fdd699e1756debc80f','unchanged source receipts cannot hide a changed installer copy');
-  await writeFile(join(copied,'package.json'),JSON.stringify({...manifest,version:'0.2.1-unknown'}));
+  assert.equal((await verifyNativeWorkbenchFrame(sourceProfile)).sha256,spec.patchedSha256,'unchanged source receipts cannot hide a changed installer copy');
+  await writeFile(join(copied,'package.json'),JSON.stringify({...manifest,version:'0.0.0-unknown'}));
   await assert.rejects(verifyNativeWorkbenchFrame(packaged),/version mismatch/);
  }finally{await rm(directory,{recursive:true,force:true});}
 });

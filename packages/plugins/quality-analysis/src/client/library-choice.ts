@@ -1,4 +1,4 @@
-import type { LibraryTreeEntry } from 'workdsh-contracts';
+import type { LibraryTreeEntry } from 'epuberdsh-contracts';
 import type { QualityLibraryChoice } from './QualityLibraryImport.js';
 /** A display entry is only a reference. Host independently checks ownership and revision. */
 export function qualityLibraryChoice(entry: LibraryTreeEntry): QualityLibraryChoice | undefined {

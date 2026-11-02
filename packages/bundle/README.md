@@ -21,7 +21,7 @@
 
 本地候选版本 **0.1.0-alpha.46**。build/typecheck 使用包内脚本，安装验证由根 scripts/probe-install.mjs 提供。源码经 TypeScript/TSX 编译后打包，不依赖上游 checkout。
 
-Skill 已拆为 `workdsh-plugin-skills@0.1.0-alpha.30` 的独立 Host/Client 安装层，本包不再导入或直接调用其初始化函数。开发时运行 `corepack pnpm build` 和 `corepack pnpm preview:install`，由官方 CLI 将这两个精确版本的 tgz 安装到预览 Profile。仅安装本包提供品牌、工作台展示和诊断，不会暗中初始化 Skill；需要技能时显式安装 Skill 包。
+Skill 已拆为 `epuberdsh-plugin-skills@0.1.0-alpha.30` 的独立 Host/Client 安装层，本包不再导入或直接调用其初始化函数。开发时运行 `corepack pnpm build` 和 `corepack pnpm preview:install`，由官方 CLI 将这两个精确版本的 tgz 安装到预览 Profile。仅安装本包提供品牌、工作台展示和诊断，不会暗中初始化 Skill；需要技能时显式安装 Skill 包。
 
 Workbench alpha.11 仍随展示产物编译，但通过 `ctx.plugin(workbench)` 建立正式子插件生命周期。它尚无独立安装制品，本轮不宣称所有规划模块均可独立分发。技能页面和侧栏能力中心入口归 Skill Client 所有。初始 URL 在官方 Client 组合完成后解析，缺失页面回到原生 Conversation，避免先选择尚未注册的面板。
 

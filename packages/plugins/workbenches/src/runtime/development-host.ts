@@ -8,7 +8,7 @@ import {listSourceCheckpoints} from './source-checkpoint-catalog.js';
 import type { Context } from '@deepseek-ai/cordis';
 import type { DomainFacility } from '@deepseek-ai/dsh-storage-domain';
 import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import type { WorkbenchRequirementsService } from './requirements-service.js';
 import { WorkbenchDevelopmentService, type ResolveWorkbenchDevelopmentTarget, type VerifyWorkbenchDevelopmentSession, VerifyWorkbenchDevelopmentSource } from './development-service.js';
 import { handleWorkbenchDevelopmentRequest, workbenchDevelopmentPath } from './development-rpc.js';

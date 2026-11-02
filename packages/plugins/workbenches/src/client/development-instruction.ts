@@ -1,5 +1,5 @@
 import { parseWorkbenchRequirementsDraft, resolveWorkbenchEditTarget,
-  type WorkbenchDevelopment, type WorkbenchRequirementsRevision, type WorkbenchEditTarget } from 'workdsh-contracts';
+  type WorkbenchDevelopment, type WorkbenchRequirementsRevision, type WorkbenchEditTarget } from 'epuberdsh-contracts';
 
 /** Prepare context for the native development conversation, without executing
  * code or treating requirements text as platform authority. */
@@ -19,9 +19,9 @@ export function createWorkbenchDevelopmentInstruction(saved: WorkbenchRequiremen
     requirementsRevision: saved.id, developmentRevision: development.revision,
     source: development.source ?? null, session: development.session ?? null, requirements, adjustment: edit ?? null };
   return [
-    '/cordis-plugin-development /workdsh-workbench-dev',
+    '/cordis-plugin-development /workbench-dev',
     '在官方创造模式中开发这份 WorkDSH 工作台，沿用已绑定的插件身份和源码。',
-    '先加载官方 cordis-plugin-development 技能，再加载 workdsh-workbench-dev 技能及本轮相关资源；使用官方运行时检查、文件和开发工具核对实际 SDK。技能不可读取时说明具体缺口，不用猜测接口替代。',
+    '先加载官方 cordis-plugin-development 技能，再加载 workbench-dev 技能及本轮相关资源；使用官方运行时检查、文件和开发工具核对实际 SDK。技能不可读取时说明具体缺口，不用猜测接口替代。',
     '先在下方 source.directory 阅读 package.json、README 和现有实现，核对源码与需求修订，再实施 requirements.firstIteration 和 acceptance 约定的本轮范围。已有源码和用户改动保留，不另建同名插件。',
     '沿用用户当前要求的产品阶段、布局和打包限制；保留原生会话、Office、模型选择与授权，开发不会自动提升访问权限。',
     '安装成功与工作台登记是两个事实。候选交付时回到本开发记录的“安装试用”检查和导入；官方安装回执不能替代 WorkDSH 包验证、登记和真实页面验收。',

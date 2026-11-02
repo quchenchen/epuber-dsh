@@ -10,13 +10,13 @@ const signal = new AbortController().signal;
 let sequence = 0;
 
 async function execute(name, arguments_) {
-  const response = await ctx.tools.execute({
-    name,
-    arguments: arguments_,
-    callId: `mcp-resource-probe-${++sequence}`,
+  const batch = await ctx.tools.execute({
+    calls: [{ type: 'tool-call', id: `mcp-resource-probe-${++sequence}`, name, arguments: JSON.stringify(arguments_ ?? {}) }],
     agent: { id: 'mcp-resource-probe' },
     signal,
   });
+  const response = batch.results[0]?.result;
+  if (!response) throw new Error(`工具 ${name} 没有返回结果。`);
   if (response.isError) throw response.error;
   return response.value;
 }

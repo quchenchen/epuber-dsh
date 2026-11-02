@@ -1,4 +1,4 @@
-import { parseWorkbenchDescriptor } from 'workdsh-contracts';
+import { parseWorkbenchDescriptor } from 'epuberdsh-contracts';
 export function createWorkbenchNativeInstallationClient(transport: typeof fetch = fetch) {
   return async (selection: { developmentId: string; expectedRevision: string; version: string; sha256: string; packageName: string; workbenchId: string }, signal?: AbortSignal) => {
     const lifetime = AbortSignal.any([AbortSignal.timeout(60_000), ...(signal ? [signal] : [])]);

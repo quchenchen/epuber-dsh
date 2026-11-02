@@ -1,8 +1,9 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-session-controller';
-import { assertActorContext } from 'workdsh-contracts';
-import type { ActorContext, IdentityService, RuntimeBindingService, SessionOwnerBinding } from 'workdsh-contracts';
-import type { ProjectTaskLink } from 'workdsh-contracts/projects';
+import type { SessionId } from '@deepseek-ai/dsh-session';
+import { assertActorContext } from 'epuberdsh-contracts';
+import type { ActorContext, IdentityService, RuntimeBindingService, SessionOwnerBinding } from 'epuberdsh-contracts';
+import type { ProjectTaskLink } from 'epuberdsh-contracts/projects';
 
 const ownedBy = (owner: SessionOwnerBinding, actor: ActorContext): boolean =>
   owner.organizationId === actor.organizationId && owner.ownerPrincipalId === actor.principalId;
@@ -14,16 +15,18 @@ export async function assertSessionAssociationAccess(ctx: Context, actor: ActorC
   const access = ctx.get('workdshAccess') as RuntimeBindingService | undefined;
   const identity = ctx.get('workdshIdentity') as IdentityService | undefined;
   const controller = ctx.get('sessionController') as Context['sessionController'] | undefined;
-  const protectedSessions = ctx.get('workdshSessionAccess') as Pick<Context['sessionController'], 'inspect'> | undefined;
-  if (!access || !identity || !controller) throw new Error('projects/session-authority-unavailable');
+  const protectedSessions = ctx.get('workdshSessionAccess') as { inspect(sessionId: SessionId, signal?: AbortSignal): Promise<unknown> } | undefined;
+  if (!access || !identity || !controller || !protectedSessions) throw new Error('projects/session-authority-unavailable');
   const resolved = await identity.resolve({ sessionId }, signal);
   if (resolved.principalId !== actor.principalId || resolved.organizationId !== actor.organizationId
     || identity.membership(actor.organizationId, actor.principalId)?.state !== 'active') throw new Error('projects/session-access-denied');
   const prior = access.sessionOwner(sessionId);
   if (prior && !ownedBy(prior, actor)) throw new Error('projects/session-access-denied');
   if (!prior && identity.profile().organization.kind !== 'personal' && !protectedSessions) throw new Error('projects/session-access-denied');
-  const inspector = protectedSessions ?? controller;
-  try { await inspector.inspect(sessionId as Parameters<typeof controller.inspect>[0], signal); }
+  try {
+    // The governed bridge owns the official cold read; the Controller no longer exposes one.
+    await protectedSessions.inspect(sessionId as SessionId, signal);
+  }
   catch (cause) { signal?.throwIfAborted(); throw new Error('projects/session-unavailable', { cause }); }
   signal?.throwIfAborted();
   const current = await identity.resolve({ sessionId }, signal);

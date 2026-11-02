@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
-import type { LibraryOriginalPreviewInput, LibraryOriginalPreviewRegistry } from 'workdsh-contracts/library';
+import type { LibraryOriginalPreviewInput, LibraryOriginalPreviewRegistry } from 'epuberdsh-contracts/library';
 import type { LibraryClient } from './management.js';
 import {createLibraryOriginalRevisionSave} from './original-revision-save.js';
 

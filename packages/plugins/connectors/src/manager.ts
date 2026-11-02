@@ -6,6 +6,7 @@ import { credentialRef } from '@deepseek-ai/dsh-credentials';
 import * as McpClient from '@deepseek-ai/dsh-mcp-client';
 import type { KvTable } from '@deepseek-ai/dsh-storage-domain';
 import type { ConnectorConfigView, ConnectorInput, ConnectorManagementService, ConnectorState, ConnectorSummary } from './shared.js';
+import { authorizationHeader, describeConnectorFailure } from './authorization.js';
 import { connectorDefinitionSchema, connectorSelectionsDomainSpec, connectorsDomainSpec, type ConnectorDefinition, type ConnectorSelection } from './storage.js';
 
 declare module '@deepseek-ai/cordis' { interface Context { workdshConnectors: ConnectorManagementService; } }
@@ -52,7 +53,7 @@ export class ConnectorManager extends Service implements ConnectorManagementServ
     if (this.options.seedExample !== false && !domain.global.get().seededExample) {
       const now = new Date().toISOString();
       await this.definitions.put('workdsh-example', {
-        id: 'workdsh-example', title: 'WorkDSH MCP 示例', description: '可查询业务目录，并通过 MCP 资源与 URI 模板读取示例资料。',
+        id: 'workdsh-example', title: 'AI融媒中心 MCP 示例', description: '可查询业务目录，并通过 MCP 资源与 URI 模板读取示例资料。',
         serverName: 'workdsh-example', transport: 'stdio', command: process.execPath, args: [serverPath], enabled: true,
         createdAt: now, updatedAt: now,
       });
@@ -165,14 +166,19 @@ export class ConnectorManager extends Service implements ConnectorManagementServ
       runtime.diagnostic = '连接授权已失效，请重新授权。';
       throw new Error('connector/authorization-missing');
     }
-    const headers: Record<string, string> = authorization ? { Authorization: authorization.value } : {};
+    const headers: Record<string, string> = authorization ? { Authorization: authorizationHeader(authorization.value) } : {};
     const transportConfig = definition.transport === 'stdio'
       ? { serverName: definition.serverName, transport: 'stdio' as const, ...connectorProcess(definition), env: {} }
       : { serverName: definition.serverName, transport: 'streamable-http' as const, url: definition.url!, headers };
     const fiber = this.ctx.plugin(McpClient, { ...transportConfig, failOnStartupError: true, toolCallTimeoutMs: 10_000, maxInstructionBytes: 8_192,
       reconnect: { enabled: true, initialDelayMs: 250, maxDelayMs: 5_000, maxAttempts: 4 } }) as ChildFiber & PromiseLike<unknown>;
     try { await fiber; runtime.child = fiber; runtime.state = 'ready'; }
-    catch (cause) { await fiber.dispose().catch(() => undefined); runtime.state = 'offline'; runtime.diagnostic = cause instanceof Error ? cause.message : 'MCP 服务启动失败。'; throw cause; }
+    catch (cause) {
+      await fiber.dispose().catch(() => undefined);
+      runtime.state = 'offline';
+      runtime.diagnostic = describeConnectorFailure(cause);
+      throw cause;
+    }
   }
 
   private async stop(id: string, remainsEnabled: boolean): Promise<void> {
@@ -202,7 +208,13 @@ export class ConnectorManager extends Service implements ConnectorManagementServ
         return { state: 'ready', toolNames, resourceCount: 0, resourceTemplateCount: 0, diagnostic: runtime.diagnostic };
       }
       const call = async (name: string, args: JsonRecord) => {
-        const output = await this.ctx.tools.execute({ name, arguments: args, callId: randomUUID() as never, agent, signal: signal ?? new AbortController().signal });
+        const batch = await this.ctx.tools.execute({
+          calls: [{ type: 'tool-call', id: randomUUID() as never, name, arguments: JSON.stringify(args) }],
+          agent,
+          signal: signal ?? new AbortController().signal,
+        });
+        const output = batch.results[0]?.result;
+        if (output === undefined) throw new Error(`连接器工具 ${name} 没有返回结果。`);
         if (output.isError) throw output.error; return record(output.value) ?? {};
       };
       // Resources are optional MCP capabilities. A server with working tools must not
@@ -217,7 +229,7 @@ export class ConnectorManager extends Service implements ConnectorManagementServ
       return { state: 'ready', toolNames, ...(runtime.diagnostic ? { diagnostic: runtime.diagnostic } : {}), resourceCount: Array.isArray(resources.resources) ? resources.resources.length : 0,
         resourceTemplateCount: Array.isArray(templates.resourceTemplates) ? templates.resourceTemplates.length : 0 };
     } catch (cause) {
-      runtime.state = 'offline'; runtime.diagnostic = cause instanceof Error ? cause.message : 'MCP 健康检查失败。';
+      runtime.state = 'offline'; runtime.diagnostic = describeConnectorFailure(cause);
       return { state: 'offline', toolNames, resourceCount: 0, resourceTemplateCount: 0, diagnostic: runtime.diagnostic };
     }
   }

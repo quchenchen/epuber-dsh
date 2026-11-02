@@ -9,6 +9,9 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { withoutRedundantAgentTeamProfile } from './preview-agent-team.mjs';
 import { previewHome as resolvePreviewHome } from './preview-home.mjs';
+// The community catalog integrations are pinned once for every Profile in this
+// repository. Reuse that inventory so Web and Desktop cannot drift apart.
+import { CATALOG_PACKAGES } from '../../desktop/scripts/workdsh-package-boundary.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const rootManifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
@@ -20,6 +23,9 @@ const baseSpec = `@deepseek-ai/dsh-base@${baseVersion}`;
 const webAppSpec = `@deepseek-ai/dsh-web-app@${webAppVersion}`;
 const marketVersion = '1.66.8';
 const marketSpec = `dshmarket@${marketVersion}`;
+// SkillHub powers the Skill panel's online catalog. Without it the same panel
+// renders but its `/skillhub` route is absent, so install it here as well.
+const skillHubSpec = `@cocofhu/skillhub@${CATALOG_PACKAGES['@cocofhu/skillhub']}`;
 const groupVersion = rootManifest.pnpm?.overrides?.['@deepseek-ai/cordis-plugin-group'];
 if (typeof groupVersion !== 'string') throw new Error('Missing exact Cordis group pin.');
 const cliVersion = JSON.parse(await readFile(join(root, 'node_modules/@deepseek-ai/dsh/package.json'), 'utf8')).version;
@@ -82,6 +88,29 @@ if (normalizedManifest) {
   await writeFile(previewManifestPath, `${JSON.stringify(normalizedManifest, null, 2)}\n`);
   console.log('Removed redundant standalone Agent Team profile from preview; WorkDSH experts owns Team composition.');
 }
+// Official packages declare their Cordis generation as peers. When the Profile
+// lets the resolver pick per consumer, one package is materialised once per peer
+// set, and any module-local registry inside it (dsh-app-boot, dsh-scope) splits
+// into copies that cannot see each other. Apply the same official pins the
+// workspace validates against so the Profile has exactly one graph generation.
+const officialPins = Object.fromEntries(Object.entries(rootManifest.pnpm?.overrides ?? {}).filter(([name]) => name.startsWith('@deepseek-ai/')));
+{
+  const manifest = JSON.parse(await readFile(previewManifestPath, 'utf8'));
+  const before = JSON.stringify([manifest.dependencies, manifest.pnpm?.overrides]);
+  manifest.pnpm = { ...(manifest.pnpm ?? {}), overrides: officialPins };
+  // A Profile created by an older release also carries exact versions that the
+  // pins now supersede. Rewrite them so the manifest states what is installed;
+  // ranges such as `file:` tarballs and independent packages are left alone.
+  for (const [name, pin] of Object.entries(officialPins)) {
+    if (manifest.dependencies?.[name] !== undefined && /^\d/.test(manifest.dependencies[name])) manifest.dependencies[name] = pin;
+  }
+  if (JSON.stringify([manifest.dependencies, manifest.pnpm?.overrides]) !== before) {
+    await writeFile(previewManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    // Pins only take effect on resolution; an existing directory keeps its old
+    // peer variants until the tree is rebuilt.
+    await run('pnpm/bin/pnpm.cjs', ['--dir', join(home, 'profiles/preview'), 'install', '--no-frozen-lockfile']);
+  }
+}
 // Reinstall the pinned official Web bundle as well as the WorkDSH layers. An
 // existing preview Profile may have been created by an older DSH release; its
 // bundle list alone does not upgrade the packages that provide newly added Web
@@ -90,9 +119,23 @@ const currentDependencies = JSON.parse(await readFile(previewManifestPath, 'utf8
 const layersMatch = currentDependencies['@deepseek-ai/dsh-base'] === baseVersion
   && currentDependencies['@deepseek-ai/dsh-web-app'] === webAppVersion
   && currentDependencies.dshmarket === marketVersion
+  && currentDependencies['@cocofhu/skillhub'] === CATALOG_PACKAGES['@cocofhu/skillhub']
   && packages.every(({ manifest }, index) => currentDependencies[manifest.name] === `file:${tarballs[index]}`);
 if (!layersMatch) {
-  await run('@deepseek-ai/dsh/lib/bin.js', ['plugin', '--profile', 'preview', 'add', baseSpec, webAppSpec, marketSpec, ...tarballs]);
+  await run('@deepseek-ai/dsh/lib/bin.js', ['plugin', '--profile', 'preview', 'add', baseSpec, webAppSpec, marketSpec, skillHubSpec, ...tarballs]);
+}
+// Installing the package is not enough: a Profile only composes a bundle listed
+// here, so register SkillHub's patch layer explicitly (idempotent on reinstall).
+{
+  const manifest = JSON.parse(await readFile(previewManifestPath, 'utf8'));
+  const bundles = manifest.dsh?.profile?.bundles ?? [];
+  if (!bundles.includes('@cocofhu/skillhub')) {
+    const next = [...bundles];
+    const at = next.indexOf('dshmarket');
+    next.splice(at < 0 ? next.length : at, 0, '@cocofhu/skillhub');
+    manifest.dsh = { ...(manifest.dsh ?? {}), profile: { ...(manifest.dsh?.profile ?? {}), bundles: next } };
+    await writeFile(previewManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  }
 }
 // Boot and ConfigEditor share module-local registration in dsh-app-boot.
 // Keep the official CLI in the Profile dependency graph as well: launching the
@@ -178,6 +221,21 @@ if (cliBoot !== settingsBoot) throw new Error('Preview CLI and ConfigEditor reso
 const loopScope = await resolveProfileDependency('@deepseek-ai/dsh-agent-loop', '@deepseek-ai/dsh-scope');
 const presetScope = await resolveProfileDependency('@deepseek-ai/dsh-agent-preset-registry', '@deepseek-ai/dsh-scope');
 if (loopScope !== presetScope) throw new Error(`Preview loaded split @deepseek-ai/dsh-scope instances: agent-loop=${loopScope}; agent-preset-registry=${presetScope}.`);
+// Peer variants can also leave a second physical copy that no direct consumer
+// above happens to resolve. Settings, profiles and loader registrations live in
+// dsh-app-boot's module scope, so exactly one copy may exist in the Profile.
+{
+  const copies = new Set();
+  const collect = async (path) => {
+    const manifest = join(path, 'package.json');
+    try { copies.add(await realpath(manifest)); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  };
+  await collect(join(officialScope, 'dsh-app-boot'));
+  for (const entry of await readdir(officialScope)) {
+    await collect(join(officialScope, entry, 'node_modules/@deepseek-ai/dsh-app-boot'));
+  }
+  if (copies.size !== 1) throw new Error(`Preview installed ${copies.size} physical @deepseek-ai/dsh-app-boot copies; peer variants must converge: ${[...copies].join(', ')}`);
+}
 for (const { directory, manifest } of packages) {
   for (const face of ['.', './client']) {
     const entry = manifest.exports[face]?.default;
@@ -200,5 +258,19 @@ for (const [index, { manifest }] of packages.entries()) {
   archiveEntries.push({ fileName, packageName: manifest.name, version: manifest.version, workbenchId: descriptor.id, sha256: createHash('sha256').update(bytes).digest('hex') });
 }
 await writeFile(join(archiveDirectory, 'index.json'), JSON.stringify({ version: 1, entries: archiveEntries }, null, 2) + '\n');
-console.log('Installed Skill, Expert, Connector, Office, Library, Projects, Workbenches, Quality Analysis and WorkDSH presentation as separate official Profile layers.');
+// A Profile can carry the SkillHub dependency and still never compose it. Both
+// catalog integrations must be in the effective tree before this reports success.
+{
+  const cli = join(home, 'profiles/preview/node_modules/@deepseek-ai/dsh/lib/bin.js');
+  const dump = await new Promise((resolveDump, rejectDump) => {
+    execFile(process.execPath, [cli, '--profile', 'preview', '--dump-config'], { cwd: root, env, timeout: 180_000, maxBuffer: 8 * 1024 * 1024 }, (error, stdout) => error ? rejectDump(error) : resolveDump(stdout));
+  });
+  for (const id of ['skillhub', 'dsh-market']) {
+    if (!dump.includes(`id: ${id}`)) throw new Error(`Preview composition is missing ${id}; the Skill catalog would render without its route.`);
+  }
+  // Knowledge ships in the same shared feature set; a profile that installs the
+  // package but never composes it leaves the 知识库 entry without a host route.
+  if (!dump.includes('id: workdsh-knowledge')) throw new Error('Preview composition is missing workdsh-knowledge; the knowledge base would render without its route.');
+}
+console.log('Installed Skill, Expert, Connector, Office, Library, Knowledge, Projects, Workbenches, Quality Analysis and WorkDSH presentation as separate official Profile layers.');
 console.log('Start the stopped preview with: corepack pnpm preview');

@@ -48,7 +48,7 @@ async function worker(directory,home){
  let ctx,stage='dependencies';const providers=['workdshWorkbenchRegistration (test adapter)'];
  try{
   const pkg=JSON.parse(await readFile(join(directory,'package.json'),'utf8')),require=createRequire(join(directory,'package.json'));
-  const hostRequire=await hostPeerRequire(directory),hostPeers=new Set(['@deepseek-ai/cordis','workdsh-plugin-workbenches']);
+  const hostRequire=await hostPeerRequire(directory),hostPeers=new Set(['@deepseek-ai/cordis','epuberdsh-plugin-workbenches']);
   const missing=[],mismatches=[],resolvers=new Map();
   const semver=createRequire(import.meta.url)('semver');
   for(const [name,range] of Object.entries({...pkg.dependencies,...pkg.peerDependencies})){
@@ -78,7 +78,12 @@ async function worker(directory,home){
   const hostSha256=createHash('sha256').update(await readFile(path)).digest('hex');
   const cordisRequire=resolvers.get('@deepseek-ai/cordis')??require;
   const cordisVersion=JSON.parse(await readFile(cordisRequire.resolve('@deepseek-ai/cordis/package.json'),'utf8')).version;
-  if(cordisVersion!=='4.0.5')throw Error('workbench/startup-unsupported-cordis');
+  // The lifecycle assumptions below (FiberState ACTIVE=2, awaited children) are
+  // verified only for the Cordis generation this SDK declares as its peer. Read
+  // the range from the published manifest so a Host upgrade is one manifest edit.
+  const self=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
+  const cordisRange=self.peerDependencies?.['@deepseek-ai/cordis'];
+  if(typeof cordisRange!=='string'||!semver.satisfies(cordisVersion,cordisRange,{includePrerelease:true}))throw Error('workbench/startup-unsupported-cordis');
   const {Context}=await import(pathToFileURL(cordisRequire.resolve('@deepseek-ai/cordis')).href);
   ctx=new Context();let registered=false;
   ctx.provide('workdshWorkbenchRegistration',{async registerManaged(caller,declaration,page){
@@ -107,7 +112,7 @@ async function worker(directory,home){
    if(current.length===fibers.length&&current.every((fiber,i)=>fiber===fibers[i]))break;
    if(pass===63)throw Error('workbench/startup-unstable-lifecycle');
   }
-  // Cordis 4.0.5 FiberState ACTIVE=2. Check dependency-pending children rather
+  // Cordis FiberState ACTIVE=2. Check dependency-pending children rather
   // than manufacturing the services the application forgot to declare/provide.
   const incomplete=fibers.filter(fiber=>fiber.state!==2);
   if(incomplete.length)return {status:'failed',stage,errorCode:'workbench/startup-incomplete-lifecycle',missingServices:[...new Set(incomplete.flatMap(fiber=>Object.keys(fiber.inject).filter(name=>!fiber.ctx.get(name))))],testProviders:providers};

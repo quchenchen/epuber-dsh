@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
-import type {ActorContext,LibraryContentDraft,LibraryService} from 'workdsh-contracts';
+import type {ActorContext,LibraryContentDraft,LibraryService} from 'epuberdsh-contracts';
 import {qualityReportDraftFieldsSchema,type QualityReportDraftSummary,type QualityReportDraftView} from '../domain/report-draft.js';
 import {qualityReportIdentifierSchema,qualityReportRevisionIdSchema,type QualityReportFields} from '../domain/report-document.js';
 

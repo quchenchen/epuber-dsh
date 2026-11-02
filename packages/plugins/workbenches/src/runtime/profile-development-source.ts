@@ -6,7 +6,7 @@ import { join, basename } from 'node:path';
 import { createRequire } from 'node:module';
 import type { Context } from '@deepseek-ai/cordis';
 import { getDshRuntimeVersion, type ProfileContext } from '@deepseek-ai/dsh-app-boot';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import type { VerifyWorkbenchDevelopmentSource } from './development-service.js';
 import { prepareWorkbenchDevelopmentSource } from './prepare-development-source.js';
 
@@ -49,11 +49,11 @@ export function createProfileWorkbenchDevelopmentSourceVerifier(ctx: Context): V
     const installationAnchor=captured.installAnchor??join(profileDirectory,'package.json');
     let sdkManifest:{name?:string;version?:string};
     try {
-      const manifest=createRequire(installationAnchor).resolve('workdsh-plugin-workbenches/package.json');
+      const manifest=createRequire(installationAnchor).resolve('epuberdsh-plugin-workbenches/package.json');
       sdkManifest=JSON.parse(await readFile(manifest,'utf8')) as {name?:string;version?:string};
     } catch(cause) { throw new Error('workbench/sdk-package-unavailable',{cause}); }
     authorize();
-    if(sdkManifest.name!=='workdsh-plugin-workbenches'||typeof sdkManifest.version!=='string')throw Error('workbench/sdk-package-unavailable');
+    if(sdkManifest.name!=='epuberdsh-plugin-workbenches'||typeof sdkManifest.version!=='string')throw Error('workbench/sdk-package-unavailable');
     const root = join(profileDirectory, 'workdsh-workbench-sources');
     await mkdir(root, { recursive: true, mode: 0o700 });
     if (await realpath(root) !== root) throw new Error('workbench/source-directory-outside');

@@ -229,6 +229,99 @@ test('skill manager surfaces invalid local skills with actionable diagnostics', 
   }
 });
 
+test('repairIdentity gives a non-kebab pack a legal identity and keeps the Chinese name as title', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'workdsh-repair-skill-'));
+  const agentsHome = join(root, 'agents'); const dshHome = join(root, 'dsh');
+  const originalAgentsHome = process.env.DSH_AGENTS_HOME; const originalDshHome = process.env.DSH_HOME;
+  const ctx = new Context();
+  const chinese = '视频号爆款短视频拆解（付费版：全能）';
+  try {
+    process.env.DSH_AGENTS_HOME = agentsHome; process.env.DSH_HOME = dshHome;
+    const pack = join(agentsHome, 'skills', 'wx-video-decomposer');
+    await mkdir(pack, { recursive: true });
+    await writeFile(join(pack, 'SKILL.md'), `---\nname: ${chinese}\ndescription: 拆解视频号爆款视频，输出结构分段与归因。\nmetadata:\n  slug: wx-video-decomposer\n---\n# 拆解流程\n`);
+    await ctx.plugin(SkillRegistry); await ctx.plugin(filesystem, { dshHome, agentsHome, watch: false }); new SkillManager(ctx);
+    const summary = (await ctx.workdshSkills.list()).find(row => row.name === 'wx-video-decomposer');
+    assert.equal(summary.state, 'invalid');
+    assert.deepEqual(summary.diagnostics.map(item => item.code), ['invalid-name']);
+    assert.match(summary.diagnostics[0].message, /title/);
+    // The Chinese name still reaches the panel before any repair happens.
+    assert.equal(summary.title, chinese);
+    const repaired = await ctx.workdshSkills.repairIdentity('wx-video-decomposer');
+    assert.equal(repaired.name, 'wx-video-decomposer');
+    assert.equal(repaired.state, 'enabled');
+    assert.equal(repaired.title, chinese);
+    const document = await readFile(join(pack, 'SKILL.md'), 'utf8');
+    assert.match(document, /^name: "wx-video-decomposer"$/m);
+    assert.ok(document.includes(`title: ${JSON.stringify(chinese)}`));
+    assert.match(document, /# 拆解流程/);
+    assert.match(document, /description: 拆解视频号爆款视频/);
+  } finally {
+    await ctx.fiber.dispose();
+    if (originalAgentsHome === undefined) delete process.env.DSH_AGENTS_HOME; else process.env.DSH_AGENTS_HOME = originalAgentsHome;
+    if (originalDshHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = originalDshHome;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('a directory shadowed by a duplicate identity stays listed, repairable and lands on its directory name', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'workdsh-conflict-skill-'));
+  const agentsHome = join(root, 'agents'); const dshHome = join(root, 'dsh');
+  const originalAgentsHome = process.env.DSH_AGENTS_HOME; const originalDshHome = process.env.DSH_HOME;
+  const ctx = new Context();
+  try {
+    process.env.DSH_AGENTS_HOME = agentsHome; process.env.DSH_HOME = dshHome;
+    for (const [dir, body] of [['humanizer', 'Official copy.'], ['unclecheng-humanizer', 'Forked copy.']]) {
+      await mkdir(join(agentsHome, 'skills', dir), { recursive: true });
+      await writeFile(join(agentsHome, 'skills', dir, 'SKILL.md'), `---\nname: humanizer\ndescription: ${body}\n---\nBody\n`);
+    }
+    await ctx.plugin(SkillRegistry); await ctx.plugin(filesystem, { dshHome, agentsHome, watch: false }); new SkillManager(ctx);
+    const rows = await ctx.workdshSkills.list();
+    assert.equal(rows.filter(row => row.name === 'humanizer').length, 1);
+    const shadowed = rows.find(row => row.name === 'unclecheng-humanizer');
+    assert.equal(shadowed.state, 'invalid');
+    assert.equal(shadowed.diagnostics[0].code, 'name-conflict');
+    const repaired = await ctx.workdshSkills.repairIdentity('unclecheng-humanizer');
+    assert.equal(repaired.name, 'unclecheng-humanizer');
+    assert.equal(repaired.state, 'enabled');
+    assert.match(await readFile(join(agentsHome, 'skills', 'unclecheng-humanizer', 'SKILL.md'), 'utf8'), /^name: "unclecheng-humanizer"$/m);
+    assert.match(await readFile(join(agentsHome, 'skills', 'humanizer', 'SKILL.md'), 'utf8'), /^name: humanizer$/m);
+  } finally {
+    await ctx.fiber.dispose();
+    if (originalAgentsHome === undefined) delete process.env.DSH_AGENTS_HOME; else process.env.DSH_AGENTS_HOME = originalAgentsHome;
+    if (originalDshHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = originalDshHome;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('repairIdentity closes a missing frontmatter fence so the pack loads', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'workdsh-fence-skill-'));
+  const agentsHome = join(root, 'agents'); const dshHome = join(root, 'dsh');
+  const originalAgentsHome = process.env.DSH_AGENTS_HOME; const originalDshHome = process.env.DSH_HOME;
+  const ctx = new Context();
+  try {
+    process.env.DSH_AGENTS_HOME = agentsHome; process.env.DSH_HOME = dshHome;
+    const pack = join(agentsHome, 'skills', 'fence-skill');
+    await mkdir(pack, { recursive: true });
+    await writeFile(join(pack, 'SKILL.md'), '---\nname: fence-skill\ndescription: 缺少结束分隔符。\n\n**在启用此技能前，请确认环境。**\n\n---\n\n保持原文。\n');
+    await ctx.plugin(SkillRegistry); await ctx.plugin(filesystem, { dshHome, agentsHome, watch: false }); new SkillManager(ctx);
+    const summary = (await ctx.workdshSkills.list()).find(row => row.name === 'fence-skill');
+    assert.equal(summary.state, 'invalid');
+    assert.ok(summary.diagnostics.some(item => item.code === 'invalid-frontmatter'));
+    const repaired = await ctx.workdshSkills.repairIdentity('fence-skill');
+    assert.equal(repaired.state, 'enabled');
+    const document = await readFile(join(pack, 'SKILL.md'), 'utf8');
+    // The fence is inserted before the body, and the horizontal rule inside the
+    // body is left alone instead of being mistaken for the closing fence.
+    assert.match(document, /\ndescription: 缺少结束分隔符。\n---\n\n\*\*在启用此技能前，请确认环境。\*\*\n\n---\n\n保持原文。\n$/);
+  } finally {
+    await ctx.fiber.dispose();
+    if (originalAgentsHome === undefined) delete process.env.DSH_AGENTS_HOME; else process.env.DSH_AGENTS_HOME = originalAgentsHome;
+    if (originalDshHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = originalDshHome;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('skill manager batch operations return one result per skill and retain recoverability', async () => {
   const root = await mkdtemp(join(tmpdir(), 'workdsh-batch-skills-'));
   const agentsHome = join(root, 'agents'); const dshHome = join(root, 'dsh');

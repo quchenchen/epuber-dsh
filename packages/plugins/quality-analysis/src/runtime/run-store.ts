@@ -3,7 +3,7 @@ import {qualityCleaningRequestSchema,type QualityCleaningRequest} from './config
 import { createHash } from 'node:crypto';
 import { defineDomain, type Domain, type DomainFacility } from '@deepseek-ai/dsh-storage-domain';
 import { z } from 'zod';
-import { assertActorContext, type ActorContext } from 'workdsh-contracts';
+import { assertActorContext, type ActorContext } from 'epuberdsh-contracts';
 import {defineQualityAnalysisConfiguration,type QualityAnalysisConfiguration} from '../domain/configuration.js';
 import {qualitySourceSnapshotSchema,type QualitySourceSnapshot} from './source-snapshot.js';
 import { verifyQualityAnalysisRunHash, type CompleteQualityAnalysisRun } from './analysis-run';

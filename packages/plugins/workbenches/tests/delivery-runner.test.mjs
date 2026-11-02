@@ -1,3 +1,4 @@
+import {cordisRange} from './support/cordis-version.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,writeFile,readFile,symlink,rm,readdir} from 'node:fs/promises';
@@ -10,7 +11,7 @@ const pnpmVersion=JSON.parse(await readFile(join(pnpmRoot,'package.json'),'utf8'
 async function fixture(failBuild=false,failStartup=false){
  const directory=await mkdtemp(join(tmpdir(),'workdsh-delivery-test-'));
  await mkdir(join(directory,'dist'));await symlink(fileURLToPath(new URL('../../../../apps/web/node_modules',import.meta.url)),join(directory,'node_modules'),process.platform==='win32'?'junction':'dir');
- await writeFile(join(directory,'package.json'),JSON.stringify({name:'workdsh-delivery-probe',version:'1.0.0',type:'module',packageManager:'pnpm@10.0.0',files:['dist'],scripts:{build:'node build.mjs',prepack:'node must-not-run.mjs'},exports:{'.':{default:'./dist/index.js'}},peerDependencies:{'@deepseek-ai/cordis':'4.0.5'},workdsh:{workbench:{id:'probe'}}}));
+ await writeFile(join(directory,'package.json'),JSON.stringify({name:'workdsh-delivery-probe',version:'1.0.0',type:'module',packageManager:'pnpm@10.0.0',files:['dist'],scripts:{build:'node build.mjs',prepack:'node must-not-run.mjs'},exports:{'.':{default:'./dist/index.js'}},peerDependencies:{'@deepseek-ai/cordis':cordisRange},workdsh:{workbench:{id:'probe'}}}));
  await writeFile(join(directory,'build.mjs'),failBuild?'process.exit(2)':'');
  await writeFile(join(directory,'dist/index.js'),failStartup?'export function apply(){throw Error("private-error-must-not-leak");}':"export const inject=['workdshWorkbenchRegistration'];export async function apply(ctx){await ctx.get('workdshWorkbenchRegistration').registerManaged(ctx,{id:'probe'},'probe-page');}");
  return directory;
@@ -72,7 +73,7 @@ test('a timed out build returns even when a detached grandchild holds stdout ope
  const dir=await fixture();let result,grandchild;
  try{
   await writeFile(join(dir,'build.mjs'),"import {spawn} from 'node:child_process';import {writeFileSync} from 'node:fs';const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{detached:true,stdio:['ignore',1,2]});writeFileSync('grandchild.pid',String(child.pid));setInterval(()=>{},1000);");
-  const start=Date.now();result=await runWorkbenchDelivery(dir,{commandTimeoutMs:1000});
+  const start=Date.now();result=await runWorkbenchDelivery(dir,{commandTimeoutMs:3000});
   assert.equal(result.status,'failed');assert.equal(result.stages[0].errorCode,'workbench/delivery-command-timeout');
   assert.ok(Date.now()-start<5000,'inherited stdio must not keep delivery running indefinitely');
   grandchild=Number(await readFile(join(dir,'grandchild.pid'),'utf8'));

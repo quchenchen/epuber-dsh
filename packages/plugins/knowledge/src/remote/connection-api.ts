@@ -1,6 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type { ConnectionRpcResult, HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import { KnowledgeError, jsonRecord } from '../services/weknora-client.js';
 import type { KnowledgeSearchMode, KnowledgeSelectionInput, KnowledgeSettingsPatch } from '../services/knowledge-service.js';
 

@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {workbenchDeliveryState} from './delivery-state.js';
 import type {WorkbenchCatalogEntry} from './catalog-client.js';
-import type {WorkbenchDevelopmentIndexEntry} from 'workdsh-contracts';
+import type {WorkbenchDevelopmentIndexEntry} from 'epuberdsh-contracts';
 import type {CreationView} from './creation-client.js';
 const labels:Record<string,string>={requirements:'需求待完善',ready:'准备制作',developing:'制作中',built:'可检查新版本','pending-install':'待安装','pending-restart':'待重启',trial:'待试用','changes-requested':'待修改',accepted:'本轮已完成',interrupted:'已中断',failed:'需要处理'};
 export function WorkbenchDevelopmentOverview(props:{developments:readonly WorkbenchDevelopmentIndexEntry[];catalog?:readonly WorkbenchCatalogEntry[];canOpen?:(id:string)=>boolean;creations:readonly CreationView[];error?:string;onContinue:(id:string)=>void;onDiscuss:(id:string)=>void;onAll?:()=>void;heading?:string;limit?:number;compact?:boolean}){

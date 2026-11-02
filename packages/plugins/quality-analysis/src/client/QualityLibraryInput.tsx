@@ -1,7 +1,7 @@
-import type {LibraryOriginalPreviewRegistry} from 'workdsh-contracts/library';
+import type {LibraryOriginalPreviewRegistry} from 'epuberdsh-contracts/library';
 import {QualitySourcePreview} from './QualitySourcePreview.js';
 import React,{useEffect,useRef,useState} from 'react';
-import {LibraryAssetPicker,type createLibraryClient,type LibraryAssetPickerProps} from 'workdsh-plugin-library/client';
+import {LibraryAssetPicker,type createLibraryClient,type LibraryAssetPickerProps} from 'epuberdsh-plugin-library/client';
 import {QualityLibraryImport,type QualityLibraryImportProps,type QualityLibraryChoice} from './QualityLibraryImport.js';
 import {qualityLibraryChoice} from './library-choice.js';
 export interface QualityLibraryInputProps extends Omit<QualityLibraryImportProps,'selectSource'|'selectedSource'> {

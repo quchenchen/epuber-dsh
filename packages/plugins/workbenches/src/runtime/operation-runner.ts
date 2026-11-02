@@ -1,4 +1,4 @@
-import type { ActorContext, WorkbenchDevelopmentOperation } from 'workdsh-contracts';
+import type { ActorContext, WorkbenchDevelopmentOperation } from 'epuberdsh-contracts';
 import type { WorkbenchDevelopmentOperations, WorkbenchOperationIntent } from './development-operations.js';
 export type WorkbenchOperationObservation =
   | { readonly state: 'succeeded'; readonly receipt: NonNullable<WorkbenchDevelopmentOperation['receipt']> }

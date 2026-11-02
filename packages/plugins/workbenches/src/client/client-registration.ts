@@ -1,4 +1,4 @@
-import { parseWorkbenchDescriptor, workbenchActivationState, type WorkbenchDescriptor } from 'workdsh-contracts';
+import { parseWorkbenchDescriptor, workbenchActivationState, type WorkbenchDescriptor } from 'epuberdsh-contracts';
 import { WorkbenchRegistry, type WorkbenchRegistrationAuthority } from '../runtime/registry.js';
 import { resolveWorkbenchLoaderSource, type WorkbenchCallerContext, type WorkbenchLoader, type WorkbenchLoaderSource } from '../runtime/loader-source.js';
 import { WorkbenchPageLifecycle, type WorkbenchPagePorts } from './page-lifecycle.js';

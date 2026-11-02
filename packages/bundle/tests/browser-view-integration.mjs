@@ -59,11 +59,12 @@ test('real Playwright MCP navigation appears in its Session sidebar frame', { sk
     await ctx.loader.await();
     const screenshots = [];
     registerBrowserView({
-      effect: ctx.effect.bind(ctx), on: ctx.on.bind(ctx), tools: { async execute(call) {
+      effect: ctx.effect.bind(ctx), on: ctx.on.bind(ctx), tools: { async execute(input) {
         try {
-          const response = await ctx.tools.execute(call);
-          screenshots.push({ keys: Object.keys(response), error: response.isError, content: response.content.map(block => block.type === 'text' ? block.text.slice(0, 300) : block.type) });
-          return response;
+          const batch = await ctx.tools.execute(input);
+          const response = batch.results[0]?.result;
+          screenshots.push({ keys: Object.keys(batch ?? {}), error: response?.isError, content: (response?.content ?? []).map(block => block.type === 'text' ? block.text.slice(0, 300) : block.type) });
+          return batch;
         } catch (cause) {
           screenshots.push({ thrown: String(cause) });
           throw cause;
@@ -75,7 +76,7 @@ test('real Playwright MCP navigation appears in its Session sidebar frame', { sk
     await owner.agent.whenIdle();
     await ctx.systemPrompt.assemble({ agent: owner.agent, scope: owner.agent, signal: new AbortController().signal });
     const url = `http://127.0.0.1:${server.address().port}/fixture`;
-    const result = await ctx.tools.execute({ agent: owner.agent, name: 'mcp__playwright-mcp__browser_navigate', arguments: { url }, callId: ToolCallId('navigate'), signal: AbortSignal.timeout(30_000) });
+    const result = (await ctx.tools.execute({ agent: owner.agent, calls: [{ type: 'tool-call', id: ToolCallId('navigate'), name: 'mcp__playwright-mcp__browser_navigate', arguments: JSON.stringify({ url }) }], signal: AbortSignal.timeout(30_000) })).results[0]?.result;
     assert.equal(result.isError, false, JSON.stringify(result.content));
     let frame;
     for (let i = 0; i < 100; i++) {

@@ -1,3 +1,4 @@
+import {installedCordis} from './support/cordis-version.mjs';
 import {preflightExternals} from './support/preflight-externals.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -28,7 +29,7 @@ async function loadOwned(relative) {
   const output = await build({
     entryPoints: [join(repository, 'packages/plugins/workbenches/src/runtime', relative)],
     bundle: true, platform: 'node', format: 'esm', write: false,
-    alias: { 'workdsh-contracts': join(repository, 'packages/contracts/src/index.ts') },
+    alias: { 'epuberdsh-contracts': join(repository, 'packages/contracts/src/index.ts') },
     plugins: [{ name: 'published-storage', setup(builder) {
       builder.onResolve({ filter: /^(?:@deepseek-ai\/dsh-storage-domain|@deepseek-ai\/dsh-app-boot|zod)$/ },
         args => ({ path: pathToFileURL(officialRequire.resolve(args.path)).href, external: true }));
@@ -72,11 +73,13 @@ async function fixture() {
       membership: () => ({ state: flags.active ? 'active' : 'revoked' }),
     },
     workdshAccess: { sessionOwner: () => flags.owner ? { ownerPrincipalId: actor.principalId, organizationId: actor.organizationId } : undefined },
-    sessionController: { inspect: async id => {
+    sessionController: {},
+    // The governed bridge owns owned-Session reads; it is the only reader the adapter uses.
+    workdshSessionAccess: { inspect: async id => {
       assert.equal(id, 'native-session-1');
       flags.inspections++;
       flags.onInspect?.(flags.inspections);
-      return { meta: { cwd: source } };
+      return { meta: { cwd: source }, events: [] };
     } },
     connection: { fetch: { register: route => { routes.set(route.path, route); return () => routes.delete(route.path); } } },
   };
@@ -128,7 +131,7 @@ async function fixture() {
   async function mount() {
     storageContext = await bootStorage(storageRoot);
     archives = await WorkbenchInstallationArchives.open(storageContext.storageDomain, target.installationId, directory);
-    const nativeApi=await mountNativeWorkbenchInstallationHost(ctx, directory, development, requirements, archives, () => true, '4.0.5');
+    const nativeApi=await mountNativeWorkbenchInstallationHost(ctx, directory, development, requirements, archives, () => true, installedCordis);
     api=await mountWorkbenchDevelopmentTimingHost(ctx,directory,development,requirements,nativeApi);
   }
   await mount();

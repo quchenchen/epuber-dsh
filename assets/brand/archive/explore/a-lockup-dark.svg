@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 96" width="470" height="96" role="img" aria-label="AI融媒中心">
+  <g transform="translate(12 12) scale(0.75)"><g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="miter" stroke-miterlimit="10">
+  <rect x="14" y="14" width="68" height="68" />
+  <path d="M52 9 V87" />
+  <path d="M9 40 H87" /></g><g fill="#FFFFFF" stroke="none"><rect x="57" y="45" width="20" height="32" /></g></g>
+  <text x="100" y="60" font-family="'Source Han Sans CN', 'Noto Sans Hans', sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" letter-spacing="0.5">AI融媒中心</text>
+  <text x="102" y="79" font-family="'Source Sans Pro', 'Helvetica Neue', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" fill-opacity="0.5" letter-spacing="3.4">AI MEDIA CENTER</text>
+</svg>

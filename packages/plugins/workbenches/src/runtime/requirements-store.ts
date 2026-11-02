@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { defineDomain, type Domain, type DomainFacility } from '@deepseek-ai/dsh-storage-domain';
 import { z } from 'zod';
-import { assertActorContext, parseWorkbenchSystemDefinition, parseWorkbenchRequirementsDraft, type ActorContext, type WorkbenchRequirementsRevision } from 'workdsh-contracts';
+import { assertActorContext, parseWorkbenchSystemDefinition, parseWorkbenchRequirementsDraft, type ActorContext, type WorkbenchRequirementsRevision } from 'epuberdsh-contracts';
 
 const draftSchema = z.object({ title: z.string().min(1).max(80), scenario: z.string().min(1).max(8000), users: z.string().min(1).max(8000), dataSources: z.string().min(1).max(8000), workflow: z.string().min(1).max(8000), firstIteration: z.string().min(1).max(8000), acceptance: z.string().min(1).max(8000), system: z.unknown().transform(parseWorkbenchSystemDefinition).optional() });
 const revisionSchema = z.object({ id: z.string(), developmentId: z.string(), parentRevisionId: z.string().optional(), owner: z.object({ organizationId: z.string(), ownerPrincipalId: z.string(), scope: z.literal('personal') }), requirements: draftSchema, createdAt: z.string(), createdBy: z.string() });

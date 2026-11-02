@@ -1,6 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-workspace-controller';
-import type { WorkbenchDevelopment } from 'workdsh-contracts';
+import type { WorkbenchDevelopment } from 'epuberdsh-contracts';
 
 /** Existing official registry owns workspace identity. Call only after the Host
  * has verified current source directory and actor access; no path comes from UI. */

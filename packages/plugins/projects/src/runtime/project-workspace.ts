@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-workspace-controller';
-import type { ActorContext } from 'workdsh-contracts';
+import type { ActorContext } from 'epuberdsh-contracts';
 
 /** Official registry remains the only workspace identity and persistence owner. */
 export async function ensureProjectWorkspace(ctx: Context, actor: ActorContext, projectId: string, signal?: AbortSignal, workspaceRoot?: string) {

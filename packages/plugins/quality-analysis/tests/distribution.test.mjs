@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {Worker} from 'node:worker_threads';import {readFile} from 'node:fs/promises';import {createRequire} from 'node:module';import {runInNewContext} from 'node:vm';
 const require=createRequire(new URL('../package.json',import.meta.url));
-const platformRequire=createRequire(require.resolve('workdsh-plugin-workbenches/package.json'));
+const platformRequire=createRequire(require.resolve('epuberdsh-plugin-workbenches/package.json'));
 // Native CSS is loaded by the browser module loader. This Node registration
 // test supplies only its inert visual boundary; managed registration stays real.
 const nativeRequire=name=>{if(name==='@deepseek-ai/dsh-client-ui-primitives')return {Button:()=>null};try{return platformRequire(name);}catch(error){if(error.code!=='MODULE_NOT_FOUND')throw error;return require(name);}};
@@ -15,7 +15,7 @@ test('built quality Client uses platform managed registration and the declared i
  const libraryCode=await readFile(new URL('../../library/dist/client.browser.js',import.meta.url),'utf8');assert.match(libraryCode,/createLibraryOriginalPanelClient/);
  let platformModule;runInNewContext(await readFile(new URL('../../workbenches/dist/client.browser.js',import.meta.url),'utf8'),{window:{__ModuleLoader__:{load:entry=>{platformModule=entry.factory(nativeRequire);}}}});
  let module;const code=await readFile(new URL('../dist/client.browser.js',import.meta.url),'utf8');
- runInNewContext(code,{fetch:()=>{throw new Error('unexpected request');},window:{__ModuleLoader__:{load:entry=>{assert.equal(entry.id,'workdsh-plugin-quality-analysis');module=entry.factory(name=>name==='workdsh-plugin-workbenches/client'?platformModule:name==='workdsh-plugin-library/client'?{createLibraryClient(){},createLibraryOriginalPanelClient,createLibraryNativeFileClient(){return{open(){throw Error('registration must not navigate to a file');}};},LibraryAssetPicker(){}}:nativeRequire(name));}}}});
+ runInNewContext(code,{fetch:()=>{throw new Error('unexpected request');},window:{__ModuleLoader__:{load:entry=>{assert.equal(entry.id,'epuberdsh-plugin-quality-analysis');module=entry.factory(name=>name==='epuberdsh-plugin-workbenches/client'?platformModule:name==='epuberdsh-plugin-library/client'?{createLibraryClient(){},createLibraryOriginalPanelClient,createLibraryNativeFileClient(){return{open(){throw Error('registration must not navigate to a file');}};},LibraryAssetPicker(){}}:nativeRequire(name));}}}});
  let registered;const ctx={effect(){},get:name=>{assert.equal(name,'workdshWorkbenchClientRegistration');return {registerManaged:async(caller,descriptor,page)=>{assert.equal(caller,ctx);assert.equal(typeof page,'function');registered=descriptor;}};}};
  await module.apply(ctx);assert.equal(registered.id,'workdsh.quality-analysis');assert.ok(module.inject.includes('workdshWorkbenchClientRegistration'));
 });

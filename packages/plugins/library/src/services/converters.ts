@@ -1,6 +1,6 @@
-import { extractTabularText } from 'workdsh-tabular';
+import { extractTabularText } from 'epuberdsh-tabular';
 import JSZip from 'jszip';
-import type { LibraryAssetKind } from 'workdsh-contracts/library';
+import type { LibraryAssetKind } from 'epuberdsh-contracts/library';
 
 export interface ConversionResult {
   readonly markdown: string;

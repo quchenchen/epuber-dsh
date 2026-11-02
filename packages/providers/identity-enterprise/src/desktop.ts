@@ -1,14 +1,17 @@
 import { Service, type Context } from '@deepseek-ai/cordis';
-import type { EnterpriseService, EnterpriseRequest, IdentityResolutionContext, IdentityService } from 'workdsh-contracts';
+import type { EnterpriseService, EnterpriseRequest, IdentityResolutionContext, IdentityService } from 'epuberdsh-contracts';
 import type {} from '@deepseek-ai/dsh-client-connection';
 import type {} from '@deepseek-ai/dsh-api-session-controller';
+import type { SessionId } from '@deepseek-ai/dsh-session';
+import type { SessionInspection } from '@deepseek-ai/dsh-session-persistence';
 import { EnterpriseMemberIdentity } from './member-identity.js';
 import { DesktopAuthority, type EnterpriseDesktopConfig } from './desktop-authority.js';
 import { DesktopBodySync, observeDesktopSessions } from './desktop-body-sync.js';
 export type { EnterpriseDesktopConfig } from './desktop-authority.js';
 
 declare module '@deepseek-ai/cordis' { interface Context { workdshIdentity: IdentityService; workdshEnterprise: EnterpriseService } }
-type SessionAccess = { inspect: Context['sessionController']['inspect'] };
+/** The governed bridge owns private-Session reads; the Controller itself no longer exposes one. */
+type SessionAccess = { inspect(sessionId: SessionId, signal?: AbortSignal): Promise<SessionInspection> };
 
 /** Explicit enterprise Desktop composition. It cannot authenticate as a personal identity. */
 export default class EnterpriseDesktopIdentity extends Service implements IdentityService {

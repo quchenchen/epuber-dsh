@@ -1,7 +1,7 @@
-# Official Team composition (DSH 0.1.6). The official service owns execution.
+# Official Team composition. The official service owns execution.
+# `tool-subagent-list-agents` existed only before 0.2.2; disabling an id that the
+# official Profile no longer publishes is a no-op that warns on every config load.
 - id: tool-subagent-control
-  disabled: true
-- id: tool-subagent-list-agents
   disabled: true
 - id: tool-subagent
   disabled: true
@@ -17,4 +17,4 @@
     - id: client-ui-agent-team
       name: '@deepseek-ai/dsh-experimental-client-ui-agent-team'
     - id: workdsh-experts
-      name: workdsh-plugin-experts
+      name: epuberdsh-plugin-experts

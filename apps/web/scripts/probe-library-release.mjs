@@ -15,10 +15,10 @@ const run = (bin, args, options = {}) => new Promise((resolveRun, reject) => {
   child.stdout.on('data', chunk => { output += chunk; }); child.stderr.on('data', chunk => { output += chunk; });
   child.on('error', reject); child.on('close', code => code === 0 ? resolveRun(output) : reject(new Error(`${args.join(' ')} failed (${code}): ${output.slice(-4000)}`)));
 });
-const packages = ['workdsh-provider-identity-local', 'workdsh-plugin-audit', 'workdsh-plugin-access', 'workdsh-plugin-library']; const archives = [];
+const packages = ['epuberdsh-provider-identity-local', 'epuberdsh-plugin-audit', 'epuberdsh-plugin-access', 'epuberdsh-plugin-library']; const archives = [];
 for (const name of packages) {
   await run(pnpm, ['--filter', name, 'build']); await run(pnpm, ['--filter', name, 'pack', '--pack-destination', artifacts]);
-  const manifestPath = name === 'workdsh-provider-identity-local' ? '../../packages/providers/identity-local/package.json' : `packages/plugins/${name.replace('workdsh-plugin-', '')}/package.json`;
+  const manifestPath = name === 'epuberdsh-provider-identity-local' ? '../../packages/providers/identity-local/package.json' : `packages/plugins/${name.replace('workdsh-plugin-', '')}/package.json`;
   const manifest = JSON.parse(await readFile(join(root, manifestPath), 'utf8')); archives.push(join(artifacts, `${name}-${manifest.version}.tgz`));
 }
 await run(dsh, ['--profile', 'library-probe', '--from-default-profile', 'web', '--dump-config']);
@@ -39,7 +39,7 @@ try {
   const imported = await call(session, 'import', { parentId: folder.id, name: '证据.md', mediaType: 'text/markdown', base64: Buffer.from('# 持久化证据\n\nLibraryRetentionToken').toString('base64'), operationId: 'package-probe-import' });
   assert.equal((await call(session, 'search', { query: 'LibraryRetentionToken' }))[0].assetId, imported.asset.id); await stop();
   session = await start(); assert.equal((await call(session, 'search', { query: 'LibraryRetentionToken' })).length, 1, 'cold restart retains searchable revision'); await stop();
-  await run(dsh, ['plugin', '--profile', 'library-probe', 'remove', 'workdsh-plugin-library']); await access(join(home, 'library', 'objects', imported.asset.id));
+  await run(dsh, ['plugin', '--profile', 'library-probe', 'remove', 'epuberdsh-plugin-library']); await access(join(home, 'library', 'objects', imported.asset.id));
   await run(dsh, ['plugin', '--profile', 'library-probe', 'add', archives.at(-1)]);
   session = await start(); assert.equal((await call(session, 'search', { query: 'LibraryRetentionToken' })).length, 1, 'reinstall reads retained data'); await stop();
   console.log(`PASS: packed Library installed, survived two cold starts, uninstall retained data, and reinstall recovered asset ${imported.asset.id}.`);

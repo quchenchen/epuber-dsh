@@ -23,12 +23,20 @@ export function provideSessionAuthority(ctx, actor, options = {}) {
       return binding;
     },
   });
-  ctx.provide('sessionController', {
+  if (options.sessionAccess !== false) ctx.provide('workdshSessionAccess', {
     inspect: async (sessionId, signal) => {
       signal?.throwIfAborted(); inspections.push(sessionId);
       if (!sessions.has(sessionId)) throw new Error('session/not-found');
-      return { sessionId };
+      return { meta: { id: sessionId }, events: [] };
     },
   });
+  // Cold-read seam the governed bridge uses; absent identities surface as not-found.
+  ctx.provide('sessionPersistence', {
+    async open(sessionId) {
+      if (!sessions.has(sessionId)) throw Object.assign(new Error(`session "${sessionId}" not found`), { code: 'session/not-found' });
+      return { header: { id: sessionId }, inheritedEventCount: 0, async read() { return { events: [] }; }, async close() {} };
+    },
+  });
+  ctx.provide('sessionController', {});
   return { sessions, owners, inspections };
 }

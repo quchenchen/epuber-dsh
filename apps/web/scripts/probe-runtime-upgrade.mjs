@@ -55,8 +55,8 @@ async function step(name,args){
 }
 if(!await step('install',['install','--ignore-scripts','--no-frozen-lockfile']))process.exit(1);
 // Build dependency declarations first; do not run the graphical preview or a paid model.
-await step('dependency-build',['--filter','workdsh-plugin-quality-analysis...','--filter','workdsh-plugin-skills...','build']);
-for(const name of ['workdsh-plugin-workbenches','workdsh-plugin-skills','workdsh-provider-identity-local','workdsh-plugin-quality-analysis']){
+await step('dependency-build',['--filter','epuberdsh-plugin-quality-analysis...','--filter','epuberdsh-plugin-skills...','build']);
+for(const name of ['epuberdsh-plugin-workbenches','epuberdsh-plugin-skills','epuberdsh-provider-identity-local','epuberdsh-plugin-quality-analysis']){
  await step(name+'-typecheck',['--filter',name,'typecheck']);
 }
 await step('workbenches-tests',['test:workbenches']);

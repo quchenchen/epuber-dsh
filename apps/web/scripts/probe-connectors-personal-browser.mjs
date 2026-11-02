@@ -66,7 +66,7 @@ async function open() {
 try {
   host=await start(); browser=await chromium.launch({headless:true}); let page=await open();
   const entries=await page.evaluate(()=>window.__DSH_BOOT__.entries.map(row=>row.id));
-  assert.ok(entries.includes('workdsh-plugin-connectors'));
+  assert.ok(entries.includes('epuberdsh-plugin-connectors'));
   assert.ok(!entries.some(name=>/enterprise/.test(name)));
   pass('Personal Profile loads packaged connectors without enterprise plugins');
   const experts=await api('experts','list'); const expert=experts.items[0];

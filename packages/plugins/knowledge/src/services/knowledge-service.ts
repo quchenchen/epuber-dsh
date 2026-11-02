@@ -1,7 +1,7 @@
 import { Context, Service } from '@deepseek-ai/cordis';
 import { credentialRef } from '@deepseek-ai/dsh-credentials';
 import type { KvTable } from '@deepseek-ai/dsh-storage-domain';
-import type { ActorContext } from 'workdsh-contracts';
+import type { ActorContext } from 'epuberdsh-contracts';
 import {
   KnowledgeError,
   WeKnoraClient,
@@ -195,6 +195,7 @@ export interface KnowledgeWikiPage extends KnowledgeWikiRef {
   readonly updatedAt?: string;
   readonly version?: number;
 }
+
 
 export interface KnowledgePreview {
   readonly knowledgeId: string;
@@ -569,6 +570,7 @@ export class KnowledgeService extends Service {
     const raw = await client.getJson<unknown>(`${API}/knowledgebase/${encodeURIComponent(id)}/wiki/pages/${path}`, undefined, signal);
     return this.mapWikiPage(raw, id);
   }
+
 
   /**
    * Resolve the bases one search targets: explicit list, then the single-base
@@ -1001,6 +1003,10 @@ export class KnowledgeService extends Service {
       knowledgeBaseId: asString(record.knowledge_base_id) ?? '',
       score: asNumber(record.score) ?? 0,
       content,
+      // Name the channel explicitly. The prompt tells the model that `via=inline`
+      // is quotable source prose and `via=wiki` is a derived page, so an absent
+      // field would leave it guessing about the one thing it must not get wrong.
+      via: 'inline',
       ...(asNumber(record.chunk_index) === undefined ? {} : { chunkIndex: asNumber(record.chunk_index)! }),
     };
   }
@@ -1067,6 +1073,7 @@ export class KnowledgeService extends Service {
       ...(asNumber(page.version) === undefined ? {} : { version: asNumber(page.version)! }),
     };
   }
+
 
   private cleanId(value: string, label: string): string {
     const id = value?.trim();

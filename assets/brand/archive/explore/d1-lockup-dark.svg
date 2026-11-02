@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 96" width="330" height="96" role="img" aria-label="AI融媒中心">
+  <g transform="translate(10 24) scale(0.5)"><g fill="#FFFFFF">
+  <g mask="url(#core)">
+    <rect x="10" y="10" width="50" height="50" rx="17" />
+    <rect x="36" y="36" width="50" height="50" rx="17" />
+  </g>
+  <mask id="core" maskUnits="userSpaceOnUse" x="0" y="0" width="96" height="96">
+    <rect x="0" y="0" width="96" height="96" fill="#fff" />
+    <circle cx="48" cy="48" r="12" fill="#000" />
+  </mask></g></g>
+  <text x="78" y="61" font-family="'Source Han Sans CN', 'Noto Sans Hans', sans-serif" font-size="36" font-weight="900" fill="#FFFFFF" letter-spacing="0.5">AI融媒中心</text>
+  <text x="80" y="81" font-family="'Source Sans Pro', 'Helvetica Neue', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" fill-opacity="0.5" letter-spacing="3.4">AI MEDIA CENTER</text>
+</svg>

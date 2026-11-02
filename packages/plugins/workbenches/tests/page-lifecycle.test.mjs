@@ -6,7 +6,7 @@ const require = createRequire(new URL('../../../../apps/web/package.json', impor
 const slotRequire = createRequire(new URL('../../workbench/package.json', import.meta.url));
 const { SlotCore } = await import(pathToFileURL(slotRequire.resolve('@deepseek-ai/dsh-client-ui-slots')).href);
 const { build } = require('esbuild');
-const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/page-lifecycle.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
+const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/page-lifecycle.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
 const { WorkbenchPageLifecycle } = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const descriptor = { id: 'company.quality', title: '质量分析', description: '', protocolVersion: '1.0', layout: 'full-page', hostCompatibility: { sdk: '^1.0.0', harness: '0.2.0-rc.2' }, capabilities: [] };
 function fixture() {

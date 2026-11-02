@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-agent';
 import type {} from '@deepseek-ai/dsh-system-prompt';
-import type { ActorContext, LibraryService } from 'workdsh-contracts';
+import type { ActorContext, LibraryService } from 'epuberdsh-contracts';
 
 const MAX_DOCUMENT_CHARS = 40_000;
 const MAX_CONTEXT_CHARS = 80_000;

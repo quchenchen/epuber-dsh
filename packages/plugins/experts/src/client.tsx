@@ -1,6 +1,6 @@
-import type { ComposerHandoff, ComposerHandoffSource } from 'workdsh-contracts/composer';
+import type { ComposerHandoff, ComposerHandoffSource } from 'epuberdsh-contracts/composer';
 declare module '@deepseek-ai/cordis' { interface Events { 'workdsh/composer-handoff'(handoff: ComposerHandoff): Promise<void>; } }
-import type { ActivityPresentation } from 'workdsh-contracts/activity';
+import type { ActivityPresentation } from 'epuberdsh-contracts/activity';
 declare module '@deepseek-ai/cordis' { interface Context { activityPresentation: ActivityPresentation; } }
 import { installExpertPresetMenu } from './client/PresetMenu.js';
 import { ConversationExperts } from './client/ConversationExperts.js';

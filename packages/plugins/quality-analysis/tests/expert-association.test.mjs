@@ -11,6 +11,9 @@ function fixture(){
  const actor={principalId:'member',organizationId:'org',resolvedBy:'identity'};
  const binding={sessionId:'session-expert',expertRevisionRef:{expertId:'expert',revisionId:'revision'},presetRevisionRef:'preset',compositionDigest:'b'.repeat(64),skillRevisionRefs:[],owner:{organizationId:'org',ownerPrincipalId:'member'},creationOperationId:'create',createdAt:'2026-10-11T00:00:00Z'};
  const services={workdshIdentity:{resolve:async()=>actor,profile:()=>({principalId:principal,resolvedBy:'identity',organization:{id:'org',kind:'personal'}}),membership:()=>({state:active?'active':'revoked'})},workdshAccess:{sessionOwner:()=>({organizationId:'org',ownerPrincipalId:'member'})},workdshExperts:{verifyBinding:async()=>structuredClone(binding)}};
+ const bridge={inspect:(id,signal)=>services.sessionController.inspect(id,signal)};
+ // The governed bridge is mounted in every personal profile; enterprise fixtures omit it on purpose.
+ Object.defineProperty(services,'workdshSessionAccess',{configurable:true,get:()=>services.workdshIdentity.profile().organization.kind==='personal'?bridge:undefined});
  return {ctx:{get:key=>services[key],fiber:{assertActive(){}}},services,binding,creation:{sessionId:binding.sessionId,binding:structuredClone(binding),handoffId:'handoff'},switchAccount:()=>{principal='other'},revoke:()=>{active=false}};
 }
 test('Host creation is matched to current expert binding and only fixed provenance is returned',async()=>{

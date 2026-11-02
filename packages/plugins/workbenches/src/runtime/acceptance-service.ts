@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {defineDomain,type Domain,type DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import {z} from 'zod';
-import {assertActorContext,type ActorContext,type IdentityService} from 'workdsh-contracts';
+import {assertActorContext,type ActorContext,type IdentityService} from 'epuberdsh-contracts';
 export interface AcceptanceBinding{developmentId:string;requirementsRevision:string;packageName:string;version:string;sha256:string;hostId:string;profileId:string;installationId:string}
 export interface AcceptanceFacts{binding?:AcceptanceBinding;ready:boolean;criteria?:string}
 export const acceptanceBindingSchema=z.object({developmentId:z.string().min(1).max(128),requirementsRevision:z.string().min(1).max(128),packageName:z.string().min(1).max(214),version:z.string().min(1).max(128),sha256:z.string().regex(/^[a-f0-9]{64}$/),hostId:z.string().min(1).max(128),profileId:z.string().min(1).max(128),installationId:z.string().min(1).max(128)}).strict();

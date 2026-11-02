@@ -1,6 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis';
 import { defineTool, type ToolRunContext } from '@deepseek-ai/dsh-tools';
-import type { ActorContext } from 'workdsh-contracts';
+import type { ActorContext } from 'epuberdsh-contracts';
 
 async function actor(ctx: Context, exec: ToolRunContext): Promise<ActorContext> {
   const sessionId = exec.agent ? String(exec.agent.id) : undefined;

@@ -65,7 +65,7 @@
   },
   "build": {
     "appId": "io.techflag.dsh.ssh",
-    "productName": "WorkDSH",
+    "productName": "EpuberDSH",
     "asar": {
       "smartUnpack": true
     },
@@ -100,7 +100,7 @@
       "!node_modules/**"
     ],
     "mac": {
-      "artifactName": "WorkDSH-${version}-${arch}.${ext}",
+      "artifactName": "EpuberDSH-${version}-${arch}.${ext}",
       "asarUnpack": [
         "build/app-icon-mac.png",
         "build/tray-iconTemplate.png",
@@ -145,7 +145,7 @@
           ]
         }
       ],
-      "artifactName": "WorkDSH-${version}-${arch}-Portable.${ext}",
+      "artifactName": "EpuberDSH-${version}-${arch}-Portable.${ext}",
       "icon": "build/app-icon.ico"
     },
     "nsis": {
@@ -159,10 +159,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "differentialPackage": false,
-      "shortcutName": "WorkDSH",
+      "shortcutName": "EpuberDSH",
       "uninstallerIcon": "build/app-icon.ico",
       "useZip": false,
-      "artifactName": "WorkDSH-${version}-${arch}-Setup.${ext}"
+      "artifactName": "EpuberDSH-${version}-${arch}-Setup.${ext}"
     },
     "linux": {
       "asarUnpack": [

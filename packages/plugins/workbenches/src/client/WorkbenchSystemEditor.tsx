@@ -1,5 +1,5 @@
 import React from 'react';
-import { type WorkbenchSystemDefinition } from 'workdsh-contracts';
+import { type WorkbenchSystemDefinition } from 'epuberdsh-contracts';
 export function WorkbenchSystemEditor({ value, onChange, disabled }: {
   readonly value?: WorkbenchSystemDefinition;
   readonly onChange: (value: WorkbenchSystemDefinition) => void;

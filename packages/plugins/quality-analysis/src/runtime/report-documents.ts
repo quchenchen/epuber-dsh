@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import type {ActorContext,LibraryService,LibraryTreeEntry} from 'workdsh-contracts';
+import type {ActorContext,LibraryService,LibraryTreeEntry} from 'epuberdsh-contracts';
 import type {QualityReportDocumentView,QualityReportFields} from '../domain/report-document.js';
 import type {CompleteQualityAnalysisRun} from './analysis-run.js';
 import type {QualityReportReceipt} from './run-store.js';

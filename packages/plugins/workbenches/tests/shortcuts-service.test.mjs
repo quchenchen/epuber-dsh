@@ -7,7 +7,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 const web=createRequire(new URL('../../../../apps/web/package.json',import.meta.url));
 const runtime=createRequire(new URL('../../projects/package.json',import.meta.url));
-const built=await web('esbuild').build({entryPoints:[fileURLToPath(new URL('../src/runtime/shortcuts-service.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',write:false,alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'official',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtime.resolve(args.path)).href,external:true}));}}]});
+const built=await web('esbuild').build({entryPoints:[fileURLToPath(new URL('../src/runtime/shortcuts-service.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',write:false,alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'official',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtime.resolve(args.path)).href,external:true}));}}]});
 const {WorkbenchShortcutsService}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const load=name=>import(pathToFileURL(runtime.resolve(name)).href);
 const {Context}=await load('@deepseek-ai/cordis');

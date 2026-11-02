@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { defineDomain, type Domain, type DomainFacility } from '@deepseek-ai/dsh-storage-domain';
 import { z } from 'zod';
-import { assertActorContext, type ActorContext, type WorkbenchDevelopmentOperation } from 'workdsh-contracts';
+import { assertActorContext, type ActorContext, type WorkbenchDevelopmentOperation } from 'epuberdsh-contracts';
 const text = z.string().min(1).max(256);
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 const target = z.object({ hostId: text, installationId: text, profileId: text, harnessVersion: text });

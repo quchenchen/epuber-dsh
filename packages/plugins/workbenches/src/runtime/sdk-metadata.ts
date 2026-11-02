@@ -7,9 +7,9 @@ import {dirname,join,relative,isAbsolute} from 'node:path';
  * Reads metadata only: neither resolving nor advertising an export executes it. */
 export async function readWorkbenchSdkMetadata(installAnchor:string){
  try{
-  const manifestPath=await realpath(createRequire(installAnchor).resolve('workdsh-plugin-workbenches/package.json'));
+  const manifestPath=await realpath(createRequire(installAnchor).resolve('epuberdsh-plugin-workbenches/package.json'));
   const packageDirectory=dirname(manifestPath),pkg=JSON.parse(await readFile(manifestPath,'utf8'));
-  if(pkg.name!=='workdsh-plugin-workbenches'||typeof pkg.version!=='string'||!pkg.version.trim())throw Error('invalid-sdk-metadata');
+  if(pkg.name!=='epuberdsh-plugin-workbenches'||typeof pkg.version!=='string'||!pkg.version.trim())throw Error('invalid-sdk-metadata');
   const publicFile=async(value:unknown)=>{
    if(typeof value!=='string'||!value.startsWith('./')||value.includes('\\'))throw Error('invalid-sdk-export');
    const path=await realpath(join(packageDirectory,value));const child=relative(packageDirectory,path);
@@ -27,6 +27,6 @@ export async function readWorkbenchSdkMetadata(installAnchor:string){
    lookupPolicy:'Use the supplied quickstart and existing scaffold first. Read only public declarations needed by this iteration; recheck on version/fingerprint changes or actual interface errors. Never inspect private bundles.'};
  }catch{
   // An unavailable metadata lookup is not a claim that the running service is absent.
-  return {status:'unavailable' as const,packageName:'workdsh-plugin-workbenches',errorCode:'workbench/sdk-metadata-unavailable'};
+  return {status:'unavailable' as const,packageName:'epuberdsh-plugin-workbenches',errorCode:'workbench/sdk-metadata-unavailable'};
  }
 }

@@ -3,7 +3,7 @@ import { inspectWorkbenchPackageArtifact } from './package-artifact.js';
 import { validateWorkbenchPackageLayout } from './package-layout.js';
 import { InstalledWorkbenchManifestReader } from './installed-manifest-reader.js';
 import { verifyInstalledWorkbenchArtifact } from './installed-artifact.js';
-import type { WorkbenchDescriptor } from 'workdsh-contracts';
+import type { WorkbenchDescriptor } from 'epuberdsh-contracts';
 import type { WorkbenchInstallationArchives } from './installation-archives.js';
 /** Read-only Host preparation. It derives update baseline from actual installed
  * files; confirmation still rechecks it before any package mutation. */

@@ -15,7 +15,7 @@ import type {
   IdentityService,
   Membership,
   Organization,
-} from 'workdsh-contracts';
+} from 'epuberdsh-contracts';
 
 export interface LocalIdentityConfig {
   readonly principalId: string;

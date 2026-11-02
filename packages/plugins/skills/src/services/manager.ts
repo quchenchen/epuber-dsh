@@ -9,7 +9,7 @@ import type { ManagedSkillDetail, ManagedSkillResource, ManagedSkillSummary, Ski
 import { SkillImportStaging } from './import-staging.js';
 import { SkillCatalogStore } from './catalog.js';
 import type { SkillManagementService, SkillDependencyInspector, SkillDisplayMetadata } from '../shared.js';
-import type { RetainedSkillRevision, SkillConsumerRef, SkillRevisionCheck, SkillRevisionRef, SkillRevisionStatus } from 'workdsh-contracts';
+import type { RetainedSkillRevision, SkillConsumerRef, SkillRevisionCheck, SkillRevisionRef, SkillRevisionStatus } from 'epuberdsh-contracts';
 
 declare module '@deepseek-ai/cordis' {
   interface Context { workdshSkills: SkillManagementService; }
@@ -74,6 +74,78 @@ function frontmatter(document: string): Record<string, unknown> {
 function frontmatterValue(document: string, key: string): string | undefined {
   try { const value = frontmatter(document)[key]; return typeof value === 'string' && value.trim() ? value.trim() : undefined; }
   catch { return undefined; }
+}
+
+/** The execution identity is ASCII-only; CJK, full-width and CJK punctuation belong to the title. */
+const displayTextPattern = /[\u3000-\u303f\u3400-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+
+function textValue(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const text = value.trim().replace(/^["']|["']$/g, '').trim();
+  return text || undefined;
+}
+
+function nestedText(metadata: Record<string, unknown>, key: string): string | undefined {
+  const nested = metadata.metadata;
+  return nested !== null && typeof nested === 'object' && !Array.isArray(nested) ? textValue((nested as Record<string, unknown>)[key]) : undefined;
+}
+
+/**
+ * Third-party packs spell the display name several ways (`title`, `displayName`,
+ * `display-name`, or a Chinese `name`). The panel shows this string; the runtime
+ * keeps using the kebab-case identity.
+ */
+function displayTitleOf(metadata: Record<string, unknown>): string | undefined {
+  const explicit = textValue(metadata.title) ?? textValue(metadata.displayName) ?? textValue(metadata['display-name']);
+  if (explicit) return explicit;
+  const name = textValue(metadata.name);
+  return name && displayTextPattern.test(name) ? name : undefined;
+}
+
+function documentTitle(document: string): string | undefined {
+  try { return displayTitleOf(frontmatter(document)); }
+  catch { return undefined; }
+}
+
+/**
+ * Third-party packs sometimes forget the closing frontmatter fence, which makes
+ * every field unreadable. Close it at the first blank line only when the block
+ * is an unambiguous `key: value` run; anything prose-like is left untouched.
+ */
+function closeFrontmatter(document: string): string | undefined {
+  try { frontmatter(document); return document; }        // already readable
+  catch { /* fall through: the closing fence may be missing */ }
+  const opening = document.match(/^---[ \t]*\r?\n/);
+  if (!opening) return undefined;
+  const eol = document.includes('\r\n') ? '\r\n' : '\n';
+  const body = document.slice(opening[0].length);
+  const lines = body.split(/\r?\n/);
+  let keys = 0;
+  let index = 0;
+  for (; index < lines.length; index++) {
+    const line = lines[index];
+    if (!line.trim()) break;
+    if (/^[A-Za-z0-9_.-]+:(\s|$)/.test(line)) { keys++; continue; }
+    if (/^\s+\S/.test(line) || line.startsWith('#')) continue;
+    break;                                               // a fence or prose ends the run
+  }
+  // Stopping on a fence means the block is closed but unparsable: not a fence problem.
+  if (!keys || index >= lines.length || lines[index].trim() === '---') return undefined;
+  const consumed = lines.slice(0, index).join(eol);
+  return `${opening[0]}${consumed}${eol}---${eol}${body.slice(consumed.length + eol.length)}`;
+}
+
+/** Replace or insert one frontmatter key without touching the remainder of the file. */
+function setFrontmatterValue(document: string, key: string, value: string): string {
+  const match = document.match(/^---\s*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
+  if (!match) return document;
+  const eol = document.includes('\r\n') ? '\r\n' : '\n';
+  const line = `${key}: ${JSON.stringify(value)}`;
+  const existing = new RegExp(`^${key}:[^\\r\\n]*$`, 'm');
+  const block = existing.test(match[1])
+    ? match[1].replace(existing, line)
+    : `${line}${eol}${match[1]}`;
+  return `---${eol}${block}${eol}---${eol}${document.slice(match[0].length)}`;
 }
 
 async function resourceFiles(directory: string, root = directory, depth = 0): Promise<string[]> {
@@ -199,15 +271,20 @@ export class SkillManager extends Service implements SkillManagementService {
     const registeredFiles = new Set<string>();
     for (const skill of skills) {
       const manageable = this.isManagedSummary(skill);
+      let authored: string | undefined;
       if (manageable) {
         const definition = await this.ctx.skills.get(skill.name, { signal });
         const path = definition?.path;
         if (!path) continue;
+        // Frontmatter title travels with the file, so an installed pack keeps its
+        // Chinese name without needing local catalog metadata.
+        authored = definition?.metadata ? displayTitleOf(definition.metadata as Record<string, unknown>) : undefined;
         try { if (!await this.isSafeManagedFile(path)) continue; registeredFiles.add(await realpath(path)); }
         catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT' || (error as Error).message === 'skill/path-symlink') continue; throw error; }
       }
       rows.push({ name: skill.name, description: skill.description, whenToUse: skill.whenToUse,
-        modelInvocable: skill.invocation.modelInvocable, state: manageable ? 'enabled' : 'readonly', manageable });
+        modelInvocable: skill.invocation.modelInvocable, state: manageable ? 'enabled' : 'readonly', manageable,
+        ...(authored && authored !== skill.name ? { title: authored } : {}) });
     }
     for (const root of this.activeRoots) {
       await mkdir(root, { recursive: true });
@@ -221,16 +298,26 @@ export class SkillManager extends Service implements SkillManagementService {
         if (registeredFiles.has(await realpath(active.file))) continue;
         const document = await readFile(active.file, 'utf8');
         const validation = this.validateDocument(document);
-        const displayName = validation.valid ? validation.name ?? name : name;
-        if (rows.some(row => row.name === displayName)) continue;
+        const declared = validation.valid ? validation.name ?? name : name;
+        // Two directories may declare one identity; the runtime keeps a single
+        // winner, so the loser must stay visible (and repairable) instead of
+        // silently disappearing from the installed list.
+        const conflict = declared !== name && rows.some(row => row.name === declared);
+        if (declared === name && rows.some(row => row.name === declared)) continue;
+        const title = documentTitle(document);
         rows.push({
-          name: displayName,
+          name: conflict ? name : declared,
           description: validation.description ?? '技能文件需要修复',
           whenToUse: frontmatterValue(document, 'when-to-use'),
-          modelInvocable: validation.valid,
-          state: validation.valid ? 'enabled' : 'invalid',
+          modelInvocable: validation.valid && !conflict,
+          state: validation.valid && !conflict ? 'enabled' : 'invalid',
           manageable: true,
-          ...(validation.valid ? {} : { diagnostics: validation.diagnostics }),
+          ...(title && title !== (conflict ? name : declared) ? { title } : {}),
+          ...(validation.valid && !conflict ? {} : {
+            diagnostics: conflict
+              ? [{ code: 'name-conflict', message: `技能标识“${declared}”已被另一个技能占用，此技能不会被加载。点「修复」改用目录名作为标识。`, path: 'SKILL.md' }, ...validation.diagnostics]
+              : validation.diagnostics,
+          }),
         });
       }
     }
@@ -290,24 +377,28 @@ export class SkillManager extends Service implements SkillManagementService {
     if (active) {
       const document = await readFile(active.file, 'utf8');
       const validation = this.validateDocument(document);
+      const title = documentTitle(document);
       return {
         name,
         description: validation.description ?? '技能文件需要修复',
         whenToUse: frontmatterValue(document, 'when-to-use'),
         modelInvocable: validation.valid, state: validation.valid ? 'enabled' : 'invalid', manageable: true, document,
         directoryPath: dirname(active.file), revision: digest(document), resources: active.directoryBundle ? await resourceFiles(dirname(active.file)) : [],
+        ...(title && title !== name ? { title } : {}),
         ...(validation.valid ? {} : { diagnostics: validation.diagnostics }),
       };
     }
     const disabled = await this.disabledEntry(name);
     if (!disabled) return undefined;
     const document = await readFile(disabled.file, 'utf8');
+    const title = documentTitle(document);
     return {
       name,
       description: frontmatterValue(document, 'description') ?? '已停用技能',
       whenToUse: frontmatterValue(document, 'when-to-use'),
       modelInvocable: false, state: 'disabled', manageable: true, document,
       directoryPath: dirname(disabled.file), revision: digest(document), resources: disabled.directoryBundle ? await resourceFiles(dirname(disabled.file)) : [],
+      ...(title && title !== name ? { title } : {}),
     };
   }
 
@@ -332,6 +423,26 @@ export class SkillManager extends Service implements SkillManagementService {
     });
   }
 
+  /**
+   * Repair a third-party SKILL.md whose identity is missing or not kebab-case,
+   * as the runtime only loads ASCII kebab-case names. The Chinese (or otherwise
+   * non-ASCII) display string is preserved in `title`, which the panel renders.
+   * Explicit user action only — imported files are never rewritten silently.
+   */
+  async repairIdentity(name: string): Promise<ManagedSkillDetail> {
+    this.assertName(name);
+    return this.withSkillLock(name, async () => {
+      const current = await this.readDetail(name);
+      if (!current?.document || !current.directoryPath || current.state === 'readonly') throw new Error('skill/not-manageable');
+      const plan = this.repairedDocument(current.document, basename(current.directoryPath), await this.identityNamesExcept(current.directoryPath));
+      if (!plan) throw new Error('skill/identity-not-repairable');
+      if (plan.document !== current.document) await this.atomicWrite(join(current.directoryPath, 'SKILL.md'), plan.document);
+      const next = await this.detail(plan.name) ?? await this.detail(name);
+      if (!next) throw new Error('skill/reload-failed');
+      return next;
+    });
+  }
+
   validateDocument(document: string, expectedName?: string): SkillValidationResult {
     const diagnostics: SkillDiagnostic[] = [];
     if (expectedName && Buffer.byteLength(document) > maximumDocumentBytes) diagnostics.push({ code: 'document-too-large', message: 'SKILL.md 超过 1 MiB 上限。', path: 'SKILL.md' });
@@ -340,7 +451,8 @@ export class SkillManager extends Service implements SkillManagementService {
     catch { diagnostics.push({ code: 'invalid-frontmatter', message: 'SKILL.md 必须以有效的 YAML frontmatter 开头。', path: 'SKILL.md' }); }
     const name = typeof metadata?.name === 'string' ? metadata.name.trim() : undefined;
     const description = typeof metadata?.description === 'string' ? metadata.description.trim() : undefined;
-    if (!name || !skillNamePattern.test(name) || !isSkillName(name)) diagnostics.push({ code: 'invalid-name', message: 'name 必须是合法的 kebab-case 技能名称。', path: 'SKILL.md' });
+    if (!name) diagnostics.push({ code: 'invalid-name', message: 'SKILL.md 缺少 name。技能标识只能用小写字母、数字和连字符（中文名请写在 title），可点「修复」自动生成。', path: 'SKILL.md' });
+    else if (!skillNamePattern.test(name) || !isSkillName(name)) diagnostics.push({ code: 'invalid-name', message: `技能标识“${name.length > 24 ? `${name.slice(0, 24)}…` : name}”不合法：只能用小写字母、数字和连字符，中文名请写在 title，可点「修复」自动生成。`, path: 'SKILL.md' });
     // The official DSH loader identifies a skill by frontmatter name, not its directory.
     // A marketplace slug may differ; only authoring flows enforce an expected name.
     if (expectedName && name && name !== expectedName) diagnostics.push({ code: 'name-mismatch', message: `frontmatter name 必须是 ${expectedName}。`, path: 'SKILL.md' });
@@ -655,10 +767,12 @@ export class SkillManager extends Service implements SkillManagementService {
     if (await realpath(definition.path) !== await realpath(active.file)) return readonlyDetail;
     const document = await readFile(active.file, 'utf8');
     const directory = dirname(active.file);
+    const title = documentTitle(document);
     return {
       name: definition.name, description: definition.description, whenToUse: definition.whenToUse,
       modelInvocable: definition.invocation.modelInvocable, state: 'enabled', manageable: true,
       document, revision: digest(document), directoryPath: directory, resources: await resourceFiles(directory),
+      ...(title && title !== definition.name ? { title } : {}),
     };
   }
 
@@ -806,6 +920,53 @@ export class SkillManager extends Service implements SkillManagementService {
       return value.id === id && skillNamePattern.test(value.name) && typeof value.originalEntry === 'string' && typeof value.trashedEntry === 'string' ? value : undefined;
     } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined; throw error; }
   }
+  /** Identities already claimed by other skills, so a repair cannot create a new collision. */
+  private async identityNamesExcept(directory: string): Promise<Set<string>> {
+    const target = resolve(directory);
+    const taken = new Set<string>();
+    for (const skill of await this.ctx.skills.list()) taken.add(skill.name);
+    for (const root of this.activeRoots) {
+      let entries;
+      try { entries = await readdir(root, { withFileTypes: true }); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') continue; throw error; }
+      for (const entry of entries) {
+        if (!entry.isDirectory() || resolve(root, entry.name) === target) continue;
+        try { const declared = frontmatterValue(await readFile(join(root, entry.name, 'SKILL.md'), 'utf8'), 'name'); if (declared) taken.add(declared); }
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') continue; }
+      }
+    }
+    return taken;
+  }
+
+  /**
+   * Pick the first legal, unclaimed identity: a valid `name`, a `slug` (top level
+   * or under `metadata`), then the directory name. Returns undefined when the
+   * document has no parsable frontmatter to edit.
+   */
+  private repairedDocument(document: string, directoryName: string, taken: ReadonlySet<string>): { name: string; document: string } | undefined {
+    const source = closeFrontmatter(document);
+    if (source === undefined) return undefined;
+    let metadata: Record<string, unknown>;
+    try { metadata = frontmatter(source); }
+    catch { return undefined; }
+    const candidates = [textValue(metadata.name), textValue(metadata.slug), nestedText(metadata, 'slug'), nestedText(metadata, 'name'), directoryName]
+      .filter((value): value is string => value !== undefined && skillNamePattern.test(value));
+    let chosen = candidates.find(candidate => !taken.has(candidate));
+    if (!chosen) {
+      const base = candidates[0] ?? directoryName;
+      for (let index = 2; index <= 99 && !chosen; index++) if (!taken.has(`${base}-${index}`)) chosen = `${base}-${index}`;
+      chosen = chosen ?? `${base}-${Date.now().toString(36)}`;
+    }
+    const name: string = chosen;
+    const declared = textValue(metadata.name);
+    const title = textValue(metadata.title) ?? displayTitleOf(metadata);
+    let next = name === declared ? source : setFrontmatterValue(source, 'name', name);
+    // Keep the human-readable name the pack shipped with; the panel shows it and
+    // the kebab-case identity stays the invocation command.
+    if (title && title !== name && !textValue(metadata.title)) next = setFrontmatterValue(next, 'title', title);
+    return { name, document: next };
+  }
+
   private async atomicWrite(path: string, content: string): Promise<void> {
     const temporary = `${path}.workdsh-${process.pid}-${Date.now()}.tmp`;
     await writeFile(temporary, content, { encoding: 'utf8', flag: 'wx', mode: 0o600 });

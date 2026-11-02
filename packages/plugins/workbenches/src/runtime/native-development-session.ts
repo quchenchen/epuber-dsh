@@ -1,6 +1,8 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-session-controller';
-import type { ActorContext, IdentityService, RuntimeBindingService } from 'workdsh-contracts';
+import type { SessionHeader } from '@deepseek-ai/dsh-session-persistence';
+import type { SessionId } from '@deepseek-ai/dsh-session';
+import type { ActorContext, IdentityService, RuntimeBindingService } from 'epuberdsh-contracts';
 import { createWorkbenchDevelopmentSessionVerifier } from './development-session.js';
 
 /** Native Host adaptation. Session creation/access binding is owned by the
@@ -9,8 +11,8 @@ export function createNativeWorkbenchDevelopmentSessionVerifier(ctx: Context, se
   const identity = ctx.get('workdshIdentity') as IdentityService | undefined;
   const access = ctx.get('workdshAccess') as RuntimeBindingService | undefined;
   const native = ctx.get('sessionController') as Context['sessionController'] | undefined;
-  const protectedSessions = ctx.get('workdshSessionAccess') as Pick<Context['sessionController'], 'inspect'> | undefined;
-  if (!identity || !access || !native) throw new Error('workbench/session-authority-unavailable');
+  const protectedSessions = ctx.get('workdshSessionAccess') as { inspect(sessionId: SessionId, signal?: AbortSignal): Promise<{ readonly meta: SessionHeader }> } | undefined;
+  if (!identity || !access || !native || !protectedSessions) throw new Error('workbench/session-authority-unavailable');
   const authorize = async (actor: ActorContext, id: string, signal?: AbortSignal) => {
     signal?.throwIfAborted();
     const current = await identity.resolve({ sessionId: id }, signal);
@@ -23,9 +25,8 @@ export function createNativeWorkbenchDevelopmentSessionVerifier(ctx: Context, se
       !owner || owner.ownerPrincipalId !== actor.principalId || owner.organizationId !== actor.organizationId ||
       (profile.organization.kind !== 'personal' && !protectedSessions)) throw new Error('workbench/development-access-denied');
   };
-  const inspector = protectedSessions ?? native;
   return createWorkbenchDevelopmentSessionVerifier(sessionId, {
     authorize,
-    inspect: (id, signal) => inspector.inspect(id as Parameters<typeof native.inspect>[0], signal),
+    inspect: async (id, signal) => await protectedSessions.inspect(id as SessionId, signal),
   });
 }

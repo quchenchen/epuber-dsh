@@ -1,5 +1,5 @@
 import type { FileSystem, FsTarget } from '@deepseek-ai/dsh-fs';
-import type { WorkbenchDevelopment } from 'workdsh-contracts';
+import type { WorkbenchDevelopment } from 'epuberdsh-contracts';
 /** Authorizes actual provider targets, independently of UI paths or Profile selection. */
 export type AuthorizeWorkbenchSourceRead = (target: FsTarget, signal?: AbortSignal) => Promise<void>;
 /** Verify directory/package identity only. This does NOT manufacture a source revision

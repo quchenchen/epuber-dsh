@@ -1,4 +1,4 @@
-import { parseWorkbenchDescriptor, workbenchActivationState } from 'workdsh-contracts';
+import { parseWorkbenchDescriptor, workbenchActivationState } from 'epuberdsh-contracts';
 import type { VerifyClientWorkbenchInstallation } from './client-registration.js';
 /** Read installation facts only. Client Loader ownership is checked separately
  * by ClientWorkbenchRegistration, never inferred from this request payload. */

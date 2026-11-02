@@ -13,9 +13,11 @@ const fail = (code: string, message: string): ConnectionRpcResult<never> => ({ o
 const record = (value: unknown): Record<string, unknown> | undefined => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 const nameFrom = (payload: unknown): string | undefined => typeof record(payload)?.name === 'string' ? record(payload)?.name as string : undefined;
 
-function publicFailure(error: unknown): ConnectionRpcResult<never> {
+export function publicFailure(error: unknown): ConnectionRpcResult<never> {
   if (error instanceof DOMException && error.name === 'AbortError') return fail('skill/request-cancelled', '操作已取消。');
-  const code = error instanceof Error && error.message.startsWith('skill/') ? error.message : 'skill/internal';
+  // `skillhub/…` is a sibling namespace of `skill/…`, not a child: a prefix test
+  // on `skill/` alone collapses every catalog failure into one useless message.
+  const code = error instanceof Error && /^skill(hub)?\//.test(error.message) ? error.message : 'skill/internal';
   const messages: Record<string, string> = {
     'skill/invalid-name': '技能名称无效。',
     'skill/not-manageable': '该技能由只读来源提供，不能修改。',
@@ -54,6 +56,25 @@ function publicFailure(error: unknown): ConnectionRpcResult<never> {
     'skill/catalog-entry-unknown': '本地技能目录中没有该技能。',
     'skill/catalog-entry-over-limit': '该技能的体积或文件数超过导入上限，不能从目录安装。',
     'skill/catalog-payload-missing': '本地技能目录缺少该技能的安装负载，请重新生成目录。',
+    'skill/identity-not-repairable': '这个 SKILL.md 的开头不是可解析的 frontmatter，无法自动修复标识，请手动补充 name。',
+    'skill/name-conflict': '技能标识与其他技能重复，请先修复标识。',
+    'skillhub/not-configured': '尚未配置技能中心服务地址。',
+    'skillhub/invalid-address': '服务地址无效，请填写完整的 http:// 或 https:// 地址。',
+    'skillhub/invalid-token': '访问令牌不能为空。',
+    'skillhub/invalid-credential-ref': '令牌变量名只能使用大写字母、数字和下划线。',
+    'skillhub/invalid-target': '技能标识无效，已拒绝请求。',
+    'skillhub/unauthorized': '技能中心拒绝了访问令牌，请检查令牌是否仍然有效。',
+    'skillhub/forbidden': '当前账号在该技能中心没有安装该技能的权限。',
+    'skillhub/not-found': '技能中心没有找到该技能。',
+    'skillhub/rate-limited': '请求过于频繁，请稍后再试。',
+    'skillhub/unreachable': '无法连接技能中心服务，请检查地址、证书与内网连通性。',
+    'skillhub/timeout': '技能中心响应超时，请稍后重试。',
+    'skillhub/bad-status': '技能中心返回了异常状态，请稍后重试。',
+    'skillhub/bad-response': '技能中心返回的内容无法解析，请确认地址指向 SkillHub 服务。',
+    'skillhub/unavailable': '技能中心连接管理未就绪。',
+    'skillhub/credential-write-failed': '无法把访问令牌写入本机凭据存储。可以先不填令牌保存地址，改用环境变量提供令牌。',
+    'skillhub/settings-write-failed': '无法保存技能中心连接信息，请检查本地存储权限。',
+    'skillhub/storage-unavailable': '本地存储服务不可用，无法保存技能中心连接信息。',
   };
   return fail(code, messages[code] ?? '技能操作失败，请重试。');
 }
@@ -98,6 +119,7 @@ async function dispatch(manager: SkillManagementService, rawEndpoint: unknown, p
       }
       return ok(await manager.update({ name, document: input.document, expectedRevision: input.expectedRevision }));
     }
+    if (endpoint === 'repair-identity') return ok(await manager.repairIdentity(name));
     if (endpoint === 'resource') {
       const resourcePath = record(payload)?.path;
       if (typeof resourcePath !== 'string') return fail('skill/invalid-request', '资源文件路径无效。');

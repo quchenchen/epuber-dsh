@@ -1,4 +1,4 @@
-import type { WorkbenchDevelopment } from 'workdsh-contracts';
+import type { WorkbenchDevelopment } from 'epuberdsh-contracts';
 import type { createWorkbenchDevelopmentClient } from './development-client.js';
 
 export type WorkbenchCandidateDevelopment = Pick<WorkbenchDevelopment,

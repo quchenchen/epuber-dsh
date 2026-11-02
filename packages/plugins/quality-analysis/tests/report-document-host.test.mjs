@@ -14,10 +14,10 @@ const {build}=webRequire('esbuild');
 const built=await build({
   stdin:{contents:"export * from './run-service';export * from './analysis-run';export {LibraryManager} from '../../../library/src/services/library-manager';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},
   bundle:true,platform:'node',format:'esm',write:false,
-  alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},
+  alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},
   plugins:[{name:'published-runtime-owner',setup(builder){
     builder.onResolve({filter:/^(?:@deepseek-ai\/cordis|@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));
-    builder.onResolve({filter:/^(?:workdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},args=>({path:pathToFileURL(libraryRequire.resolve(args.path)).href,external:true}));
+    builder.onResolve({filter:/^(?:epuberdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},args=>({path:pathToFileURL(libraryRequire.resolve(args.path)).href,external:true}));
   }}],
 });
 const bundleRoot=await mkdtemp(join(tmpdir(),'quality-report-host-bundle-'));

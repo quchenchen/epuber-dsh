@@ -4,7 +4,7 @@ import {ensureQualityAiRunSession,readQualityRunInterpretation} from './run-sess
 import type {Context} from '@deepseek-ai/cordis';
 import type {DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import type {HostConnectionHandle} from '@deepseek-ai/dsh-client-connection';
-import type {IdentityService,LibraryService,ProjectService} from 'workdsh-contracts';
+import type {IdentityService,LibraryService,ProjectService} from 'epuberdsh-contracts';
 import type {QualityAnalysisExecutor} from './analysis-executor.js';
 import type {QualityArtifactExecutor} from './artifact-executor.js';
 import {QualityAnalysisRunService,type QualityLibraryInputPorts} from './run-service.js';

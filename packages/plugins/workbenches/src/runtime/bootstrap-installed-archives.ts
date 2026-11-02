@@ -34,7 +34,15 @@ export async function bootstrapInstalledWorkbenchArchives(root:string,archives:W
   // retained archive, but require its installed-file verification to still pass.
   if(existing){
    if(existing.workbenchId!==row.workbenchId)throw Error('workbench/installation-version-conflict');
-   await archives.retainVerified({packageName:row.packageName,version:row.version,workbenchId:existing.workbenchId,sha256:existing.sha256,path:existing.path},authorize);
+   try{await archives.retainVerified({packageName:row.packageName,version:row.version,workbenchId:existing.workbenchId,sha256:existing.sha256,path:existing.path},authorize);}
+   catch(error){
+    // An in-place upgrade keeps the version but replaces the installed bytes, so
+    // a receipt retained from the previous build can no longer certify them.
+    // The freshly inspected seed can, and only it may supersede the stale one.
+    const stale=error instanceof Error && error.message==='workbench/installed-file-mismatch' && existing.sha256!==inspected.receipt.sha256;
+    if(!stale)throw error;
+    await archives.supersedeVerified({...inspected.receipt,workbenchId:row.workbenchId,path},authorize);
+   }
   }else await archives.retainVerified({...inspected.receipt,workbenchId:row.workbenchId,path},authorize);
  }
 }

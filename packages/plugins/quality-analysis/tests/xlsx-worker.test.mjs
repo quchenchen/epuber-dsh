@@ -16,7 +16,7 @@ const {writeWorksheetTables}=await import(new URL('../../../tabular/dist/index.j
 const mapping={inspectionId:'id',inspectionDate:'date',inspectedQuantity:'total',nonconformingQuantity:'bad',quantityUnit:'unit',inspectionType:'type'};
 test('real XLSX worker preserves typed cells and feeds quality statistics with explicit sheet/header',async()=>{
  const root=await mkdtemp(join(tmpdir(),'quality-xlsx-'));const path=join(root,'worker.mjs');
- await build({entryPoints:[fileURLToPath(new URL('../src/runtime/xlsx-worker.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',outfile:path,plugins:[{name:'published-tabular',setup(builder){builder.onResolve({filter:/^workdsh-tabular$/},()=>({path:new URL('../../../tabular/dist/index.js',import.meta.url).href,external:true}));}}]});
+ await build({entryPoints:[fileURLToPath(new URL('../src/runtime/xlsx-worker.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',outfile:path,plugins:[{name:'published-tabular',setup(builder){builder.onResolve({filter:/^epuberdsh-tabular$/},()=>({path:new URL('../../../tabular/dist/index.js',import.meta.url).href,external:true}));}}]});
  const importer=new QualityXlsxImporter(pathToFileURL(path));
  try{
  const table={name:'检验',headers:['id','date','total','bad','unit','type'],rows:[['001','2026-10-10',100,2,'piece','initial']]};
@@ -36,14 +36,14 @@ test('real XLSX worker preserves typed cells and feeds quality statistics with e
 
 test('real LibraryManager XLSX source preserves exact revision, sheet selection and late authorization',async()=>{
  const runtimeRequire=createRequire(new URL('../../projects/package.json',import.meta.url));
- const serviceBuilt=await build({stdin:{contents:"export * from './run-service';export * from './record-rpc';export * from '../client/record-client';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'official-runtime',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));}}]});
+ const serviceBuilt=await build({stdin:{contents:"export * from './run-service';export * from './record-rpc';export * from '../client/record-client';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'official-runtime',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));}}]});
  const {QualityAnalysisRunService,handleQualityRecordsRequest,createQualityRecordClient}=await import(`data:text/javascript;base64,${Buffer.from(serviceBuilt.outputFiles[0].text).toString('base64')}`);
  const load=async name=>import(pathToFileURL(runtimeRequire.resolve(name)).href);
  const {Context}=await load('@deepseek-ai/cordis'),{default:Storage}=await load('@deepseek-ai/dsh-storage'),JsonStorage=await load('@deepseek-ai/dsh-storage-json'),StorageDomain=await load('@deepseek-ai/dsh-storage-domain');
  const {LibraryManager}=await import(new URL('../../library/dist/index.js',import.meta.url));
  const root=await mkdtemp(join(tmpdir(),'quality-library-xlsx-')),ctx=new Context(),path=join(root,'worker.mjs');
  const actor={principalId:'member',organizationId:'org',requestId:'test',resolvedBy:'trusted-fixture'};
- await build({entryPoints:[fileURLToPath(new URL('../src/runtime/xlsx-worker.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',outfile:path,plugins:[{name:'local-tabular',setup(builder){builder.onResolve({filter:/^workdsh-tabular$/},()=>({path:new URL('../../../tabular/dist/index.js',import.meta.url).href,external:true}));}}]});
+ await build({entryPoints:[fileURLToPath(new URL('../src/runtime/xlsx-worker.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',outfile:path,plugins:[{name:'local-tabular',setup(builder){builder.onResolve({filter:/^epuberdsh-tabular$/},()=>({path:new URL('../../../tabular/dist/index.js',import.meta.url).href,external:true}));}}]});
  const importer=new QualityXlsxImporter(pathToFileURL(path));let service;
  try{
   await ctx.plugin(Storage);await ctx.plugin(JsonStorage,{root:join(root,'storage')});await ctx.plugin(StorageDomain,{backend:'json'});await ctx.plugin(LibraryManager,{root:join(root,'library')});
@@ -75,14 +75,14 @@ test('real LibraryManager XLSX source preserves exact revision, sheet selection 
 
 test('real Excel directory/header failures reach RPC clients without replacing pinned inspection sources',async()=>{
  const runtimeRequire=createRequire(new URL('../../projects/package.json',import.meta.url));
- const serviceBuilt=await build({stdin:{contents:"export * from './run-service';export * from './record-rpc';export * from '../client/record-client';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'official-runtime',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));}}]});
+ const serviceBuilt=await build({stdin:{contents:"export * from './run-service';export * from './record-rpc';export * from '../client/record-client';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},bundle:true,platform:'node',format:'esm',write:false,alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},plugins:[{name:'official-runtime',setup(builder){builder.onResolve({filter:/^(?:@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));}}]});
  const {QualityAnalysisRunService,handleQualityRecordsRequest,createQualityRecordClient}=await import(`data:text/javascript;base64,${Buffer.from(serviceBuilt.outputFiles[0].text).toString('base64')}`);
  const load=async name=>import(pathToFileURL(runtimeRequire.resolve(name)).href);
  const {Context}=await load('@deepseek-ai/cordis'),{default:Storage}=await load('@deepseek-ai/dsh-storage'),JsonStorage=await load('@deepseek-ai/dsh-storage-json'),StorageDomain=await load('@deepseek-ai/dsh-storage-domain');
  const {LibraryManager}=await import(new URL('../../library/dist/index.js',import.meta.url));
  const root=await mkdtemp(join(tmpdir(),'quality-xlsx-errors-')),ctx=new Context(),path=join(root,'worker.mjs');
  const actor={principalId:'member',organizationId:'org',requestId:'test',resolvedBy:'trusted-fixture'};
- await build({entryPoints:[fileURLToPath(new URL('../src/runtime/xlsx-worker.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',outfile:path,plugins:[{name:'local-tabular',setup(builder){builder.onResolve({filter:/^workdsh-tabular$/},()=>({path:new URL('../../../tabular/dist/index.js',import.meta.url).href,external:true}));}}]});
+ await build({entryPoints:[fileURLToPath(new URL('../src/runtime/xlsx-worker.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',outfile:path,plugins:[{name:'local-tabular',setup(builder){builder.onResolve({filter:/^epuberdsh-tabular$/},()=>({path:new URL('../../../tabular/dist/index.js',import.meta.url).href,external:true}));}}]});
  const importer=new QualityXlsxImporter(pathToFileURL(path));let service;
  try{
   await ctx.plugin(Storage);await ctx.plugin(JsonStorage,{root:join(root,'storage')});await ctx.plugin(StorageDomain,{backend:'json'});await ctx.plugin(LibraryManager,{root:join(root,'library')});

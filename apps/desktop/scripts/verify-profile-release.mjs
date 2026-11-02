@@ -53,9 +53,9 @@ export function verifyOfficialWebPackages(manifest, profile, config) {
 }
 
 export function verifyDefaultProfile(manifest) {
-  const selected = (manifest.dsh?.profile?.bundles ?? []).filter(name => name.startsWith('workdsh-')).sort()
-  const direct = Object.keys(manifest.dependencies ?? {}).filter(name => name.startsWith('workdsh-')).sort()
-  const installed = [...direct, ...Object.keys(manifest.optionalDependencies ?? {}).filter(name => name.startsWith('workdsh-'))].sort()
+  const selected = (manifest.dsh?.profile?.bundles ?? []).filter(name => name.startsWith('epuberdsh-')).sort()
+  const direct = Object.keys(manifest.dependencies ?? {}).filter(name => name.startsWith('epuberdsh-')).sort()
+  const installed = [...direct, ...Object.keys(manifest.optionalDependencies ?? {}).filter(name => name.startsWith('epuberdsh-'))].sort()
   for (const [kind, actual, expected] of [
     ['selected features', selected, PRODUCT_PACKAGES],
     ['direct features', direct, PRODUCT_PACKAGES],

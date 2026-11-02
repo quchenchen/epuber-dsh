@@ -1,4 +1,4 @@
-import type { ActorContext, IdentityService } from 'workdsh-contracts';
+import type { ActorContext, IdentityService } from 'epuberdsh-contracts';
 /** Host identity owns profile management roles. Ordinary members need a
  * separately verified development association; caller role claims are ignored. */
 export function createWorkbenchActivationAccess(identity: IdentityService, actor: ActorContext,

@@ -3,7 +3,7 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type { Agent } from '@deepseek-ai/dsh-agent';
 import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import type { BrowserSessionView } from './index.js';
 
 export const browserSessionPath = '/api/workdsh-browser-session';

@@ -1,5 +1,5 @@
 import type { DomainFacility } from '@deepseek-ai/dsh-storage-domain';
-import { assertActorContext, type ActorContext, type IdentityService } from 'workdsh-contracts';
+import { assertActorContext, type ActorContext, type IdentityService } from 'epuberdsh-contracts';
 import { WorkbenchRequirementsStore } from './requirements-store.js';
 
 /** Host service core: callers provide business ids, never identity claims or storage paths. */

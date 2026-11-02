@@ -6,7 +6,7 @@ import type {
   OfficeBlockInput,
   OfficeDocumentState,
   OfficeOperation,
-} from "workdsh-contracts/office";
+} from "epuberdsh-contracts/office";
 
 export const id = z
   .string()

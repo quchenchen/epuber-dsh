@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { ActorContext, IdentityProfile, IdentityResolutionContext, IdentityService, Membership } from 'workdsh-contracts';
+import type { ActorContext, IdentityProfile, IdentityResolutionContext, IdentityService, Membership } from 'epuberdsh-contracts';
 import type { VerifiedMember } from './request-context.js';
 
 /** Internal Agent-owned identity. The trusted verifier retains authentication, not this DTO. */

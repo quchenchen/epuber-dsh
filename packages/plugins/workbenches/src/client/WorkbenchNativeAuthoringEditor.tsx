@@ -9,7 +9,7 @@ import { createWorkbenchDevelopmentInstruction } from './development-instruction
 export interface WorkbenchNativeAuthoringEditorProps extends Omit<WorkbenchAuthoringEditorProps, 'onAssociated'> {
   readonly native: Pick<Context, 'sessions' | 'conversation' | 'uiWorkspace' | 'layout'>;
   /** A persisted development and Session exist, independently of draft delivery. */
-  readonly onDraftPrepared?: (entry: import('workdsh-contracts').WorkbenchDevelopmentIndexEntry, instruction:string)=>void;
+  readonly onDraftPrepared?: (entry: import('epuberdsh-contracts').WorkbenchDevelopmentIndexEntry, instruction:string)=>void;
   readonly onDevelopmentReady?: (developmentId: string) => void;
 }
 /** Joins the already-implemented save/association receipt to official input.

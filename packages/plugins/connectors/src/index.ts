@@ -11,7 +11,7 @@ import { ConnectorManager, type ConnectorManagerOptions } from './manager.js';
 export * from './shared.js';
 export * from './connection-api.js';
 export * from './manager.js';
-export const name = 'workdsh-plugin-connectors';
+export const name = 'epuberdsh-plugin-connectors';
 export const inject = ['connection', 'tools', 'mcpResources', 'storageDomain', 'agents', 'credentials', 'workdshSessionAccess'];
 
 export async function apply(ctx: Context, options: ConnectorManagerOptions = {}): Promise<void> {

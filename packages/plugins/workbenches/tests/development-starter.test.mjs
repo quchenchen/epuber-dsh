@@ -4,13 +4,13 @@ test('generated starter builds actual Host and Client artifacts with stable pack
  const dir=await mkdtemp(join(tmpdir(),'workdsh-starter-'));
  try{
  const descriptor={id:'probe.starter',title:'骨架验证',description:'',protocolVersion:'1.0',layout:'full-page',hostCompatibility:{sdk:'^1.0.0',harness:'0.2.1-rc.1'},capabilities:[]};
- const starter=createWorkbenchStarter('workdsh-probe-starter',descriptor);assert.match(starter.files['.npmrc'],/auto-install-peers=false/);assert.match(starter.files['.npmrc'],/store-dir=\.workdsh-pnpm-store/);assert.match(starter.manifest.peerDependencies['workdsh-plugin-workbenches'],/^\^3\.0\.0-alpha\./);await writeFile(join(dir,'package.json'),JSON.stringify(starter.manifest));for(const [name,content] of Object.entries(starter.files))await writeFile(join(dir,name),content);
+ const starter=createWorkbenchStarter('workdsh-probe-starter',descriptor);assert.match(starter.files['.npmrc'],/auto-install-peers=false/);assert.match(starter.files['.npmrc'],/store-dir=\.workdsh-pnpm-store/);assert.match(starter.manifest.peerDependencies['epuberdsh-plugin-workbenches'],/^\^3\.0\.0-alpha\./);await writeFile(join(dir,'package.json'),JSON.stringify(starter.manifest));for(const [name,content] of Object.entries(starter.files))await writeFile(join(dir,name),content);
  await symlink(fileURLToPath(new URL('../../../../apps/web/node_modules',import.meta.url)),join(dir,'node_modules'),'dir');
  const result=spawnSync(process.execPath,['build.mjs'],{cwd:dir,encoding:'utf8'});assert.equal(result.status,0,result.stderr);
  // Public SDK imports must stay external, even with no locally resolvable SDK.
- await writeFile(join(dir,'client.jsx'),"import {WorkbenchButton} from 'workdsh-plugin-workbenches/client';\n"+starter.files['client.jsx'].replace('插件骨架已加载。','插件骨架已加载。').replace('<main>','<main><WorkbenchButton>保存</WorkbenchButton>'));
+ await writeFile(join(dir,'client.jsx'),"import {WorkbenchButton} from 'epuberdsh-plugin-workbenches/client';\n"+starter.files['client.jsx'].replace('插件骨架已加载。','插件骨架已加载。').replace('<main>','<main><WorkbenchButton>保存</WorkbenchButton>'));
  const sdkBuild=spawnSync(process.execPath,['build.mjs'],{cwd:dir,encoding:'utf8'});assert.equal(sdkBuild.status,0,sdkBuild.stderr);
- assert.match(await readFile(join(dir,'dist/client.browser.js'),'utf8'),/require\("workdsh-plugin-workbenches\/client"\)/);
+ assert.match(await readFile(join(dir,'dist/client.browser.js'),'utf8'),/require\("epuberdsh-plugin-workbenches\/client"\)/);
  // A metadata edit must reach both built registrations without editing two source copies.
  starter.manifest.workdsh.workbench.description='Updated shared declaration';
  await writeFile(join(dir,'package.json'),JSON.stringify(starter.manifest));
@@ -33,7 +33,7 @@ test('confirmed system modules produce navigation without changing declaration i
 test('the same Desktop starter builds, checks and delivers with an installation anchor and no Profile SDK tree',async()=>{
  const root=await mkdtemp(join(tmpdir(),'workdsh-desktop-starter-'));let report;
  try{
-  const profile=join(root,'home/profiles/workdsh'),source=join(profile,'workdsh-workbench-sources/probe'),installation=join(root,'installation'),sdk=join(installation,'node_modules/workdsh-plugin-workbenches');
+  const profile=join(root,'home/profiles/workdsh'),source=join(profile,'workdsh-workbench-sources/probe'),installation=join(root,'installation'),sdk=join(installation,'node_modules/epuberdsh-plugin-workbenches');
   await mkdir(source,{recursive:true});await mkdir(sdk,{recursive:true});
   const original=fileURLToPath(new URL('..',import.meta.url)),sdkRequire=createRequire(join(original,'package.json'));
   for(const file of ['package.json','dist','scripts'])await cp(join(original,file),join(sdk,file),{recursive:true});
@@ -49,7 +49,7 @@ test('the same Desktop starter builds, checks and delivers with an installation 
   for(const [name,content]of Object.entries(starter.files))await writeFile(join(source,name),content);
   await writeFile(join(source,'.workdsh-runtime.json'),JSON.stringify({schemaVersion:1,installationAnchor:join(installation,'package.json')}));
   await mkdir(join(source,'node_modules'));await symlink(dirname(require.resolve('esbuild/package.json')),join(source,'node_modules/esbuild'),process.platform==='win32'?'junction':'dir');
-  assert.throws(()=>createRequire(join(source,'package.json')).resolve('workdsh-plugin-workbenches'));
+  assert.throws(()=>createRequire(join(source,'package.json')).resolve('epuberdsh-plugin-workbenches'));
   assert.match(starter.files['.gitignore'],/\.workdsh-runtime\.json/);
   const build=spawnSync(process.execPath,['build.mjs'],{cwd:source,encoding:'utf8',timeout:15000});assert.equal(build.status,0,build.stderr);
   const check=spawnSync(process.execPath,[join(source,'check-startup.mjs')],{cwd:profile,encoding:'utf8',timeout:15000});assert.equal(check.status,0,check.stderr+check.stdout);assert.equal(JSON.parse(check.stdout).status,'passed');

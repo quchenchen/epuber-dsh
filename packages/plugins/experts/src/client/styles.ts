@@ -1,4 +1,4 @@
-import { controlsCss, modalCss } from 'workdsh-ui';
+import { controlsCss, modalCss } from 'epuberdsh-ui';
 
 export const expertsCss = `${modalCss}
 @layer workdsh-business {
@@ -89,6 +89,9 @@ export const expertsCss = `${modalCss}
 .wd-experts .badge.warn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}
 .wd-experts .badge.bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-warn-primary)}
 .wd-experts .pin{margin-left:auto}
+.wd-experts .card-foot-actions{margin-left:auto;display:flex;align-items:center;gap:4px}
+.wd-experts .card-foot-actions .pin{margin-left:0}
+.wd-experts .card-foot-actions .summon{min-height:26px;padding:0 9px;font-size:12px;white-space:nowrap}
 .wd-experts .pin{background:transparent;border:0;min-height:28px;padding:2px 6px;font-size:15px;color:var(--dsw-alias-label-dimmed)}
 .wd-experts .pin.on{color:var(--dsw-alias-state-warn-primary)}
 .wd-experts .more-button{width:34px}

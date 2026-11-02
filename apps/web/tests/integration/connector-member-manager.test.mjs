@@ -11,6 +11,7 @@ import { AccessManager, SessionAccessBridge } from '../../../../packages/plugins
 import { AuditJournal } from '../../../../packages/plugins/audit/dist/index.js';
 import { ConnectorManager } from '../../../../packages/plugins/connectors/dist/index.js';
 import { connectorProcess } from '../../../../packages/plugins/connectors/dist/manager.js';
+import { coldReadPersistence } from '../helpers/session-persistence.mjs';
 
 test('bundled example survives package relocation without rewriting independent MCP commands', async () => {
  const stale = {id:'workdsh-example',serverName:'workdsh-example',transport:'stdio',command:'/removed/old-package/node',args:['/removed/old-package/example-server.mjs']};
@@ -36,7 +37,9 @@ test('fixed-member connectors authorize native empty Sessions and deny foreign o
    async resolve(evidence){if(!active)throw Error('member revoked');return {principalId:'a',organizationId:'org',requestId:'connector-read',resolvedBy:'workdsh-enterprise-process',sessionId:evidence?.sessionId};}
   });
   const reads=[];
-  ctx.provide('sessionController',{async inspect(id){reads.push(id);if(!['a-session','new-session'].includes(id))throw Error('Session not found');return {meta:{id},events:[]};}});
+  ctx.provide('sessionPersistence',coldReadPersistence(id=>{reads.push(id);if(!['a-session','new-session'].includes(id))return undefined;return {header:{id},events:[]}}));
+  // The bridge keeps its Controller dependency for create/list/resume; this fixture only reads.
+  ctx.provide('sessionController',{async list(){return{items:[]}},async create(){throw Error('fixture create')},async resolveAgent(){throw Error('fixture resume')}});
   await ctx.plugin(AuditJournal);await ctx.plugin(AccessManager);
   await ctx.workdshAccess.bindSession({principalId:'b',organizationId:'org',requestId:'foreign-bind',resolvedBy:'test'},{sessionId:foreign.id});
   await ctx.plugin(SessionAccessBridge,{autoBindFixedMemberSessions:true});

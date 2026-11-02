@@ -29,13 +29,13 @@ const DSH_PACKAGE = '@deepseek-ai/dsh'
 const ROOT_PACKAGES = [DSH_PACKAGE, DESKTOP_HOST_PACKAGE] as const
 // WORKDSH TEST PATCH: preseed the WorkDSH profile layers beside the official roots.
 const WORKDSH_ROOT_PACKAGES = [
-  'workdsh-bundle',
-  'workdsh-plugin-skills',
-  'workdsh-plugin-access',
-  'workdsh-plugin-audit',
-  'workdsh-plugin-experts',
-  'workdsh-provider-identity-local',
-  'workdsh-plugin-office',
+  'epuberdsh-bundle',
+  'epuberdsh-plugin-skills',
+  'epuberdsh-plugin-access',
+  'epuberdsh-plugin-audit',
+  'epuberdsh-plugin-experts',
+  'epuberdsh-provider-identity-local',
+  'epuberdsh-plugin-office',
 ] as const
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')

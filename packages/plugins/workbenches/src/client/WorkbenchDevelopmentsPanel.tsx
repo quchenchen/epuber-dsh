@@ -1,7 +1,7 @@
 import {WorkbenchDevelopmentOverview} from './WorkbenchDevelopmentOverview.js';
 import {createWorkbenchCreationClient,type CreationView} from './creation-client.js';
 import React, { useEffect, useMemo, useState } from 'react';
-import type { WorkbenchDevelopmentIndexEntry } from 'workdsh-contracts';
+import type { WorkbenchDevelopmentIndexEntry } from 'epuberdsh-contracts';
 import { createWorkbenchDevelopmentClient } from './development-client.js';
 import { WorkbenchDevelopments } from './WorkbenchDevelopments.js';
 import { createWorkbenchCatalogClient, type WorkbenchCatalogEntry } from './catalog-client.js';

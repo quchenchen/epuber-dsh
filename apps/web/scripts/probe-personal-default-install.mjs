@@ -33,7 +33,7 @@ try{
  await run(process.execPath,[join(root,'scripts/install-project-release.mjs'),'--directory',assets,'--profile','personal','--dsh',wrapper]);
  const profile=JSON.parse(await readFile(join(home,'profiles/personal/package.json'),'utf8'));
  for(const name of packages.map(p=>p.name))assert.ok(profile.dependencies[name],name);
- for(const name of ['workdsh-plugin-office','workdsh-plugin-projects','workdsh-plugin-activity','workdsh-provider-identity-enterprise','workdsh-plugin-enterprise-collaboration'])assert.ok(!profile.dependencies[name],name);
+ for(const name of ['epuberdsh-plugin-office','epuberdsh-plugin-projects','epuberdsh-plugin-activity','epuberdsh-provider-identity-enterprise','epuberdsh-plugin-enterprise-collaboration'])assert.ok(!profile.dependencies[name],name);
  pass('Actual source installer creates a fresh personal Profile with only the default owned package set');
  server=spawn(process.execPath,[join(home,'profiles/personal/node_modules/@deepseek-ai/dsh/lib/bin.js'),'--profile','personal','--host','127.0.0.1','--port','0','--no-open'],{cwd:home,env,stdio:['ignore','pipe','pipe']});
  server.stdout.on('data',b=>{log+=b;});server.stderr.on('data',b=>{log+=b;});

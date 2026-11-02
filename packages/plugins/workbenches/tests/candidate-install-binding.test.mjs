@@ -9,7 +9,7 @@ const web = createRequire(new URL('../../../../apps/web/package.json', import.me
 const built = await web('esbuild').build({
   entryPoints: [fileURLToPath(new URL('../src/client/WorkbenchPackagePreview.tsx', import.meta.url)), fileURLToPath(new URL('../src/client/WorkbenchSourceCandidates.tsx', import.meta.url)), fileURLToPath(new URL('../src/client/WorkbenchPackageUpload.tsx', import.meta.url))],
   bundle: true, platform: 'node', format: 'esm', write: false, outdir: '/unused', jsx: 'transform',
-  alias: { 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/index.ts', import.meta.url)) },
+  alias: { 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/index.ts', import.meta.url)) },
   tsconfigRaw: { compilerOptions: { jsx: 'react', jsxFactory: 'React.createElement', jsxFragmentFactory: 'React.Fragment' } },
   plugins: [{ name: 'candidate-hooks', setup(builder) {
     builder.onResolve({ filter: /^react$/ }, () => ({ path: 'react', namespace: 'candidate-hooks' }));

@@ -17,12 +17,12 @@ try{
  assert.equal((await fetch(origin,{headers:{cookie}})).status,200);
  let authority;
  for(let n=0;n<30;n++){
-  const response=await fetch(origin+'/api/workdsh-workbench-registration',{method:'POST',headers:{cookie,'content-type':'application/json'},body:JSON.stringify({endpoint:'client-authority',payload:{packageName:'workdsh-plugin-quality-analysis'}})});
+  const response=await fetch(origin+'/api/workdsh-workbench-registration',{method:'POST',headers:{cookie,'content-type':'application/json'},body:JSON.stringify({endpoint:'client-authority',payload:{packageName:'epuberdsh-plugin-quality-analysis'}})});
   const data=await response.json();if(response.ok&&data.ok){authority=data.value;break;}await new Promise(r=>setTimeout(r,300));
  }
  assert.ok(authority,'Quality workbench authority unavailable');assert.equal(authority.enabled,true);assert.equal(authority.compatible,true);assert.equal(authority.descriptor.id,'workdsh.quality-analysis');
  const manifest=JSON.parse(await readFile(join(profile,'package.json'),'utf8'));
- assert.ok(manifest.dsh.profile.bundles.includes('workdsh-plugin-workbenches'));
+ assert.ok(manifest.dsh.profile.bundles.includes('epuberdsh-plugin-workbenches'));
 async function rpc(path,endpoint,payload){const response=await fetch(origin+path,{method:'POST',headers:{cookie,'content-type':'application/json'},body:JSON.stringify({endpoint,payload}),signal:AbortSignal.timeout(60000)});const data=await response.json();if(!response.ok||!data.ok)throw Error('Release RPC failed '+endpoint+' '+(data.error?.code??response.status));return data.value;}
 const q=(endpoint,payload)=>rpc('/api/workdsh-quality-records',endpoint,payload);
 const record=await q('create',{title:'独立候选质量分析（测试数据）',operationId:'release-installed-demo-quality-v1'});
@@ -47,7 +47,7 @@ const report=await q('save-report',{recordId:record.id,runId:run.runId,contentHa
  const reportBytes=Buffer.from(original.base64,'base64');assert.equal(createHash('sha256').update(reportBytes).digest('hex'),report.sha256);assert.ok(reportBytes.toString('utf8').includes('300'));
  let starterSdkVerified=false;
  if(process.argv.includes('--starter')){
-  const installedPlatform=JSON.parse(await readFile(join(profile,'node_modules/workdsh-plugin-workbenches/package.json'),'utf8'));
+  const installedPlatform=JSON.parse(await readFile(join(profile,'node_modules/epuberdsh-plugin-workbenches/package.json'),'utf8'));
   const developmentId=`release-starter-${installedPlatform.version}`,requirementPath='/api/workdsh-workbench-requirements',developmentPath='/api/workdsh-workbench-development';
   let requirements=(await rpc(requirementPath,'history',{developmentId})).at(-1);
   if(!requirements)requirements=await rpc(requirementPath,'append',{developmentId,requirements:{title:'SDK生成验证',scenario:'测试隔离工作台',users:'测试用户',dataSources:'本地测试',workflow:'验证骨架',firstIteration:'生成入口',acceptance:'使用实际平台版本'}});
@@ -56,8 +56,8 @@ const report=await q('save-report',{recordId:record.id,runId:run.runId,contentHa
   const bound=await rpc(developmentPath,'ensure-session',{developmentId,expectedDevelopmentRevision:entry.development.revision});
   assert.ok(bound.development.source&&bound.development.session);
   const generated=JSON.parse(await readFile(join(bound.development.source.directory,'package.json'),'utf8'));
-  const platform=JSON.parse(await readFile(join(profile,'node_modules/workdsh-plugin-workbenches/package.json'),'utf8'));
-  assert.equal(generated.peerDependencies['workdsh-plugin-workbenches'],platform.version);
+  const platform=JSON.parse(await readFile(join(profile,'node_modules/epuberdsh-plugin-workbenches/package.json'),'utf8'));
+  assert.equal(generated.peerDependencies['epuberdsh-plugin-workbenches'],platform.version);
   assert.match(await readFile(join(bound.development.source.directory,'.npmrc'),'utf8'),/legacy-peer-deps=true/);starterSdkVerified=true;
  }
  const result={scope:'Independent release Profile HTTP/Host smoke; no GUI or model execution',web200:true,workbenchAuthority:true,starterSdkVerified,recordId:record.id,runId:run.runId,contentHash:run.contentHash,inspectedQuantity:run.inspectedQuantity,nonconformingQuantity:run.nonconformingQuantity,reportSaved:!!report,reportAssetId:report.assetId,reportRevisionId:report.revisionId,reportOriginalHashVerified:true,qualityVersion:authority.package.version,harness:JSON.parse(await readFile(join(profile,'node_modules/@deepseek-ai/dsh/package.json'),'utf8')).version};

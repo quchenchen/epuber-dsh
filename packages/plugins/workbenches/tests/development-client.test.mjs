@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(new URL('../../../../apps/web/package.json', import.meta.url));
 const { build } = require('esbuild');
-const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/development-client.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
+const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/development-client.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
 const { createWorkbenchDevelopmentClient } = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const entry = () => ({ title: '质量分析', development: { id: 'dev-1', workbenchId: 'company.quality', packageName: 'quality-plugin', owner: { organizationId: 'org', ownerPrincipalId: 'member', scope: 'personal' }, revision: 'rev-1', requirementsRevision: 'req-1', iterationId: 'iteration-1', target: { hostId: 'host', installationId: 'desktop', profileId: 'default', harnessVersion: '0.2.0-rc.2' }, state: 'ready', createdAt: '2026-10-10T00:00:00.000Z', updatedAt: '2026-10-10T00:00:00.000Z' } });
 const client = value => createWorkbenchDevelopmentClient(async () => Response.json({ ok: true, value }));

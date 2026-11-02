@@ -8,7 +8,7 @@ import type {
   ExecutionBinding,
   Operation,
   SkillRevisionRef,
-} from 'workdsh-contracts';
+} from 'epuberdsh-contracts';
 import { expertDefinitionSchema } from '../domain/definition.js';
 
 /**

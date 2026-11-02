@@ -1,8 +1,8 @@
 import {pdfStateSchema,pdfEditInput,applyPdf,initialPdf} from "../pdf/model.js";
 import {pdfBytes} from "../pdf/encode.js";
-import type {OfficePdfOpenInput,OfficePdfEditInput} from "workdsh-contracts/office";
+import type {OfficePdfOpenInput,OfficePdfEditInput} from "epuberdsh-contracts/office";
 import {htmlStateSchema,htmlEditInput,applyHtml} from "../html/model.js";
-import type {OfficeHtmlOpenInput,OfficeHtmlEditInput} from "workdsh-contracts/office";
+import type {OfficeHtmlOpenInput,OfficeHtmlEditInput} from "epuberdsh-contracts/office";
 import {spreadsheetStateSchema,spreadsheetEditInput,createSpreadsheet,applySpreadsheet,spreadsheetCapabilities} from "../spreadsheet/model.js";
 import { createHash, randomUUID } from "node:crypto";
 import { Service, type Context } from "@deepseek-ai/cordis";
@@ -20,7 +20,7 @@ import type {
   ActorContext,
   AuditEvent,
   ResourceOwner,
-} from "workdsh-contracts";
+} from "epuberdsh-contracts";
 import type {
   OfficeSnapshot,
   OfficeContentSnapshot,
@@ -30,7 +30,7 @@ import type {
   OfficeReceipt,
   OfficeEditInput,
   OfficeOpenInput,
-} from "workdsh-contracts/office";
+} from "epuberdsh-contracts/office";
 import {
   applyOperations,
   capabilities,

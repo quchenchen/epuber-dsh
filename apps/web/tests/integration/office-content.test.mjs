@@ -602,11 +602,12 @@ test("PPT export delivers committed native bytes, retries safely and rejects cha
   const calls=[];
   const ctx={tools:{get:()=>true,execute:async input=>{
     calls.push(input);
-    if(input.name==="bash"){
-      try{const {stdout}=await promisify(execFile)(process.execPath,["-e",input.arguments.command.slice(9,-1)],{cwd:home});return {content:[{type:"text",text:stdout}]};}
-      catch{return {isError:true,content:[]};}
+    const [call]=input.calls,args=JSON.parse(call.arguments);
+    if(call.name==="bash"){
+      try{const {stdout}=await promisify(execFile)(process.execPath,["-e",args.command.slice(9,-1)],{cwd:home});return {results:[{result:{content:[{type:"text",text:stdout}]}}]};}
+      catch{return {results:[{result:{isError:true,content:[]}}]};}
     }
-    return {content:[]};
+    return {results:[{result:{content:[]}}]};
   }}};
   const exec={agent:{},signal:new AbortController().signal,callId:"export-test",deferContext:()=>{}};
   try{
@@ -614,8 +615,8 @@ test("PPT export delivers committed native bytes, retries safely and rejects cha
     assert.match(first.path,/\.pptx$/);
     assert.equal(first.status,"presented");
     assert.deepEqual(await readFile(join(home,first.path)),Buffer.from(deck.bytes,"base64"));
-    assert.equal(calls.at(-1).name,"present");
-    assert.equal(calls.at(-1).arguments.files[0].path,first.path);
+    assert.equal(calls.at(-1).calls[0].name,"present");
+    assert.equal(JSON.parse(calls.at(-1).calls[0].arguments).files[0].path,first.path);
     assert.equal((await exportAndPresent(ctx,exec,snapshot,3)).path,first.path);
     const before=calls.length;
     await assert.rejects(()=>exportAndPresent(ctx,exec,snapshot,2),/REVISION_CONFLICT/);
@@ -653,8 +654,8 @@ test("Excel live service persists batches, fences human edits, and delivers actu
   assert.equal((await h.s.read(actor(),first.documentId)).revision,3);
   const latest=await h.s.read(actor(),first.documentId);const bytes=await spreadsheetXlsx(latest);assert.deepEqual(bytes,await spreadsheetXlsx(latest));
   const wb=new ExcelJS.Workbook();await wb.xlsx.load(bytes);assert.equal(wb.worksheets.length,2);assert.equal(wb.getWorksheet("工作表1").getCell("A2").value,9);assert.equal(wb.getWorksheet("工作表1").getCell("C2").formula,"SUM(A2:B2)");assert.equal(wb.getWorksheet("汇总").getCell("A1").formula,"'工作表1'!C2");
-  const {exportAndPresent}=await import(new URL("export.js",artifacts));const calls=[];const delivery={tools:{get:()=>true,execute:async input=>{calls.push(input);if(input.name==="bash"){const marker=/OFFICE_EXPORTED_[a-z0-9-]+/.exec(input.arguments.command)[0];return {content:[{type:"text",text:marker}]};}return {content:[]};}}};
-  const file=await exportAndPresent(delivery,{agent:{},signal:new AbortController().signal,callId:"excel-export",deferContext(){}},latest,3);assert.match(file.path,/\.xlsx$/);assert.equal(calls.at(-1).name,"present");
+  const {exportAndPresent}=await import(new URL("export.js",artifacts));const calls=[];const delivery={tools:{get:()=>true,execute:async input=>{calls.push(input);const [call]=input.calls,args=JSON.parse(call.arguments);if(call.name==="bash"){const marker=/OFFICE_EXPORTED_[a-z0-9-]+/.exec(args.command)[0];return {results:[{result:{content:[{type:"text",text:marker}]}}]};}return {results:[{result:{content:[]}}]};}}};
+  const file=await exportAndPresent(delivery,{agent:{},signal:new AbortController().signal,callId:"excel-export",deferContext(){}},latest,3);assert.match(file.path,/\.xlsx$/);assert.equal(calls.at(-1).calls[0].name,"present");
   await h.ctx.fiber.dispose();h=await boot(root);const cold=await h.s.read(actor(),first.documentId);assert.equal(cold.kind,"spreadsheet");assert.equal(cold.state.sheets["sheet-1"].cells.A2.value,9);assert.deepEqual(await h.s.editForAgent(actor(),batch),receipt);
  }finally{if(h)await h.ctx.fiber.dispose();await rm(root,{recursive:true,force:true});}
 });
@@ -836,18 +837,19 @@ test("Large template PPTX exports through bounded commands without changing pack
  const calls=[];let denied=false;
  const ctx={tools:{get:()=>true,execute:async input=>{
   calls.push(input);
-  if(input.name!=="bash")return {content:[]};
-  assert.ok(Buffer.byteLength(input.arguments.command)<(process.platform==='win32'?30000:100000));
-  if(denied)return {isError:true,content:[{type:"text",text:"denied"}]};
-  const {stdout}=await promisify(execFile)(process.execPath,["-e",input.arguments.command.slice(9,-1)],{cwd:home});
-  return {content:[{type:"text",text:stdout}]};
+  const [call]=input.calls,args=JSON.parse(call.arguments);
+  if(call.name!=="bash")return {results:[{result:{content:[]}}]};
+  assert.ok(Buffer.byteLength(args.command)<(process.platform==='win32'?30000:100000));
+  if(denied)return {results:[{result:{isError:true,content:[{type:"text",text:"denied"}]}}]};
+  const {stdout}=await promisify(execFile)(process.execPath,["-e",args.command.slice(9,-1)],{cwd:home});
+  return {results:[{result:{content:[{type:"text",text:stdout}]}}]};
  }}};
  const exec={agent:{},signal:new AbortController().signal,callId:"large-export",deferContext(){}};
  try{
   const first=await exportAndPresent(ctx,exec,snapshot,22);
   assert.deepEqual(await readFile(join(home,first.path)),bytes);
-  assert.ok(calls.filter(c=>c.name==="bash").length>10);
-  assert.equal(calls.at(-1).name,"present");
+  assert.ok(calls.filter(c=>c.calls[0].name==="bash").length>10);
+  assert.equal(calls.at(-1).calls[0].name,"present");
   assert.equal((await exportAndPresent(ctx,exec,snapshot,22)).path,first.path);
   denied=true;const start=calls.length;
   await assert.rejects(()=>exportAndPresent(ctx,exec,snapshot,22),/未交付文件/);

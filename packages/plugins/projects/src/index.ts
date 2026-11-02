@@ -6,7 +6,7 @@ import { registerProjectConnection } from './remote/connection-api.js';
 import { registerProjectContextInjection } from './runtime/context-injection.js';
 import { registerDeliverableAttribution } from './runtime/deliverable-attribution.js';
 export * from './services/project-manager.js'; export * from './storage/domain.js';
-export const name='workdsh-plugin-projects';
+export const name='epuberdsh-plugin-projects';
 export const inject=['storageDomain','connection','workdshIdentity'];
 export interface ProjectOptions { readonly workspaceRoot?: string; }
 export async function apply(ctx:Context,options:ProjectOptions={}){

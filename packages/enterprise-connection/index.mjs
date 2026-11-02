@@ -1,2 +1,2 @@
-export const name="workdsh-enterprise-connection";
+export const name="epuberdsh-enterprise-connection";
 export function apply() {}

@@ -6,7 +6,7 @@ import type {WorkbenchNativeAuthoringEditorProps} from './WorkbenchNativeAuthori
 import {createWorkbenchRequirementsClient} from './requirements-client.js';
 import {createWorkbenchDevelopmentInstruction} from './development-instruction.js';
 import {creationProposalReview,restoreCreationReview,type WorkbenchCreationReview} from './creation-review.js';
-import type {WorkbenchDevelopmentIndexEntry,WorkbenchRequirementsDraft} from 'workdsh-contracts';
+import type {WorkbenchDevelopmentIndexEntry,WorkbenchRequirementsDraft} from 'epuberdsh-contracts';
 
 export function WorkbenchCreationPage(props:{identityScopeKey:string;native:WorkbenchNativeAuthoringEditorProps['native'];initialCreation?:CreationView;onCancel:()=>void;onDevelopmentReady:(id:string)=>void}){
   const client=useMemo(()=>createWorkbenchCreationClient(),[]);

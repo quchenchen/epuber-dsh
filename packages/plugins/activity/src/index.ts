@@ -1,3 +1,3 @@
-export const name = 'workdsh-plugin-activity';
+export const name = 'epuberdsh-plugin-activity';
 /** Client-only presentation; no Host execution or storage services. */
 export function apply(): void {}

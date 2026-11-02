@@ -8,7 +8,7 @@ import { chromium, expect } from '@playwright/test';
  * Usage:
  *   node scripts/verify-knowledge-isolated.mjs "http://127.0.0.1:18990/?token=..."
  *
- * Requires a running DSH Web profile that has workdsh-plugin-knowledge
+ * Requires a running DSH Web profile that has epuberdsh-plugin-knowledge
  * installed (see packages/plugins/knowledge/README.md). Real WeKnora data is
  * expected: two knowledge bases (能源知识库 / 新型电力系统) reachable through the
  * Host. Screenshots land in .artifacts/knowledge-plugin/.

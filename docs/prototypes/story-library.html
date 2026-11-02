@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>选题库 · 国家电网线</title>
+<style>
+  :root{
+    --bg:#f4f6f9;--panel:#fff;--ink:#16202c;--ink-2:#4a5a6a;--ink-3:#8494a4;
+    --line:#e3e8ef;--line-2:#eef1f6;--blue:#1b4fd8;--blue-soft:#eaf0ff;
+    --red:#c9412f;--amber:#b26a00;--green:#0f7a5f;--slate:#5b6b7c;
+    --radius:10px;--mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .app{height:100%;display:flex;flex-direction:column;overflow:hidden}
+
+  header{flex:0 0 auto;display:flex;align-items:center;gap:20px;padding:0 20px;height:52px;background:#101b28;color:#fff}
+  .brand{display:flex;align-items:baseline;gap:9px;font-size:15px;font-weight:600;letter-spacing:.3px}
+  .brand em{font-style:normal;font-size:11px;font-weight:400;color:#7f93a8;letter-spacing:1px}
+  .run{display:flex;align-items:center;gap:14px;font-size:11.5px;color:#93a6ba}
+  .run b{color:#dce6f2;font-weight:500}
+  .dot{width:5px;height:5px;border-radius:50%;background:#3ecf8e;display:inline-block;margin-right:5px}
+  .tabs{margin-left:auto;display:flex;gap:2px}
+  .tabs button{background:none;border:0;color:#8ea2b6;font-size:12.5px;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit}
+  .tabs button:hover{color:#dbe6f2;background:#1c2b3c}
+  .tabs button.on{color:#fff;background:#24364a}
+
+  main{flex:1 1 auto;display:flex;min-height:0}
+  .rail{flex:0 0 196px;background:var(--panel);border-right:1px solid var(--line);padding:14px 0;overflow-y:auto}
+  .rail h4{font-size:10.5px;font-weight:600;letter-spacing:1.4px;color:var(--ink-3);padding:0 16px 7px;text-transform:uppercase}
+  .rail h4+h4{margin-top:16px}
+  .rail-item{display:flex;align-items:center;gap:8px;padding:6px 16px;cursor:pointer;
+    color:var(--ink-2);font-size:12.5px;border-left:2px solid transparent}
+  .rail-item:hover{background:#f7f9fc}
+  .rail-item.on{background:var(--blue-soft);color:var(--blue);border-left-color:var(--blue);font-weight:500}
+  .rail-item .n{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+  .rail-item.on .n{color:var(--blue)}
+  .swatch{width:7px;height:7px;border-radius:2px;flex:0 0 auto}
+
+  .list{flex:0 0 400px;background:var(--bg);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .list-bar{flex:0 0 auto;padding:12px 14px 10px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
+  .search{display:flex;align-items:center;gap:7px;background:#f2f5f9;border:1px solid var(--line);border-radius:7px;padding:0 9px;height:30px}
+  .search input{border:0;background:none;outline:none;font-family:inherit;font-size:12.5px;color:var(--ink);width:100%}
+  .search input::placeholder{color:var(--ink-3)}
+  .seg{display:flex;gap:5px;flex-wrap:wrap}
+  .seg button{border:1px solid var(--line);background:#fff;color:var(--ink-2);font-family:inherit;
+    font-size:11.5px;padding:3px 9px;border-radius:5px;cursor:pointer}
+  .seg button:hover{border-color:#c9d4e0}
+  .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  .cards{flex:1 1 auto;overflow-y:auto;padding:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px 10px;
+    margin-bottom:8px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+  .card:hover{border-color:#c5d1de}
+  .card.on{border-color:var(--blue);box-shadow:0 0 0 2px rgba(27,79,216,.09)}
+  .card-top{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .pri{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:1px 5px;border-radius:3px;flex:0 0 auto}
+  .pri.P0{background:#fdecea;color:var(--red)}
+  .pri.P1{background:#fdf3e3;color:var(--amber)}
+  .pri.P2{background:#eef1f5;color:var(--slate)}
+  .card-line{font-size:11px;color:var(--ink-3)}
+  .card-region{margin-left:auto;font-size:11px;color:var(--ink-3)}
+  .card h3{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:6px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-3)}
+  .card-meta .src{font-family:var(--mono);font-size:10.5px}
+  .st{margin-left:auto;font-size:10.5px;padding:1.5px 6px;border-radius:4px;font-weight:500;white-space:nowrap}
+  .st.candidate{background:#eef4ff;color:#2a5bd7}
+  .st.claimed{background:#fdf3e3;color:#a05f00}
+  .st.briefed{background:#eaf6f2;color:#0d6b4f}
+  .st.drafting{background:#eef0fe;color:#4c46b8}
+  .st.review{background:#fdf0f5;color:#9c2c62}
+  .st.published{background:#e8f5ee;color:#0d6b4f}
+  .st.parked{background:#f1f3f6;color:#7c8a99}
+
+  .detail{flex:1 1 auto;background:var(--panel);overflow-y:auto;min-width:0}
+  .d-inner{padding:20px 24px 40px;max-width:780px}
+  .d-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .tag{font-size:11px;color:var(--ink-2);background:#f2f5f9;border:1px solid var(--line);padding:2px 7px;border-radius:4px}
+  .d-title{font-size:19px;font-weight:600;line-height:1.45;letter-spacing:-.2px;margin-bottom:14px}
+  .d-sec{margin-top:22px}
+  .d-sec>h5{font-size:10.5px;font-weight:600;letter-spacing:1.3px;color:var(--ink-3);text-transform:uppercase;margin-bottom:9px}
+  .why{background:#f8fafc;border:1px solid var(--line-2);border-left:2px solid var(--blue);
+    border-radius:0 8px 8px 0;padding:11px 13px;color:var(--ink-2);line-height:1.75}
+  .angles{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .angles li{display:flex;gap:9px;color:var(--ink-2);line-height:1.7}
+  .angles li span.k{flex:0 0 auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding-top:2px;width:16px}
+  .sources{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .src-row{display:flex;align-items:flex-start;gap:10px;padding:8px 11px;background:#fff;
+    text-decoration:none;color:inherit;border-bottom:1px solid var(--line-2)}
+  .src-row:last-child{border-bottom:0}
+  .src-row:hover{background:#f8fafc}
+  .src-site{flex:0 0 100px;font-size:11px;color:var(--ink-3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:1px}
+  .src-title{flex:1 1 auto;font-size:12.5px;color:var(--ink-2);line-height:1.55}
+  .src-row:hover .src-title{color:var(--blue)}
+  .d-meta{display:flex;gap:26px;padding:11px 0 0;border-top:1px solid var(--line-2);margin-top:22px;
+    font-size:11.5px;color:var(--ink-3);flex-wrap:wrap}
+  .d-meta b{color:var(--ink-2);font-weight:500}
+  .d-meta code{font-family:var(--mono);font-size:10.5px}
+  .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center}
+  .btn{font-family:inherit;font-size:12.5px;padding:6px 13px;border-radius:7px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--ink-2)}
+  .btn:hover{border-color:#c5d1de;background:#fbfcfe}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:500}
+  .btn.primary:hover{background:#1743bb}
+  .hint{font-size:11px;color:var(--ink-3)}
+
+  /* doc pages */
+  .doc{flex:1 1 auto;min-height:0;overflow-y:auto;padding:24px 28px 70px}
+  .doc>.wrap{max-width:1000px}
+  .doc h2{font-size:17px;font-weight:600;margin-bottom:6px}
+  .doc .lead{color:var(--ink-2);margin-bottom:20px;max-width:760px;line-height:1.8}
+  .doc h3{font-size:13px;font-weight:600;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .doc p{color:var(--ink-2);line-height:1.8;margin-bottom:10px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-weight:600;font-size:10.5px;letter-spacing:1px;color:var(--ink-3);
+    text-transform:uppercase;padding:0 10px 7px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line-2);vertical-align:top;color:var(--ink-2);line-height:1.65}
+  td:first-child{color:var(--ink);font-weight:500}
+  td code{font-family:var(--mono);font-size:11px;background:#f2f5f9;padding:1px 4px;border-radius:3px}
+  .num{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+  .w-pos{color:var(--green);font-weight:600}
+  .w-neg{color:var(--red);font-weight:600}
+  .w-zero{color:var(--ink-3)}
+
+  .flow{display:flex;margin-top:10px;flex-wrap:wrap}
+  .flow div{flex:1 1 0;min-width:118px;padding:11px 12px;border:1px solid var(--line);border-left:0;background:#fff}
+  .flow div:first-child{border-left:1px solid var(--line);border-radius:8px 0 0 8px}
+  .flow div:last-child{border-radius:0 8px 8px 0}
+  .flow b{display:block;font-size:11.5px;margin-bottom:3px;color:var(--ink)}
+  .flow span{font-size:11.5px;color:var(--ink-3);line-height:1.6}
+  .flow div.hot{background:#f7faff;border-color:#c9d9f7}
+  .flow div.hot b{color:var(--blue)}
+
+  pre.doc-box{background:#0f1a26;color:#c8d6e5;border-radius:9px;padding:15px 17px;overflow-x:auto;
+    font-family:var(--mono);font-size:11.5px;line-height:1.75;margin:10px 0 4px;white-space:pre-wrap}
+  pre.doc-box .k{color:#7fb3ff}
+  pre.doc-box .s{color:#8fd6a8}
+  pre.doc-box .c{color:#5c7185}
+  pre.doc-box .w{color:#e8b96a}
+
+  .cal{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:11.5px}
+  .cal-row{display:flex;align-items:center;gap:10px}
+  .cal-label{flex:0 0 92px;color:var(--ink-2);font-family:var(--mono);font-size:11px}
+  .cal-track{flex:1 1 auto;position:relative;height:16px;background:#f4f6f9;border-radius:3px;min-width:0}
+  .cal-pt{position:absolute;top:4px;width:7px;height:7px;border-radius:50%;margin-left:-3.5px}
+  .cal-scale{display:flex;gap:10px;margin-left:102px;color:var(--ink-3);font-size:10.5px;font-family:var(--mono);margin-top:2px}
+
+  .kpi{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+  .kpi div{flex:1 1 140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff}
+  .kpi b{display:block;font-size:18px;font-weight:600;letter-spacing:-.3px;font-family:var(--mono)}
+  .kpi span{font-size:11.5px;color:var(--ink-3)}
+
+  .note{margin-top:16px;padding:10px 13px;background:#fdf8ec;border:1px solid #f0e3c4;border-radius:8px;
+    font-size:12px;color:#7a5c1e;line-height:1.7}
+  .note.blue{background:#f3f7ff;border-color:#d5e2f8;color:#2b4a7a}
+  .hidden{display:none !important}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#d3dbe4;border-radius:5px;border:2px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:#bcc7d4;background-clip:content-box}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">选题库 <em>国家电网线</em></div>
+    <div class="run">
+      <span><i class="dot"></i>上次扫描 <b>今日 07:00</b></span>
+      <span>候选 <b id="rgCandidate">0</b></span>
+      <span>待策划 <b id="rgBriefed">0</b></span>
+      <span>草稿 <b id="rgDrafting">0</b></span>
+    </div>
+    <div class="tabs">
+      <button data-tab="stories" class="on">选题</button>
+      <button data-tab="pipeline">流程</button>
+      <button data-tab="config">配置</button>
+      <button data-tab="jibei">冀北实证</button>
+    </div>
+  </header>
+
+  <!-- ============ 选题 ============ -->
+  <main id="view-stories">
+    <aside class="rail">
+      <h4>线口</h4><div id="lineList"></div>
+      <h4>状态</h4><div id="statusList"></div>
+    </aside>
+    <section class="list">
+      <div class="list-bar">
+        <div class="search"><input id="q" placeholder="搜索标题、主体、文号…" autocomplete="off"></div>
+        <div class="seg" id="priSeg">
+          <button data-pri="" class="on">全部</button>
+          <button data-pri="P0">P0</button>
+          <button data-pri="P1">P1</button>
+          <button data-pri="P2">P2</button>
+        </div>
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+    <section class="detail" id="detail"></section>
+  </main>
+
+  <!-- ============ 流程 ============ -->
+  <section class="doc hidden" id="view-pipeline">
+    <div class="wrap">
+      <h2>认领之后不是成稿</h2>
+      <p class="lead">
+        原先把「已认领」直接连到「成稿」，等于要求记者认领完就写。实际卡点在中间：素材散在来源页里、
+        角度没定、数据缺口没列。所以认领的产物不是稿子，是一份<strong>可以直接交给 Agent 的素材包</strong>，
+        再开一个<strong>新会话</strong>去做策划与起草。
+      </p>
+
+      <h3>七段链路</h3>
+      <div class="flow">
+        <div><b>候选</b><span>采集器产出，未分配</span></div>
+        <div><b>已认领</b><span>人点「认领」，锁定 48 小时</span></div>
+        <div class="hot"><b>素材包</b><span>系统把来源、数字、缺口打包成 Brief</span></div>
+        <div class="hot"><b>策划中</b><span>新建原生会话，Brief 作为首条指令</span></div>
+        <div><b>草稿</b><span>会话回传草稿，绑定同一事件</span></div>
+        <div><b>待审</b><span>编辑审事实与口径</span></div>
+        <div><b>已发</b><span>回填链接，进周度复盘</span></div>
+      </div>
+
+      <h3>每一步谁做、系统做什么</h3>
+      <table>
+        <thead><tr><th style="width:96px">节点</th><th style="width:100px">谁做</th><th>系统动作</th><th style="width:150px">产物</th></tr></thead>
+        <tbody>
+          <tr><td>候选</td><td>采集器</td><td>按源配置扫描、去重、算分，写入事件表</td><td>事件 + 来源列表</td></tr>
+          <tr><td>已认领</td><td>编辑</td><td>置认领人与时间，48 小时未动自动释放</td><td>归属记录</td></tr>
+          <tr><td>素材包</td><td>系统</td><td>抓取来源正文 → 抽硬数字/文号/时间 → 比对历史选题 → 填 Brief 模板</td><td>结构化 Brief</td></tr>
+          <tr><td>策划中</td><td>Agent</td><td>新建原生会话，Brief 作首条消息；会话与事件双向绑定</td><td>策划稿（角度/结构/缺口）</td></tr>
+          <tr><td>草稿</td><td>Agent</td><td>回传正文，事件状态由会话回执推进，不是模型自称完成</td><td>草稿 v1</td></tr>
+          <tr><td>待审</td><td>编辑</td><td>核对事实、来源、口径；退回则带批注重开会话</td><td>审核记录</td></tr>
+          <tr><td>已发</td><td>编辑</td><td>回填发布链接，同事件来源归档</td><td>成品 + 复盘数据</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Brief：认领的产物长这样</h3>
+      <p>它的作用是把「人已经判断过的东西」固定下来，避免 Agent 从零猜。凡是没确认的，写进缺口，不许它编。</p>
+      <pre class="doc-box"><span class="c"># 选题素材包 · 2026-10-28-004</span>
+<span class="k">事件</span>：冀北绿色采购三年把中标供应商绿色认证占比从 18.6% 推到 99.57%
+<span class="k">指纹</span>：jibei-green-procurement-2026
+<span class="k">来源</span>：国网冀北物资分公司专稿（腾讯新闻转载，2026-10-23）
+
+<span class="k">已确认事实</span>
+- 编写 208 本国网采购标准（专用 + 通用），预计带动约 150 亿元入网设备绿色采购
+- 中标冀北工程的供应商中，取得绿色认证的占比：18.6% → 99.57%，近 3 年
+- 固化 ID 4788 条，压减近八成
+- 霸州绿色数智评标基地 2025-06 投运，累计承接 300 余批次
+
+<span class="k">未确认 / 缺口</span>
+- 18.6% 与 99.57% 的统计口径：按供应商家数，还是按中标金额
+- 「绿色认证」具体指哪几类（绿色工厂 / 绿色供应链 / 环境管理体系）
+- 150 亿元是带动额还是采购额
+- 缺少横向对照：国网其他省公司同一指标是多少
+
+<span class="k">可用角度</span>
+1. 采购指挥棒：一家省公司如何用评标细则改写上游 200 家供应商的行为
+2. 绿色认证会不会变成新的准入壁垒，中小供应商怎么办
+3. 与「十五五」绿色采购考核挂钩，其他省公司会不会跟进
+
+<span class="k">历史报道</span>
+- 本库 2026-09 有「国网绿色采购标准体系」相关 2 条，均未涉及认证占比数据
+
+<span class="k">产出要求</span>
+形态：深度（1800–2500 字）｜ 受众：设备制造商与行业研究 ｜ 截止：认领后 5 个工作日
+<span class="k">红线</span>
+- 不得把 18.6%→99.57% 表述为「全部供应商已绿色化」（口径未确认）
+- 不得推测国网其他省公司数据</pre>
+
+      <h3>新会话的首条指令</h3>
+      <p>Brief 不是直接粘进去就完事。首条消息要指定角色、工作顺序和停止条件——尤其是「先策划、后起草」，不然模型会一口气写完 2000 字。</p>
+      <pre class="doc-box"><span class="k">你是能源行业的资深记者。</span>下面是一份选题素材包。请按顺序工作：
+
+<span class="w">第 1 步 · 判断</span>
+这份素材够不够支撑一篇 2000 字深度稿？如果不够，直接说缺什么，不要开始写。
+
+<span class="w">第 2 步 · 选角度</span>
+从「可用角度」里选一个，说明为什么选它、放弃另外两个的理由。
+如果三个都不成立，提出第四个。
+
+<span class="w">第 3 步 · 出策划</span>
+给结构大纲（每节一个小标题 + 一句话主旨）、需要补的数据清单、建议采访对象（按优先级）。
+数据清单要标注：能从公开渠道查到的 / 必须问人的。
+
+<span class="w">第 4 步 · 等我确认</span>
+<span class="w">不要在这一轮写正文。</span>我说「开始写」再写。
+
+<span class="c">--- 素材包 ---</span>
+（此处插入 Brief 全文）</pre>
+
+      <div class="note">
+        为什么必须开新会话：当前会话里已经有过讨论、试错和废弃结论，这些会污染起草。
+        新会话只带 Brief 这一份上下文，模型不会被「刚才说过的某个说法」带偏。
+        会话与事件双向绑定，草稿回来时按会话 ID 归档，不会串到别的选题上。
+      </div>
+
+      <h3>状态机（含异常分支）</h3>
+      <table>
+        <thead><tr><th style="width:130px">从 → 到</th><th>触发</th><th style="width:220px">异常处理</th></tr></thead>
+        <tbody>
+          <tr><td>候选 → 已认领</td><td>编辑点认领</td><td>48 小时无动作自动释放回候选，并降权</td></tr>
+          <tr><td>已认领 → 素材包</td><td>系统抓正文成功</td><td>正文抓取失败（政府站/公众号）仍生成 Brief，标注「仅摘要」</td></tr>
+          <tr><td>素材包 → 策划中</td><td>人工点「开新会话」</td><td>会话创建失败保留 Brief，可重试，不重复建会话</td></tr>
+          <tr><td>策划中 → 草稿</td><td>会话回执 + 人工确认采用</td><td>Agent 判断素材不足 → 回退到候选或转「搁置」，附理由</td></tr>
+          <tr><td>草稿 → 待审</td><td>人工提交</td><td>审校退回 → 原会话继续，不新建</td></tr>
+          <tr><td>任意 → 搁置</td><td>人工</td><td>必须填原因分类（选题过时 / 素材不足 / 已被别家做过 / 口径风险）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 配置 ============ -->
+  <section class="doc hidden" id="view-config">
+    <div class="wrap">
+      <h2>选题方向怎么配</h2>
+      <p class="lead">
+        原来的七条线口是按「我关心什么主题」切的，靠人拍，换个人就要重来。改成按
+        <strong>源 × 栏目 × 内容类型</strong>配：因为一家单位发什么，是由它的栏目决定的，不是由我们的兴趣决定的。
+        下面每个数字都可以在配置文件里改，不改代码。
+      </p>
+
+      <h3>第零层：先分清「信源」和「口径」</h3>
+      <p>
+        把媒体聚焦当线索源是错的。从报道里取选题，做出来的稿子是「对报道的报道」——没有新增事实，
+        还和原报道抢同一个题面。所以先分层，再谈方向：
+      </p>
+      <table>
+        <thead><tr><th style="width:100px">类型</th><th style="width:300px">例子</th><th style="width:110px">能否产出选题</th><th>用法</th></tr></thead>
+        <tbody>
+          <tr><td>一手信源</td><td>企业官网要闻与公告、政府文件、招标中标公示、财报、统计数据</td><td class="num w-pos">能</td><td>构成事件，决定去重指纹</td></tr>
+          <tr><td>二手转述</td><td>行业媒体转载、地市通稿、公众号改编</td><td class="num w-neg">不能</td><td>只补「来源数」，不改变事件是否成立</td></tr>
+          <tr><td>口径参考</td><td>人民日报、新华社、央视、经济日报、科技日报</td><td class="num w-neg">不能</td><td>校准方向、提供背景数字、判断风险</td></tr>
+        </tbody>
+      </table>
+      <p><strong>硬规则：一个事件必须有一手来源才能进候选。媒体数量只影响排序，不影响它是否成立。</strong></p>
+
+      <p style="margin-top:14px">央媒在这套体系里有三个正当用途，都不是「取题」：</p>
+      <table>
+        <thead><tr><th style="width:110px">用途</th><th>具体做法</th></tr></thead>
+        <tbody>
+          <tr><td>校准方向</td><td>统计央媒写什么、不写什么（冀北：绿电与转型 7/9，荣誉 0/9），据此调线口与栏目权重</td></tr>
+          <tr><td>验证价值</td><td>一手事件若被央媒写过 → 加 2 分；没被写过不扣分</td></tr>
+          <tr><td>取背景数字</td><td>报道里的公开数字可引用，须注明出处；不能作为选题由头</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        一个可执行的自检：如果一条选题的「来源」栏里只有媒体、没有一手材料，它就不是选题，是转载计划。
+        这种直接从候选里剔除，而不是写进库再想办法圆。
+      </div>
+
+      <h3>第一层：信源与栏目（以冀北为例，栏目 ID 已核实）</h3>
+      <table>
+        <thead><tr><th style="width:120px">栏目</th><th style="width:150px">路径</th><th style="width:130px">更新节奏</th><th style="width:90px">单条信息量</th><th style="width:80px">转化率</th><th>适配产出</th></tr></thead>
+        <tbody>
+          <tr><td>公司要闻</td><td><code>/html/main/col8/</code></td><td>每周 1–2，月末集中</td><td>中</td><td class="num">约 1/3</td><td>简讯 / 深度</td></tr>
+          <tr><td>通知公告</td><td><code>/html/main/col7/</code></td><td>每周 3–5，单日多批</td><td>低（模板化）</td><td class="num">单条 0<br>聚合高</td><td>数据稿（按周聚合）</td></tr>
+          <tr><td>总部动态</td><td><code>/html/main/col9/</code></td><td>与要闻同日批量</td><td>低</td><td class="num">约 1/5</td><td>一般不单独成稿</td></tr>
+          <tr><td>媒体聚焦</td><td><code>/html/main/col37/</code></td><td>每周 1–2</td><td>二手</td><td class="num">—</td><td>只作线索，作对标</td></tr>
+          <tr><td>地市频道</td><td><code>/html/{tss,qhd}/col41xxx/</code></td><td>每周多篇</td><td>通稿化</td><td class="num">约 1/8</td><td>有硬数字才做</td></tr>
+        </tbody>
+      </table>
+      <p class="note blue">
+        「转化率」不是猜的：它是上一季度该栏目产出条数 ÷ 进入成稿的条数。第一次先填经验值，
+        跑满一个月用实际数据回填，之后每季度调一次。这是这套配置唯一需要长期维护的数字。
+      </p>
+
+      <h3>第二层：内容类型识别（决定同一条消息值不值得做）</h3>
+      <table>
+        <thead><tr><th style="width:130px">类型</th><th style="width:300px">匹配特征</th><th style="width:70px">权重</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>标准与规则</td><td>标准 / 团标 / 行业标准 / 入选国家 / 牵头编制</td><td class="num w-pos">+3</td><td>独占性强，影响整个行业</td></tr>
+          <tr><td>技术与装备</td><td>柔直 / 构网 / SVG / 带电检测 / 具身智能 / 电压治理</td><td class="num w-pos">+3</td><td>有技术门槛，竞品抄不动</td></tr>
+          <tr><td>工程与投资</td><td>500 千伏 / 220 千伏 / 输变电 / 送出 / 核准</td><td class="num w-pos">+2</td><td>单条弱，聚合后成地图</td></tr>
+          <tr><td>数字化</td><td>智能 / 数智 / AI / 平台 / 机器人</td><td class="num w-pos">+1</td><td>易空泛，必须有硬指标才升权</td></tr>
+          <tr><td>竞赛与荣誉</td><td>竞赛 / 获奖 / 荣获 / 斩获 / 入选</td><td class="num w-neg">−1</td><td>通稿，除非带可引用数字</td></tr>
+          <tr><td>服务与保电</td><td>保电 / 服务队 / 走访 / 防汛 / 迎峰度夏</td><td class="num w-neg">−2</td><td>几乎不可用，除非有独家事实</td></tr>
+          <tr><td>央媒背书</td><td>一手事件被人民日报 / 新华社 / 央视 / 经济日报 / 科技日报 报道过</td><td class="num w-pos">+2</td><td>仅加分，不改变来源；无一手源时此条不生效</td></tr>
+        </tbody>
+      </table>
+
+      <h3>第三层：聚合规则（把弱信号攒成强选题）</h3>
+      <table>
+        <thead><tr><th style="width:150px">聚合器</th><th style="width:120px">窗口</th><th>规则</th><th style="width:150px">产出示例</th></tr></thead>
+        <tbody>
+          <tr><td>工程地图</td><td>7 天</td><td>同省 ≥3 个输变电/送出工程 → 合成一条「本周建设动向」</td><td>「冀北一周核准 4 项工程」</td></tr>
+          <tr><td>同一事件追踪</td><td>30 天</td><td>同一指纹的新来源 → 追加到原选题，不新建</td><td>「河北储能申报」持续追踪</td></tr>
+          <tr><td>数据序列</td><td>季度</td><td>同一指标出现 2 次以上 → 建序列，做趋势</td><td>「绿色认证占比三年变化」</td></tr>
+        </tbody>
+      </table>
+
+      <h3>可调参数（配置文件，不用改代码）</h3>
+      <pre class="doc-box"><span class="k">sources</span>:
+  - id: sgcc-jibei
+    name: 国网冀北电力
+    base: http://www.jibei.sgcc.com.cn
+    <span class="c"># 站点提供 RSS，优先用 RSS 而不是解析 HTML</span>
+    rss: /html/main/col41519/
+    <span class="c"># 实测：该站按批次集中发布，日更是浪费</span>
+    cadence: <span class="s">"TUE,FRI 07:00"</span>
+    max_per_run: 30
+    columns:
+      - id: col8
+        name: 公司要闻
+        weight: 1.0
+        forms: [简讯, 深度]
+      - id: col7
+        name: 通知公告
+        weight: 0.7
+        aggregate: weekly-engineering
+      - id: col9
+        name: 总部动态
+        weight: 0.4
+      - id: col37
+        name: 媒体聚焦
+        <span class="c"># 不产出选题，只做方向校准与背书验证</span>
+        role: calibration-only
+        produces_candidates: false
+
+<span class="k">thresholds</span>:
+  P0: 12          <span class="c"># 直接进编前会</span>
+  P1: 8
+  auto_park: 3    <span class="c"># 低于此分不进候选，避免噪音</span>
+
+<span class="k">limits</span>:
+  daily_candidates: 30    <span class="c"># 超过 30 条编辑就不看了</span>
+  max_body_chars: 20000
+  brief_deadline_hours: 48</pre>
+
+      <div class="note">
+        为什么按栏目而不按主题：主题是「我们认为重要」，栏目是「对方认为重要」。前者要不停维护词表，
+        后者只要盯着 URL 结构。冀北 col7 一周发四条工程公告，这件事本身比任何关键词表都更能说明「该做工程地图了」。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 冀北实证 ============ -->
+  <section class="doc hidden" id="view-jibei">
+    <div class="wrap">
+      <h2>国网冀北电力：发布规律核查与模拟</h2>
+      <p class="lead">
+        核查对象：<code>www.jibei.sgcc.com.cn</code>。抓取时间 2026-10-28。以下栏目 ID、日期、标题均来自首页与栏目页实际内容，
+        不是推测。
+      </p>
+
+      <h3>一、栏目结构（已核实）</h3>
+      <table>
+        <thead><tr><th style="width:110px">栏目</th><th style="width:120px">栏目 ID</th><th>内容性质</th></tr></thead>
+        <tbody>
+          <tr><td>公司要闻</td><td><code>col8</code></td><td>本单位成绩：竞赛获奖、标准获批、技术场景亮相</td></tr>
+          <tr><td>总部动态</td><td><code>col9</code></td><td>国网总部口径：署名文章、捐赠、方案发布、作品获奖</td></tr>
+          <tr><td>媒体聚焦</td><td><code>col37</code></td><td>外部已发稿：人民日报、新华社、国家电网报、河北日报、亮报</td></tr>
+          <tr><td>通知公告</td><td><code>col7</code></td><td>输变电/送出工程类公告，模板化，标题即信息</td></tr>
+          <tr><td>地市频道</td><td><code>col41190</code> 唐山 · <code>col41284/41285</code> 秦皇岛</td><td>县公司服务、保电、党员服务队</td></tr>
+          <tr><td>专题</td><td>张雄特高压 / 张北柔直 / 风光储输</td><td>三个常设技术专题，长期不换</td></tr>
+          <tr><td>RSS</td><td><code>col41519</code></td><td><strong>站点提供 RSS 订阅</strong></td></tr>
+        </tbody>
+      </table>
+
+      <h3>二、发文规律：按批次集中发布，不是日更</h3>
+      <p>把 col8 / col9 / col37 的日期叠在一张时间轴上，重合度高得反常：</p>
+      <div class="cal">
+        <div class="cal-row"><span class="cal-label">col8 要闻</span><div class="cal-track">
+          <i class="cal-pt" style="left:9%;background:#1b4fd8"></i><i class="cal-pt" style="left:31%;background:#1b4fd8"></i>
+          <i class="cal-pt" style="left:41%;background:#1b4fd8"></i><i class="cal-pt" style="left:56%;background:#1b4fd8"></i>
+          <i class="cal-pt" style="left:74%;background:#1b4fd8"></i></div></div>
+        <div class="cal-row"><span class="cal-label">col9 总部</span><div class="cal-track">
+          <i class="cal-pt" style="left:19%;background:#0e7c86"></i><i class="cal-pt" style="left:31%;background:#0e7c86"></i>
+          <i class="cal-pt" style="left:41%;background:#0e7c86"></i><i class="cal-pt" style="left:56%;background:#0e7c86"></i>
+          <i class="cal-pt" style="left:68%;background:#0e7c86"></i></div></div>
+        <div class="cal-row"><span class="cal-label">col37 媒体</span><div class="cal-track">
+          <i class="cal-pt" style="left:3%;background:#8b5cf6"></i><i class="cal-pt" style="left:14%;background:#8b5cf6"></i>
+          <i class="cal-pt" style="left:31%;background:#8b5cf6"></i><i class="cal-pt" style="left:41%;background:#8b5cf6"></i>
+          <i class="cal-pt" style="left:56%;background:#8b5cf6"></i><i class="cal-pt" style="left:68%;background:#8b5cf6"></i>
+          <i class="cal-pt" style="left:74%;background:#8b5cf6"></i></div></div>
+        <div class="cal-row"><span class="cal-label">col7 公告</span><div class="cal-track">
+          <i class="cal-pt" style="left:64%;background:#b26a00;width:16px;border-radius:2px"></i>
+          <i class="cal-pt" style="left:68%;background:#b26a00;width:20px;border-radius:2px"></i></div></div>
+        <div class="cal-scale"><span>08-21</span><span>09-04</span><span>09-11</span><span>09-24</span><span>09-30</span><span>10-10</span><span>10-16</span><span>10-21</span></div>
+      </div>
+      <div class="kpi">
+        <div><b>1.5</b><span>要闻条/周（9 月至今）</span></div>
+        <div><b>5</b><span>col7 单日公告数（10-21）</span></div>
+        <div><b>0</b><span>日更记录</span></div>
+        <div><b>7</b><span>同期重合日期数</span></div>
+      </div>
+      <p style="margin-top:12px">
+        结论：<strong>按日扫描是浪费</strong>，三条栏目在 09-11、09-24、09-30、10-10 等日期同时更新，说明编辑按周批次上传。
+        采集节奏定为<strong>每周二、周五各一次</strong>，命中率更高，也不会漏。
+      </p>
+
+      <h3>三、内容方向：四类稿子，只有两类能用</h3>
+      <table>
+        <thead><tr><th style="width:110px">类型</th><th style="width:260px">真实标题样本</th><th style="width:60px">权重</th><th>判断</th></tr></thead>
+        <tbody>
+          <tr><td>标准与规则</td><td>公司牵头申报计量结算能源行业标准入选国家…<br>公司牵头中电联信用团体标准获批发布</td><td class="num w-pos">+3</td><td>一家省公司能定行业标准，是硬实力，可做行业格局</td></tr>
+          <tr><td>技术与装备</td><td>公司「变电站具身智能带电检测」场景亮相<br>技术先行控电压 绿电并网促转型</td><td class="num w-pos">+3</td><td>有技术门槛，能讲清原理就是独家</td></tr>
+          <tr><td>竞赛与荣誉</td><td>公司 5 支参赛队伍在中电联电力电缆安装运维…<br>公司斩获电力交易员国家级竞赛团体三等奖</td><td class="num w-neg">−1</td><td>通稿，除非带可引用的数字或行业背景</td></tr>
+          <tr><td>服务与保电</td><td>电护水产养殖 助力稳产增收<br>滨海度假区「满电」迎客来</td><td class="num w-neg">−2</td><td>几乎不可用：无独家事实、无数据</td></tr>
+        </tbody>
+      </table>
+
+      <h3>四、中央级媒体：5 个月 20 条，央媒占 45%</h3>
+      <p>
+        媒体聚焦栏目（col37）2026 年 6–10 月共 20 条。这不是「转载区」——它决定了什么题材被认为可以对外讲。
+      </p>
+
+      <table>
+        <thead><tr><th style="width:120px">层级</th><th style="width:60px">条数</th><th style="width:60px">占比</th><th>出现媒体</th></tr></thead>
+        <tbody>
+          <tr><td>中央级</td><td class="num">9</td><td class="num">45%</td><td>人民日报 3 · 新华社 3 · 新华网 1 · 经济参考报 1 · 科技日报 1</td></tr>
+          <tr><td>行业级</td><td class="num">7</td><td class="num">35%</td><td>国家电网报 5 · 国家电网杂志 1 · 亮报 1</td></tr>
+          <tr><td>省级</td><td class="num">4</td><td class="num">20%</td><td>河北经济日报 3 · 河北日报 1</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:18px 0 6px">央媒那 9 条，题材高度集中</h4>
+      <table>
+        <thead><tr><th style="width:140px">题材</th><th style="width:50px">条数</th><th>标题</th></tr></thead>
+        <tbody>
+          <tr><td>绿电与新型电力系统</td><td class="num">4</td><td>【人民日报】渤海湾畔绿电来 · 冀北新型电力系统建设全面提速 ·【科技日报】绿电奔流 转型添翼 ·【新华社】"西电东送"新通道大同—怀来—天津南</td></tr>
+          <tr><td>区域转型叙事</td><td class="num">3</td><td>新华网：从"煤电重镇"到"绿智枢纽" ·【经济参考报】解码唐山 · 国家电网杂志：张家口的风点亮北京的"云"</td></tr>
+          <tr><td>服务与应急</td><td class="num">2</td><td>【新华社】电暖冀北服务为民 · 河北宽城：在暴雨中"抢出"生机</td></tr>
+        </tbody>
+      </table>
+
+      <div class="kpi">
+        <div><b>4/9</b><span>央媒报道写唐山</span></div>
+        <div><b>0</b><span>央媒写竞赛获奖</span></div>
+        <div><b>3–4</b><span>条/月，月末集中</span></div>
+        <div><b>45%</b><span>央媒占媒体聚焦比重</span></div>
+      </div>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:18px 0 6px">最值得研究的一篇：人民日报海外版《绿色希冀：赋能低碳美好生活》</h4>
+      <p>
+        2026-08-05 整版稿，三段结构就是冀北当前的外宣定调：<strong>向绿而行（绿电消纳）→ 向新而进（算电协同与供应链）→ 向暖而生（充电服务）</strong>。
+        它带的数字是目前公开口径里最权威的一组，可直接引用：
+      </p>
+      <table>
+        <thead><tr><th style="width:210px">指标</th><th style="width:170px">数值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>2025 冀北新能源发电量</td><td class="num">1225.1 亿千瓦时</td><td>占电源发电总量 56.3%</td></tr>
+          <tr><td>2025 冀北电网绿电交易量</td><td class="num">438.3 亿千瓦时</td><td>同比增长 56.1%</td></tr>
+          <tr><td>秦皇岛中信戴卡绿电使用率</td><td class="num">88.6%</td><td>2025 年交易 3.8 亿千瓦时</td></tr>
+          <tr><td>张家口新能源装机（2026-06）</td><td class="num">4646 万千瓦</td><td>占地区总装机 89%，风电规模全国地级市第一</td></tr>
+          <tr><td>"算力电力"专班</td><td class="num">2026-03</td><td>全国首个电动重卡型虚拟电厂在唐山投运</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:18px 0 6px">三条判断（直接改配置）</h4>
+      <p>
+        <strong>1. 央媒只写绿电与转型，不写荣誉。</strong>
+        5 个月内央媒 9 条，竞赛获奖为 0、标准发布为 0——这两类只在 col8 内部宣传。
+        所以「竞赛与荣誉 −1」是对的，别把采编资源投在外宣不会用的题材上。
+      </p>
+      <p>
+        <strong>2. 唐山是外宣主战场。</strong>
+        央媒 9 条里 4 条写唐山（渤海湾畔绿电来、优化营商环境、煤电重镇到绿智枢纽、解码唐山）。
+        唐山频道应单独提权，高于承德、廊坊、秦皇岛。
+      </p>
+      <p>
+        <strong>3. 央媒写过的事件，风险低，但仍要一手材料。</strong>
+        背书只解决「能不能写」，不解决「写什么」。一手事件被央媒写过 → 加 2 分；
+        反过来，只有央媒报道、找不到一手材料的事件，不进候选。
+      </p>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:18px 0 6px">不跟央媒抢同一个写法</h4>
+      <table>
+        <thead><tr><th style="width:230px">央媒已经写了</th><th style="width:180px">我们不该重复</th><th>我们能加的切口</th></tr></thead>
+        <tbody>
+          <tr><td>绿色希冀：全景式成就</td><td>再写一遍"成就"</td><td>算电协同专班的成本、调度机制、算力方为什么配合</td></tr>
+          <tr><td>渤海湾畔绿电来：现场特写</td><td>抒情式现场</td><td>438.3 亿千瓦时绿电的买方结构：谁在买、为什么买</td></tr>
+          <tr><td>煤电重镇到绿智枢纽：城市转型</td><td>城市转型口号</td><td>唐山重卡虚拟电厂的实际调节收益与结算方式</td></tr>
+          <tr><td>电暖冀北：服务故事</td><td>服务故事</td><td>供暖负荷与电网峰谷的量化关系、清洁取暖度电成本</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:18px 0 6px">那《绿色希冀》里的数字能用吗</h4>
+      <p>能，但只作为<strong>背景</strong>，不作为<strong>由头</strong>。区别在这里：</p>
+      <table>
+        <thead><tr><th style="width:140px">用法</th><th style="width:80px">可否</th><th>例子</th></tr></thead>
+        <tbody>
+          <tr><td>作背景数字</td><td class="w-pos">可以</td><td>在一手事件的稿子里做对照：「据人民日报海外版，2025 年冀北绿电交易 438.3 亿千瓦时」</td></tr>
+          <tr><td>作选题由头</td><td class="w-neg">不行</td><td>「人民日报说 438.3 亿」单独成题，等于复述，没有新增事实</td></tr>
+          <tr><td>作事实核验</td><td class="w-pos">可以</td><td>一手公告缺数字时，用央媒口径交叉验证，但不作为唯一依据</td></tr>
+        </tbody>
+      </table>
+      <p>
+        如果 438.3 亿千瓦时确实值得做，正确路径是去找一手材料：冀北电力交易中心的交易公告、
+        绿电交易实施细则、或买方企业的采购披露。找到之前，它只是一条待验证的线索，不进候选。
+      </p>
+
+      <div class="note blue">
+        一句话：央媒讲「我们做成了什么」，我们讲「怎么做到的、花了多少、别人能不能抄」。
+        选题库只在央媒的题面上打转，永远只能做二手解读。
+      </div>
+
+      <h3>五、模拟：三条选题从真实素材里捞出来</h3>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:16px 0 6px">A. 绿色采购的硬约束（P0，推荐）</h4>
+      <p>
+        素材来自物资分公司专稿：中标供应商中取得绿色认证的占比，近三年从 <strong>18.6% 升到 99.57%</strong>；
+        编写 208 本国网采购标准，带动约 150 亿元绿色采购；固化 ID 4788 条压减近八成。
+        这条几乎没人写过——因为它藏在「供应链管理」的外壳里，不像新闻。但它是<strong>用评标细则改写上游行为的实证</strong>，
+        对设备制造商是切身利益。
+      </p>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:16px 0 6px">B. 光伏高渗台区电压治理（P1）</h4>
+      <p>
+        素材来自唐山「先行讲堂」：随着新能源成为装机主体，配网出现<strong>电压双向越限</strong>、承载力不足；
+        解法是电容器精细化补偿、谐波治理、SVG 下沉、一台区一策。分布式光伏渗透率上去之后，
+        这是县域配网最普遍的真问题，但公开报道极少讲技术细节。
+      </p>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:16px 0 6px">C. 一周四个工程（P1，靠聚合）</h4>
+      <p>
+        col7 在 10-20 / 10-21 两天连发：阳原 220 千伏、怀安 500 千伏、唐山西扩建 500 千伏、京能热电厂扩建 500 千伏送出。
+        单条都是公告，没有新闻性；<strong>四条合起来就是一张「张家口 + 唐山两地的电源送出与主网加强」地图</strong>。
+        这正是配置里「聚合器」存在的理由。
+      </p>
+
+      <h3>六、链路走一遍：从选题到策划稿</h3>
+      <p>以 A 为例，认领后系统生成的 Brief（全文见「流程」页），投进新会话，Agent 首轮应该产出这样一份东西：</p>
+      <pre class="doc-box"><span class="c">── 第 1 步 · 判断 ──────────────────────────</span>
+够，但缺一个关键的横向坐标。
+现有素材能支撑「冀北做了什么」，撑不起「这件事有多大」——因为
+没有国网其他省公司的同一指标。建议：要么补 2–3 个省公司的绿色
+采购数据（公开可查年报/社会责任报告），要么把稿件定位从「行业
+趋势」降为「单点样本」。
+
+<span class="c">── 第 2 步 · 选角度 ─────────────────────────</span>
+选角度 1「采购指挥棒」，放弃 2 和 3。
+理由：角度 1 有独家数据（18.6%→99.57%）和明确机制（评标细则），
+读者能立刻判断「这对我意味着什么」。
+角度 2（准入门槛）需要中小供应商的采访，短期拿不到；
+角度 3（其他省跟进）属于推演，没有事实支撑，容易写成预测稿。
+
+<span class="c">── 第 3 步 · 结构 ───────────────────────────</span>
+1. 一个数字开场：99.57%（用反差，不铺垫）
+2. 机制拆解：评标细则怎么把认证变成分数
+   2.1 208 本采购标准里，绿色条款占多少
+   2.2 认证从「加分项」变成「事实门槛」的临界点在哪一年
+3. 供应商侧的变化：谁被挤出去，谁进来了（这是缺口）
+4. 150 亿元的算法：带动额还是采购额
+5. 这套做法会不会外溢到国网其他省公司
+
+<span class="c">── 第 4 步 · 数据缺口 ───────────────────────</span>
+必须问人：
+- 18.6% / 99.57% 的统计口径（家数 or 金额）← 决定第一段怎么写
+- 「绿色认证」含哪几类
+- 150 亿元是带动额还是采购额
+公开可查：
+- 国网 2025/2026 社会责任报告中的绿色采购章节
+- 绿色工厂 / 绿色供应链管理企业名单（工信部）
+
+建议采访（优先级）：
+1. 冀北物资公司采购标准编写负责人（唯一能解释 208 本的人）
+2. 一家三年内新获认证的供应商（讲准入压力）
+3. 国网物资部（问是否推广）
+
+<span class="c">── 第 5 步 · 风险 ───────────────────────────</span>
+- 不得写「全部供应商已绿色化」：口径未确认，且 99.57% ≠ 100%
+- 不得推演其他省数据
+- 「近三年」需确认起止年份，否则不能画趋势
+
+<span class="w">以上确认后，我再写正文。</span></pre>
+
+      <div class="note">
+        注意第 1 步：Agent 主动指出素材撑不起「行业趋势」这个定位，并给出降级方案。
+        这才是策划该干的事——如果它上来就写 2000 字，说明 Brief 里的「停止条件」没写清楚。
+      </div>
+
+      <h3>七、这套配置对冀北之外的推广成本</h3>
+      <table>
+        <thead><tr><th style="width:140px">要做的事</th><th style="width:100px">一次性</th><th style="width:100px">每月维护</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>新增一个省公司源</td><td class="num">0.5 天</td><td class="num">—</td><td>同构站点（sgcc 子域），栏目 ID 换一下即可</td></tr>
+          <tr><td>回填转化率</td><td>—</td><td class="num">1 小时</td><td>按栏目统计上月产出/成稿，填回配置</td></tr>
+          <tr><td>调整内容类型权重</td><td>—</td><td class="num">按需</td><td>发现某类连续 3 条被搁置就降权</td></tr>
+          <tr><td>加聚合器</td><td class="num">1–2 天</td><td>—</td><td>如「招标中标地图」，需要新的抽取规则</td></tr>
+        </tbody>
+      </table>
+      <div class="note blue">
+        推广顺序建议：先把冀北一条线跑到能稳定出稿（约 4 周），再复制到唐山、秦皇岛这类地市频道，
+        最后才做其他省公司。反过来的话，你会同时维护 30 个源的解析规则，一个改版全部失效。
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const LINES = [
+  { id:'policy',  name:'政策与监管',        color:'#8b5cf6' },
+  { id:'strategy',name:'战略与投资',        color:'#1b4fd8' },
+  { id:'grid',    name:'电网工程',          color:'#0e7c86' },
+  { id:'equip',   name:'装备与供应链',      color:'#b26a00' },
+  { id:'storage', name:'新能源与储能',      color:'#0f7a5f' },
+  { id:'market',  name:'电力市场与价格',    color:'#c2410c' },
+  { id:'digital', name:'数字化与新型电力系统', color:'#4c46b8' }
+];
+
+const STATUS = [
+  { id:'candidate', name:'候选' },
+  { id:'claimed',   name:'已认领' },
+  { id:'briefed',   name:'素材包' },
+  { id:'drafting',  name:'策划中' },
+  { id:'review',    name:'待审' },
+  { id:'published', name:'已发' },
+  { id:'parked',    name:'搁置' }
+];
+
+const STORIES = [
+  {
+    id:'s1', p:'P0', line:'equip', region:'冀北', score:16,
+    title:'冀北绿色采购三年把中标供应商绿色认证占比从 18.6% 推到 99.57%',
+    fp:'jibei-green-procurement-2026', status:'briefed', owner:'陈',
+    why:'这条藏在「供应链管理」的外壳里，不像新闻，但它是用评标细则改写上游行为的实证：208 本国网采购标准、带动约 150 亿元绿色采购、固化 ID 压减近八成。对设备制造商是切身利益——认证从加分项变成事实门槛。',
+    angles:[
+      '采购指挥棒：一家省公司如何用评标细则改写上游两百多家供应商的行为',
+      '绿色认证会不会变成新的准入壁垒，中小供应商怎么办',
+      '与「十五五」绿色采购考核挂钩，其他省公司会不会跟进'
+    ],
+    sources:[
+      { site:'腾讯新闻', title:'国网冀北电力有限公司物资分公司：建设现代数智供应链服务绿色低碳高质量发展', url:'https://new.qq.com/rain/a/20261023A02KTQ00' }
+    ],
+    related:['s2','s3']
+  },
+  {
+    id:'s2', p:'P1', line:'digital', region:'冀北·唐山', score:10,
+    title:'光伏高渗台区的电压双向越限：冀北县域的四种解法',
+    fp:'jibei-voltage-high-pv', status:'drafting', owner:'李',
+    why:'新能源成为装机主体后，配网的主要矛盾从「够不够用」变成「稳不稳」——电压双向越限、承载力不足。唐山「先行讲堂」把运维检修部、滦州、乐亭三家的做法摆在一起：电容器精细化补偿、谐波治理、SVG 下沉、一台区一策。技术细节公开报道极少。',
+    angles:[
+      '四种解法分别适合什么台区，成本差多少',
+      '「一台区一策」意味着多大的人工投入，能规模化吗',
+      '光伏渗透率超过多少就必须做治理，有没有临界值'
+    ],
+    sources:[
+      { site:'国网冀北·唐山', title:'技术先行控电压 绿电并网促转型——公司「先行讲堂」第二期开讲', url:'http://www.jibei.sgcc.com.cn/html/tss/col41190/2026-10/22/20261022113700558503338_1.html' }
+    ],
+    related:['s1']
+  },
+  {
+    id:'s3', p:'P1', line:'grid', region:'冀北', score:9,
+    title:'冀北两天核准四项输变电工程：张家口与唐山两地的送出加强',
+    fp:'jibei-engineering-week-42', status:'candidate',
+    why:'col7 在 10-20 / 10-21 连发阳原 220 千伏、怀安 500 千伏、唐山西扩建 500 千伏、京能热电厂扩建 500 千伏送出。单条都是公告，四条合起来才是「电源送出 + 主网加强」的动向——这正是聚合器存在的理由。',
+    angles:[
+      '四个工程的共同点：都服务于新能源送出还是负荷增长',
+      '怀安、阳原落在张家口，与张北柔直、风光储输是什么关系',
+      '京能热电厂扩建的送出工程，说明火电还在新增'
+    ],
+    sources:[
+      { site:'国网冀北·通知公告', title:'冀北张家口阳原 220 千伏输变电工程', url:'http://www.jibei.sgcc.com.cn/html/main/col7/2026-10/20/20261020084741432847132_1.html' },
+      { site:'国网冀北·通知公告', title:'张家口怀安 500 千伏输变电工程', url:'http://www.jibei.sgcc.com.cn/html/main/col7/2026-10/20/20261020170107681730735_1.html' },
+      { site:'国网冀北·通知公告', title:'唐山西扩建 500 千伏输变电工程', url:'http://www.jibei.sgcc.com.cn/html/main/col7/2026-10/21/20261021102116928283207_1.html' },
+      { site:'国网冀北·通知公告', title:'京能热电厂（扩建）500 千伏送出工程', url:'http://www.jibei.sgcc.com.cn/html/main/col7/2026-10/21/20261021103945235549826_1.html' }
+    ],
+    related:['s4']
+  },
+  {
+    id:'s4', p:'P1', line:'equip', region:'冀北', score:9,
+    title:'冀北牵头两项标准：计量结算能源行业标准入选国家级、中电联信用团标获批',
+    fp:'jibei-standards-2026', status:'claimed', owner:'王',
+    why:'一家省公司能定行业标准，比拿十个竞赛奖更能说明实力。计量结算标准直接关系现货市场的结算规则，信用团标则影响供应商准入——两条都指向「规则制定权」。',
+    angles:[
+      '计量结算标准落地后，谁会因为结算口径变化而受益或受损',
+      '信用团标与绿色认证是不是同一套准入逻辑的两面',
+      '省公司主导行业标准的路径：从业务痛点到标准立项要多久'
+    ],
+    sources:[
+      { site:'国网冀北·公司要闻', title:'公司牵头申报计量结算能源行业标准入选国家…', url:'http://www.jibei.sgcc.com.cn/html/main/col8/2026-09/24/20260924105351656726055_1.html' },
+      { site:'国网冀北·公司要闻', title:'公司牵头中电联信用团体标准获批发布', url:'http://www.jibei.sgcc.com.cn/html/main/col8/2026-09/11/20260911111136882992678_1.html' }
+    ],
+    related:['s1']
+  },
+  {
+    id:'s5', p:'P0', line:'policy', region:'河北', score:16,
+    title:'河北启动 2026 年独立储能申报：全省 1000 万千瓦，南网 400 万、冀北 600 万',
+    fp:'hebei-storage-2026-quota', status:'candidate',
+    why:'单省一年 1000 万千瓦，南网分到 400 万千瓦。更关键的是配套规则：清单管理、清单外不给容量电价、拿指标 9 个月内开工、15 个月内并网、市级按优选评分标准公示不少于 5 天。',
+    angles:[
+      '南网 400 万千瓦怎么分到市：按接入站点还是按申报评分',
+      '9 个月开工 + 15 个月并网的硬约束，会淘汰哪类主体',
+      '技术先进性 25 分怎么拿：构网型、4 小时以上长时储能加分'
+    ],
+    sources:[
+      { site:'河北省工信厅', title:'关于进一步加强独立储能项目规范管理有关事项的通知（冀发改能源〔2026〕418 号）', url:'https://gxt.hebei.gov.cn/main/policy/zxzcdetail?id=6b39b172-4551-4110-9613-b781185815d5' },
+      { site:'国际储能网', title:'河北发改委：清单外独立储能项目不得给予容量电价', url:'https://chuneng.in-en.com/html/chunengy-54195.shtml' }
+    ],
+    related:['s6','s15']
+  },
+  {
+    id:'s6', p:'P0', line:'policy', region:'河北', score:14,
+    title:'河北集中处置 85 个独立储能项目：69 个延期至 2027 年 1 月底，16 个取消',
+    fp:'hebei-storage-disposal-2026', status:'review', owner:'李',
+    why:'与 1000 万千瓦新增申报同期发生：一边扩规模，一边清存量，合计 1165.5 万千瓦被延期或取消。这是「规模冲动被清单管理纠偏」最硬的实证。',
+    angles:[
+      '1165.5 万千瓦建不动的真原因：用地、并网、收益，哪条约束最硬',
+      '延期到 2027-01-31 的项目会不会二次延期',
+      '16 个被取消项目的投资主体是谁，有没有国资背景'
+    ],
+    sources:[
+      { site:'中国经济信息网', title:'河北集中处置 85 个独立储能项目', url:'https://www.cei.cn//defaultsite/s/article/2026/09/14/4b4ff607-9d914745-01a0-9e706031-241b_2026.html' }
+    ],
+    related:['s5']
+  },
+  {
+    id:'s7', p:'P0', line:'equip', region:'全国', score:15,
+    title:'国网特高压设备前三批招标 292.6 亿元，已超 2025 年全年',
+    fp:'sgcc-uhv-tender-2026-b3', status:'candidate',
+    why:'前三批累计 292.61 亿元，2025 年同期只有 37.80 亿元、全年 220.62 亿元。设备招标先于开工 6–12 个月，是唯一能提前一年看到工程节奏的先行指标。',
+    angles:[
+      '292.6 亿拆开：1000kV GIS 占多少，平高、西电、泰开的份额怎么变',
+      '第四批中标对应哪些在建工程',
+      '从招标到收入确认的时滞：设备商 2027 年能兑现多少'
+    ],
+    sources:[
+      { site:'中国工业新闻网', title:'盈利锚点锁定高端开关 特高压设备多元化场景放量', url:'https://www.cinn.cn/yc/2026/08-26/PDEp6REr.html' },
+      { site:'中国证券网', title:'投资加码带动业绩释放 电力设备储能产业链迎周期回暖', url:'https://m.cnstock.com/commonDetail/772983' }
+    ],
+    related:['s8']
+  },
+  {
+    id:'s8', p:'P0', line:'strategy', region:'全国', score:12,
+    title:'国网上半年固定资产投资超 3100 亿元，同比增 12.6%',
+    fp:'sgcc-capex-2026h1', status:'claimed', owner:'陈',
+    why:'两网合计近 4000 亿元（国网 3100 亿 +12.6%，南网 892.62 亿 +14.79%），是全年投资节奏的锚点。南网增速高于国网，说明投资重心在向南网辖区和配网侧倾斜。',
+    angles:[
+      '两网增速差 2.19 个百分点，钱去了哪里',
+      '3100 亿里配网占比——「十五五」配网投资将超总盘子一半',
+      '对比 2025 年同期，看是否有「前低后高」的节奏变化'
+    ],
+    sources:[
+      { site:'中国证券网', title:'投资加码带动业绩释放 电力设备储能产业链迎周期回暖', url:'https://m.cnstock.com/commonDetail/772983' }
+    ],
+    related:['s7']
+  },
+  {
+    id:'s9', p:'P1', line:'grid', region:'全国', score:9,
+    title:'配电网「十五五」投资占比将超电网总投资一半',
+    fp:'sgcc-distribution-share', status:'candidate',
+    why:'投资结构从主干网转向配网，产业链受益者要换一批：特高压看 GIS 和变压器，配网看一二次融合设备、智能终端、电缆。',
+    angles:[
+      '配网投资的钱具体买什么：一二次融合、台区智能终端、柔性直流',
+      '配网设备供应商与特高压供应商几乎是两批公司',
+      '微电网的兜底价值：福建台山岛离网 15 天、河北涉县离网 7 天'
+    ],
+    sources:[
+      { site:'国网能源研究院', title:'【人民日报海外版】投资将超 5 万亿元，新型电网新在哪', url:'http://www.sgeri.sgcc.com.cn/html/sgerinew/gb/xwzx/mtgz/20260901/786325202609011709000003.shtml' }
+    ],
+    related:['s8']
+  },
+  {
+    id:'s10', p:'P1', line:'storage', region:'甘肃', score:10,
+    title:'甘肃新型储能并网突破 1000 万千瓦，「十五五」国网经营区将新增 1.4 亿千瓦',
+    fp:'gansu-storage-10gw', status:'candidate',
+    why:'省级样本对上全国目标：甘肃 1000 万千瓦对应年多消纳绿电 75.5 亿千瓦时、减碳近 590 万吨，可以反推 1.4 亿千瓦的消纳账。',
+    angles:[
+      '1000 万千瓦储能在甘肃的实际调用频次与收益，和装机匹配吗',
+      '1.4 亿千瓦的消纳账：需要多少绿电通道配套',
+      '秒级响应的全域智能调控中枢，技术方案是哪家做的'
+    ],
+    sources:[
+      { site:'国家电网', title:'国家电网加快构建新型电力系统：万里风光入「网」来', url:'http://www.sgcc.com.cn/html/sgcc_main/gb/sdzr/shzrwz/shzryw/20260927/705512202610131048000025.shtml' }
+    ],
+    related:['s11']
+  },
+  {
+    id:'s11', p:'P1', line:'storage', region:'冀北', score:11,
+    title:'冀北新能源装机占比 74.24% 居全国首位，张北柔直构网型提升输送 30%',
+    fp:'jibei-grid-forming', status:'candidate',
+    why:'74.24% 是全球范围内都罕见的高比例新能源电网，是「能不能稳住」的极限样本。构网型开环控制把绿电输送能力提升 30% 以上、实现 450 万千瓦满功率运行。',
+    angles:[
+      '74.24% 占比下，调峰和调频靠什么兜底',
+      '构网型 vs 跟网型：张北的实际运行数据能不能拿到',
+      '江苏金湖已做到毫秒级并离网切换，和冀北是一条路线吗'
+    ],
+    sources:[
+      { site:'国家电网', title:'国家电网加快构建新型电力系统：万里风光入「网」来', url:'http://www.sgcc.com.cn/html/sgcc_main/gb/sdzr/shzrwz/shzryw/20260927/705512202610131048000025.shtml' }
+    ],
+    related:['s2']
+  },
+  {
+    id:'s12', p:'P0', line:'digital', region:'上海', score:13,
+    title:'上海虚拟电厂单次响应 164.77 万千瓦创纪录，响应精度 89%',
+    fp:'shanghai-vpp-record-2026', status:'candidate',
+    why:'164.77 万千瓦相当于尖峰时刻凭空多一座 165 万千瓦的中型火电厂。响应从「隔日」进到「小时级」，需求侧资源已可被当作确定性容量调度。',
+    angles:[
+      '164.77 万千瓦的构成：楼宇空调、用户侧储能、充电桩各占多少',
+      '72 家运营商、285.66 万千瓦可调能力，实际调用率是多少',
+      '需求侧削峰 2030 年超 1 亿千瓦——中小城市的复制门槛在哪'
+    ],
+    sources:[
+      { site:'国家电网', title:'国家电网加快构建新型电力系统：万里风光入「网」来', url:'http://www.sgcc.com.cn/html/sgcc_main/gb/sdzr/shzrwz/shzryw/20260927/705512202610131048000025.shtml' }
+    ],
+    related:['s13']
+  },
+  {
+    id:'s13', p:'P2', line:'digital', region:'上海', score:7,
+    title:'上海算电协同：16 家数据中心两小时压降负荷 9.78 万千瓦',
+    fp:'shanghai-compute-grid-2026', status:'candidate',
+    why:'算力负荷第一次被当成可调资源集中调度，规模不大，但是新业态的起点。数据中心从「用电大户」变成「可中断负荷」。',
+    angles:[
+      '数据中心愿意被调的原因：绿电、电价还是并网指标',
+      '算力跨省转移跟着绿电价格走，对西部招商意味着什么',
+      '2 小时 9.78 万千瓦的可复制性需要什么条件'
+    ],
+    sources:[
+      { site:'国网上海', title:'【国家电网报】打造超大城市智慧能源管理大师', url:'http://www.sh.sgcc.com.cn/html/main/col37/2026-08/14/20260814162707447249989_1.html' }
+    ],
+    related:['s12']
+  },
+  {
+    id:'s14', p:'P1', line:'digital', region:'全国', score:8,
+    title:'国家能源局《电力并网运行管理规定（征求意见稿）》首次将新型储能纳入并网管理',
+    fp:'nea-grid-code-storage', status:'published',
+    why:'「无协议不得并网」如果落地，储能就从「能建」进入「能并」的合规阶段。此前大量独立储能卡在并网环节，缺的正是这条顶层依据。',
+    angles:[
+      '并网调度协议示范文本会不会成为事实上的技术门槛',
+      '存量已投运但未签协议的储能怎么办',
+      '与河北「15 个月并网」的地方要求怎么衔接'
+    ],
+    sources:[
+      { site:'生意头条', title:'国家能源局公开征求意见：新型储能纳入并网管理，无协议不得并网', url:'https://toutiao.toocle.com/detail-11376138.html' }
+    ],
+    related:['s5']
+  },
+  {
+    id:'s15', p:'P1', line:'market', region:'安徽', score:9,
+    title:'安徽容量电价落地：165 元/千瓦·年，按 6 小时折算',
+    fp:'anhui-capacity-price', status:'candidate',
+    why:'首个把「按小时折算」写清楚的省级容量电价。165 元/千瓦·年是 6 小时口径，换算成 4 小时项目收益要打折，直接改变投资测算模型。',
+    angles:[
+      '折算后 4 小时项目的实际单价是多少',
+      '容量电费由工商业用户分摊，会不会推高本地电价',
+      '和山东、甘肃的容量补偿标准横向对比'
+    ],
+    sources:[
+      { site:'生意头条', title:'安徽容量电价政策落地', url:'https://toutiao.toocle.com/detail-11376138.html' }
+    ],
+    related:['s14']
+  }
+];
+
+let state = { line:'', status:'', pri:'', q:'', sel:'s1' };
+const $ = (id) => document.getElementById(id);
+const lineOf = (id) => LINES.find(l => l.id === id) || { name:id, color:'#999' };
+const statusOf = (id) => STATUS.find(s => s.id === id) || { name:id };
+const countBy = (k,v) => STORIES.filter(s => s[k] === v).length;
+
+function renderRail(){
+  const total = STORIES.length;
+  $('lineList').innerHTML =
+    `<div class="rail-item ${state.line===''?'on':''}" data-line="">
+       <span class="swatch" style="background:#c3cdd8"></span>全部线口<span class="n">${total}</span></div>` +
+    LINES.map(l => {
+      const n = countBy('line', l.id);
+      if (!n) return '';
+      return `<div class="rail-item ${state.line===l.id?'on':''}" data-line="${l.id}">
+        <span class="swatch" style="background:${l.color}"></span>${l.name}<span class="n">${n}</span></div>`;
+    }).join('');
+
+  $('statusList').innerHTML =
+    `<div class="rail-item ${state.status===''?'on':''}" data-status="">全部状态<span class="n">${total}</span></div>` +
+    STATUS.map(s => {
+      const n = countBy('status', s.id);
+      if (!n) return '';
+      return `<div class="rail-item ${state.status===s.id?'on':''}" data-status="${s.id}">
+        ${s.name}<span class="n">${n}</span></div>`;
+    }).join('');
+
+  $('lineList').querySelectorAll('[data-line]').forEach(el => {
+    el.onclick = () => { state.line = el.dataset.line; renderRail(); renderCards(); };
+  });
+  $('statusList').querySelectorAll('[data-status]').forEach(el => {
+    el.onclick = () => { state.status = el.dataset.status; renderRail(); renderCards(); };
+  });
+}
+
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return STORIES.filter(s => {
+    if (state.line && s.line !== state.line) return false;
+    if (state.status && s.status !== state.status) return false;
+    if (state.pri && s.p !== state.pri) return false;
+    if (q && !(s.title.toLowerCase().includes(q) || s.why.toLowerCase().includes(q))) return false;
+    return true;
+  }).sort((a,b) => (a.p === b.p ? b.score - a.score : a.p.localeCompare(b.p)));
+}
+
+function renderCards(){
+  const rows = filtered();
+  if (!rows.length){
+    $('cards').innerHTML = `<div style="padding:40px 10px;text-align:center;color:var(--ink-3);font-size:12.5px">
+      没有符合条件的选题。<br>换个线口，或清空搜索。</div>`;
+    return;
+  }
+  $('cards').innerHTML = rows.map(s => `
+    <div class="card ${state.sel===s.id?'on':''}" data-id="${s.id}">
+      <div class="card-top">
+        <span class="pri ${s.p}">${s.p}</span>
+        <span class="card-line">${lineOf(s.line).name}</span>
+        <span class="card-region">${s.region}</span>
+      </div>
+      <h3>${s.title}</h3>
+      <div class="card-meta">
+        <span class="src">${s.sources.length} 源</span>
+        <span class="st ${s.status}">${statusOf(s.status).name}</span>
+      </div>
+    </div>`).join('');
+
+  $('cards').querySelectorAll('.card').forEach(el => {
+    el.onclick = () => { state.sel = el.dataset.id; renderCards(); renderDetail(); };
+  });
+}
+
+function nextLabel(id){
+  return { claimed:'认领', briefed:'生成素材包', drafting:'开新会话', review:'提交待审', published:'标记已发' }[id] || id;
+}
+
+function renderDetail(){
+  const s = STORIES.find(x => x.id === state.sel);
+  if (!s){ $('detail').innerHTML = ''; return; }
+  const line = lineOf(s.line);
+
+  const actions = STATUS.filter(x => x.id !== s.status && x.id !== 'parked').map(x =>
+    `<button class="btn ${x.id === 'briefed' ? 'primary' : ''}" data-go="${x.id}">${nextLabel(x.id)}</button>`
+  ).join('');
+
+  const related = (s.related || []).map(id => {
+    const r = STORIES.find(x => x.id === id);
+    return r ? `<a href="#" data-jump="${r.id}" style="display:flex;gap:8px;padding:6px 0;color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line-2)">
+      <span class="pri ${r.p}" style="align-self:center">${r.p}</span>
+      <span style="font-size:12.5px">${r.title}</span></a>` : '';
+  }).join('');
+
+  const briefNote = s.status === 'briefed'
+    ? `<div class="note blue" style="margin-top:0">素材包已生成。下一步是开新会话：把 Brief 作为首条指令提交，Agent 先出策划、不写正文。</div>`
+    : '';
+
+  $('detail').innerHTML = `<div class="d-inner">
+    <div class="d-eyebrow">
+      <span class="pri ${s.p}">${s.p}</span>
+      <span class="tag" style="border-left:2px solid ${line.color}">${line.name}</span>
+      <span class="tag">${s.region}</span>
+      <span class="st ${s.status}" style="margin-left:0">${statusOf(s.status).name}</span>
+      ${s.owner ? `<span class="tag">认领 ${s.owner}</span>` : ''}
+    </div>
+    <h1 class="d-title">${s.title}</h1>
+    ${briefNote}
+
+    <div class="d-sec">
+      <h5>为什么值得做</h5>
+      <div class="why">${s.why}</div>
+    </div>
+
+    <div class="d-sec">
+      <h5>可用角度</h5>
+      <ul class="angles">
+        ${s.angles.map((a,i) => `<li><span class="k">0${i+1}</span><span>${a}</span></li>`).join('')}
+      </ul>
+    </div>
+
+    ${related ? `<div class="d-sec"><h5>关联选题</h5>${related}</div>` : ''}
+
+    <div class="d-sec">
+      <h5>来源 · ${s.sources.length}</h5>
+      <div class="sources">
+        ${s.sources.map(x => `<a class="src-row" href="${x.url}" target="_blank" rel="noopener">
+          <span class="src-site" title="${x.site}">${x.site}</span>
+          <span class="src-title">${x.title}</span></a>`).join('')}
+      </div>
+    </div>
+
+    <div class="actions">${actions}
+      <button class="btn" data-go="parked" style="margin-left:auto;color:var(--ink-3)">搁置</button>
+    </div>
+
+    <div class="d-meta">
+      <span>事件指纹 <code>${s.fp}</code></span>
+      <span>规则得分 <b>${s.score}</b></span>
+      <span>${s.owner ? '认领人 <b>' + s.owner + '</b>' : '尚未认领'}</span>
+    </div>
+  </div>`;
+
+  $('detail').querySelectorAll('[data-go]').forEach(el => {
+    el.onclick = () => {
+      s.status = el.dataset.go;
+      if (el.dataset.go === 'candidate') s.owner = undefined;
+      if (el.dataset.go === 'claimed' && !s.owner) s.owner = '我';
+      renderAll();
+    };
+  });
+  $('detail').querySelectorAll('[data-jump]').forEach(el => {
+    el.onclick = (e) => { e.preventDefault(); state.sel = el.dataset.jump; renderCards(); renderDetail(); };
+  });
+}
+
+function renderHeaderStats(){
+  $('rgCandidate').textContent = countBy('status','candidate');
+  $('rgBriefed').textContent = countBy('status','briefed');
+  $('rgDrafting').textContent = countBy('status','drafting');
+}
+
+function renderAll(){ renderRail(); renderCards(); renderDetail(); renderHeaderStats(); }
+
+$('q').oninput = (e) => { state.q = e.target.value; renderCards(); };
+$('priSeg').querySelectorAll('button').forEach(el => {
+  el.onclick = () => {
+    state.pri = el.dataset.pri;
+    $('priSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b === el));
+    renderCards();
+  };
+});
+
+const VIEWS = ['stories','pipeline','config','jibei'];
+function showTab(name){
+  VIEWS.forEach(v => {
+    $('view-' + v).classList.toggle('hidden', v !== name);
+  });
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.classList.toggle('on', b.dataset.tab === name);
+  });
+}
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => {
+    const t = b.dataset.tab;
+    history.replaceState(null, '', t === 'stories' ? location.pathname : '#' + t);
+    showTab(t);
+  };
+});
+const initial = location.hash.replace('#','');
+if (VIEWS.includes(initial)) showTab(initial);
+
+renderAll();
+</script>
+</body>
+</html>

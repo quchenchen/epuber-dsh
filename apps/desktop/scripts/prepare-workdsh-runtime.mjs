@@ -75,7 +75,7 @@ function verifyInstalled() {
   for (const id of ['workdsh-installation-probe', 'workdsh-identity-local', 'workdsh-access', 'workdsh-audit', 'workdsh-workbenches']) {
     if (!config.stdout.includes('id: ' + id)) throw new Error('Missing required infrastructure: ' + id)
   }
-  for (const name of ['workdsh-plugin-office', 'workdsh-plugin-activity', 'workdsh-plugin-quality-analysis']) {
+  for (const name of ['epuberdsh-plugin-office', 'epuberdsh-plugin-activity', 'epuberdsh-plugin-quality-analysis']) {
     if (existsSync(join(profile, 'node_modules', name)) || config.stdout.includes('name: ' + name)) throw new Error('External feature was bundled by default: ' + name)
   }
   run(process.execPath, [join(desktopRoot, 'scripts/verify-product-plugin-inventory.mjs'), output])

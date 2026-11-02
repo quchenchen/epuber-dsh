@@ -1,4 +1,4 @@
-import { parseWorkbenchDescriptor, type WorkbenchDescriptor } from 'workdsh-contracts';
+import { parseWorkbenchDescriptor, type WorkbenchDescriptor } from 'epuberdsh-contracts';
 import type { WorkbenchRuntimeStatus } from '../runtime/runtime-observation.js';
 export interface WorkbenchCatalogEntry {
   readonly packageName: string; readonly selected: boolean;

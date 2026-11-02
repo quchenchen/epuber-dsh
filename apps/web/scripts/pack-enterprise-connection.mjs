@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';import {join,resolve} from 'node:path';import {ex
 const source=resolve(import.meta.dirname,'../../../packages/enterprise-connection');
 const output=resolve(process.argv[2]??'/private/tmp/workdsh-enterprise-delivery');mkdirSync(output,{recursive:true});
 const stage=mkdtempSync(join(tmpdir(),'enterprise-delivery-'));cpSync(source,stage,{recursive:true,filter:p=>!p.includes('/node_modules')});
-const packages={'workdsh-provider-identity-enterprise':'../../../packages/providers/identity-enterprise','workdsh-plugin-enterprise-collaboration':'../../../packages/plugins/enterprise-collaboration'};
+const packages={'epuberdsh-provider-identity-enterprise':'../../../packages/providers/identity-enterprise','epuberdsh-plugin-enterprise-collaboration':'../../../packages/plugins/enterprise-collaboration'};
 for(const [name,path] of Object.entries(packages)){
  execFileSync('corepack',['pnpm','--filter',name,'build'],{cwd:resolve(import.meta.dirname,'..'),stdio:'pipe'});
  const directory=resolve(import.meta.dirname,path);const pkg=JSON.parse(readFileSync(join(directory,'package.json'),'utf8'));
@@ -13,8 +13,8 @@ for(const [name,path] of Object.entries(packages)){
  const target=join(stage,'node_modules',name);mkdirSync(target,{recursive:true});
  execFileSync('tar',['-xzf',join(stage,name+'-'+pkg.version+'.tgz'),'--strip-components=1','-C',target]);
 }
-const browser=readFileSync(resolve(import.meta.dirname,packages['workdsh-provider-identity-enterprise'],'dist/client.browser.js'),'utf8');
-writeFileSync(join(stage,'client.browser.js'),browser.replace('id: "workdsh-provider-identity-enterprise"','id: "workdsh-enterprise-connection"'));
+const browser=readFileSync(resolve(import.meta.dirname,packages['epuberdsh-provider-identity-enterprise'],'dist/client.browser.js'),'utf8');
+writeFileSync(join(stage,'client.browser.js'),browser.replace('id: "epuberdsh-provider-identity-enterprise"','id: "epuberdsh-enterprise-connection"'));
 writeFileSync(join(stage,'pnpm-workspace.yaml'),'nodeLinker: hoisted\n');
 execFileSync('corepack',['pnpm','pack','--pack-destination',output],{cwd:stage,stdio:'inherit'});
 

@@ -7,7 +7,7 @@ import type { KvTable } from '@deepseek-ai/dsh-storage-domain';
 import type {
   ActorContext, IdentityService, LibraryAsset, LibraryAssetKind, LibraryAssetStatus, LibraryDraft, LibraryContentDraft, LibrarySaveContentDraftInput, LibraryArchiveContentDraftInput, LibraryImportInput, LibraryOriginalRevisionInput, LibraryNode, LibraryRevision,
   LibrarySearchFilters, LibrarySearchHit, LibraryService, LibrarySpace, LibraryTaskReference, LibraryTreeEntry, ResourceOwner,
-} from 'workdsh-contracts';
+} from 'epuberdsh-contracts';
 import { convertToMarkdown, type ConversionResult } from './converters.js';
 import { libraryDomainSpec, stateKey, type LibraryState } from '../storage/domain.js';
 

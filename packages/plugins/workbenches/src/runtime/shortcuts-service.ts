@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {defineDomain,type Domain,type DomainFacility} from '@deepseek-ai/dsh-storage-domain';
 import {z} from 'zod';
-import {assertActorContext,type ActorContext,type IdentityService} from 'workdsh-contracts';
+import {assertActorContext,type ActorContext,type IdentityService} from 'epuberdsh-contracts';
 
 function spec(actor:ActorContext){
   const key=createHash('sha256').update(JSON.stringify([actor.organizationId,actor.principalId])).digest('hex').slice(0,40);

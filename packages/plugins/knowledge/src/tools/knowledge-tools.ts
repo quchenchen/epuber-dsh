@@ -1,6 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis';
 import { defineTool, type ToolRunContext } from '@deepseek-ai/dsh-tools';
-import type { ActorContext, IdentityService } from 'workdsh-contracts';
+import type { ActorContext, IdentityService } from 'epuberdsh-contracts';
 import type { KnowledgeSearchScope } from '../services/knowledge-service.js';
 
 declare module '@deepseek-ai/cordis' { interface Context { workdshIdentity: IdentityService; } }

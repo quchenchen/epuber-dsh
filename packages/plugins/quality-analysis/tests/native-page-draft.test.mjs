@@ -9,8 +9,8 @@ const declaredDescriptor=JSON.parse(await readFile(new URL('../package.json',imp
 // surfaces are replaced; the real native draft preflight stays in this bundle.
 const built=await require('esbuild').build({entryPoints:[fileURLToPath(new URL('../src/client.tsx',import.meta.url))],bundle:true,platform:'node',format:'esm',write:false,jsx:'transform',tsconfigRaw:{compilerOptions:{jsx:'react',jsxFactory:'React.createElement',jsxFragmentFactory:'React.Fragment'}},plugins:[{name:'native-quality-page-fixture',setup(b){
  b.onResolve({filter:/^react$/},()=>({path:'react',namespace:'fixture'}));
- b.onResolve({filter:/^workdsh-plugin-workbenches\/client$/},()=>({path:'workbenches',namespace:'fixture'}));
- b.onResolve({filter:/^workdsh-plugin-library\/client$/},()=>({path:'library',namespace:'fixture'}));
+ b.onResolve({filter:/^epuberdsh-plugin-workbenches\/client$/},()=>({path:'workbenches',namespace:'fixture'}));
+ b.onResolve({filter:/^epuberdsh-plugin-library\/client$/},()=>({path:'library',namespace:'fixture'}));
  b.onResolve({filter:/\/QualityAnalysisBrowser\.js$/},()=>({path:'browser',namespace:'fixture'}));
  b.onResolve({filter:/\/record-client\.js$/},()=>({path:'client',namespace:'fixture'}));
  b.onResolve({filter:/\/identity-scope\.js$/},()=>({path:'identity',namespace:'fixture'}));

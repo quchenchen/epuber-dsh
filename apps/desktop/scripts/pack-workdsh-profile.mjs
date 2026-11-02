@@ -30,7 +30,7 @@ for (const name of RELEASE_PACKAGES) {
   verifyPackageDshReferences(pkg, DSH_VERSION)
   verifyBuiltPackageExports(pkg, directory)
   for (const [peer, range] of Object.entries(requiredRuntimeDependencies(pkg))) {
-    if (peer.startsWith('workdsh-')) {
+    if (peer.startsWith('epuberdsh-')) {
       if (!RELEASE_PACKAGES.includes(peer)) throw new Error('Missing owned runtime dependency: ' + name + ' requires ' + peer)
       continue
     }

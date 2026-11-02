@@ -10,8 +10,8 @@ const manifests=new Map();
 for(const directory of directories){try{const manifest=JSON.parse(await readFile(join(base,directory,'package.json'),'utf8'));manifests.set(manifest.name,{manifest,directory});}catch(error){if(error.code!=='ENOENT')throw error;}}
 return manifests;
 }
-export const defaults=['workdsh-provider-identity-local','workdsh-provider-browser-session','workdsh-plugin-audit','workdsh-plugin-access','workdsh-plugin-skills','workdsh-plugin-experts','workdsh-plugin-connectors','workdsh-plugin-library','workdsh-plugin-workbenches','workdsh-bundle'];
-const allowed=new Set([...defaults,'workdsh-contracts','workdsh-ui','workdsh-plugin-workbench','workdsh-tabular']);
+export const defaults=['epuberdsh-provider-identity-local','epuberdsh-provider-browser-session','epuberdsh-plugin-audit','epuberdsh-plugin-access','epuberdsh-plugin-skills','epuberdsh-plugin-experts','epuberdsh-plugin-connectors','epuberdsh-plugin-library','epuberdsh-plugin-workbenches','epuberdsh-bundle'];
+const allowed=new Set([...defaults,'epuberdsh-contracts','epuberdsh-ui','epuberdsh-plugin-workbench','epuberdsh-tabular']);
 export async function auditDefaultPluginDelivery(){
 const manifests=await readOwnedManifests();
 const installer=await readFile(join(root,'scripts/install-project-release.mjs'),'utf8');
@@ -23,7 +23,7 @@ assert.ok(packedDefaults,'Release packer must declare the default installation p
 assert.deepEqual([...packedDefaults[1].matchAll(/'([^']+)'/g)].map(match=>match[1]),defaults);
 const packedOptional=packer.match(/optionalPackages:\s*\[([^\]]+)\]/);
 assert.ok(packedOptional,'Release packer must declare optional packages');
-assert.deepEqual([...packedOptional[1].matchAll(/'([^']+)'/g)].map(match=>match[1]),['workdsh-plugin-office','workdsh-plugin-projects','workdsh-plugin-activity','workdsh-plugin-quality-analysis']);
+assert.deepEqual([...packedOptional[1].matchAll(/'([^']+)'/g)].map(match=>match[1]),['epuberdsh-plugin-office','epuberdsh-plugin-projects','epuberdsh-plugin-activity','epuberdsh-plugin-quality-analysis']);
 const {visited,edges}=assertDefaultOwnedClosure(manifests);
 const proof={scope:'Unreleased Web personal installer/source package closure; not Desktop or published artifacts',defaultPackages:defaults,
  ownedClosure:[...visited].sort(),edges,externalEnterprisePackagesAbsent:true,
@@ -39,7 +39,7 @@ const visit=name=>{
  const row=manifests.get(name);assert.ok(row,'Owned package must have a manifest: '+name);
  // Also inspect build dependencies: bundled Client code can carry workspace-only modules.
  for(const field of ['dependencies','optionalDependencies','peerDependencies','devDependencies'])for(const dependency of Object.keys(row.manifest[field]??{})){
-  if(!dependency.startsWith('workdsh-'))continue;
+  if(!dependency.startsWith('epuberdsh-'))continue;
   assert.ok(allowed.has(dependency),'Default package closure contains an external feature: '+name+' -> '+dependency);
   edges.push({from:name,to:dependency,field});visit(dependency);
  }

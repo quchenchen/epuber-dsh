@@ -1,6 +1,6 @@
 # WorkDSH 专家插件 / Experts plugin
 
-一个插件管理多个专家与专家团配置。当前源码候选为 `workdsh-plugin-experts@0.1.0-alpha.8`，精确锁定 **DeepSeek Harness 0.2.0-rc.2 / Cordis 4.0.4**；实际构建、安装与运行范围见[验收要求](../../../apps/web/docs/ACCEPTANCE.md)，旧探针和已发布安装包不能证明本轮候选已验收。
+一个插件管理多个专家与专家团配置。当前源码候选为 `epuberdsh-plugin-experts@0.1.0-alpha.8`，精确锁定 **DeepSeek Harness 0.2.0-rc.2 / Cordis 4.0.4**；实际构建、安装与运行范围见[验收要求](../../../apps/web/docs/ACCEPTANCE.md)，旧探针和已发布安装包不能证明本轮候选已验收。
 
 WorkDSH manages authored expert assets and immutable revisions. Team execution, messaging, tasks and the Web team panel use the official DSH Agent Teams plugins.
 

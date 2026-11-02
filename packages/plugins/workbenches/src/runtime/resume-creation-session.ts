@@ -1,12 +1,14 @@
 import {realpath} from 'node:fs/promises';
 import type {Context} from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-session-controller';
-import type {ActorContext} from 'workdsh-contracts';
+import type {SessionHeader} from '@deepseek-ai/dsh-session-persistence';
+import type {SessionId} from '@deepseek-ai/dsh-session';
+import type {ActorContext} from 'epuberdsh-contracts';
 
 /** create() is a new-conversation command: a named started Session causes the
  * official controller to mint another identity. Resume must use cold reads. */
 export async function resumeWorkbenchCreationSession(actor:ActorContext,sessionId:string,expectedId:string,directory:string,
- ports:{authorize(actor:ActorContext,id:string,signal?:AbortSignal):Promise<void>;inspect:Context['sessionController']['inspect'];projections:Context['sessionController']['projections']},
+ ports:{authorize(actor:ActorContext,id:string,signal?:AbortSignal):Promise<void>;inspect:(sessionId:SessionId,signal?:AbortSignal)=>Promise<{readonly meta:SessionHeader}>;projections:Context['sessionController']['projections']},
  check:()=>void,signal?:AbortSignal){
  check();if(sessionId!==expectedId)throw Error('workbench/creation-conflict');
  await ports.authorize(actor,sessionId,signal);check();

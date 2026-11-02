@@ -29,10 +29,10 @@ test('real Client → record RPC → Library CSV worker → analysis worker → 
   const compiled=await build({
     stdin:{contents:"export * from '../client/record-client';export * from './record-rpc';export * from './run-service';export * from './csv-import';export * from './analysis-executor';export {LibraryManager} from '../../../library/src/services/library-manager';",resolveDir:fileURLToPath(new URL('../src/runtime/',import.meta.url)),loader:'ts'},
     bundle:true,platform:'node',format:'esm',write:false,
-    alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},
+    alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))},
     plugins:[{name:'published-runtime-owner',setup(builder){
       builder.onResolve({filter:/^(?:@deepseek-ai\/cordis|@deepseek-ai\/dsh-storage-domain|zod)$/},args=>({path:pathToFileURL(runtimeRequire.resolve(args.path)).href,external:true}));
-      builder.onResolve({filter:/^(?:workdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},args=>({path:pathToFileURL(libraryRequire.resolve(args.path)).href,external:true}));
+      builder.onResolve({filter:/^(?:epuberdsh-tabular|jszip|pdfjs-dist(?:\/.*)?)$/},args=>({path:pathToFileURL(libraryRequire.resolve(args.path)).href,external:true}));
     }}],
   });
   const bundlePath=join(root,'report-flow.mjs');await writeFile(bundlePath,compiled.outputFiles[0].text);

@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState,useSyncExternalStore} from 'react';
-import type {LibraryOriginalPreviewRegistry} from 'workdsh-contracts/library';
+import type {LibraryOriginalPreviewRegistry} from 'epuberdsh-contracts/library';
 import type {QualityLibraryChoice} from './QualityLibraryImport.js';
 
 /** Library navigates to the native file panel; this workbench owns no file viewer. */

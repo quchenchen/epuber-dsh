@@ -6,7 +6,7 @@ import { WorkbenchOfflineImportHistory } from './WorkbenchOfflineImportHistory.j
 import { WorkbenchPackagePreview } from './WorkbenchPackagePreview.js';
 import {WorkbenchDevelopmentOverview} from './WorkbenchDevelopmentOverview.js';
 import {createWorkbenchCreationClient,type CreationView} from './creation-client.js';
-import type {WorkbenchDevelopmentIndexEntry} from 'workdsh-contracts';
+import type {WorkbenchDevelopmentIndexEntry} from 'epuberdsh-contracts';
 import React, { useEffect, useMemo, useRef, useState,useSyncExternalStore } from 'react';
 import { createWorkbenchCatalogClient, type WorkbenchCatalogEntry } from './catalog-client.js';
 import { createWorkbenchActivationClient } from './activation-client.js';

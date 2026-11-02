@@ -11,6 +11,9 @@ const runtime=createRequire(new URL('../../quality-analysis/package.json',import
 const {build}=web('esbuild');
 const {Context}=await import(pathToFileURL(runtime.resolve('@deepseek-ai/cordis')).href);
 const {default:Tools}=await import(pathToFileURL(runtime.resolve('@deepseek-ai/dsh-tools')).href);
+const ToolExecutor=await import(pathToFileURL(web.resolve('@deepseek-ai/dsh-tool-executor-native')).href);
+// dsh-tools 0.2.2 dispatches only through a registered executor and exposes the batch shape.
+const dispatch=(runtime,input)=>runtime.execute({calls:[{type:'tool-call',id:input.callId,name:input.name,arguments:JSON.stringify(input.arguments??{})}],agent:input.agent,signal:input.signal}).then(batch=>batch.results[0]?.result);
 const compiled=await build({entryPoints:[fileURLToPath(new URL('../src/runtime/development-tools.ts',import.meta.url))],bundle:true,platform:'node',format:'esm',write:false,
   plugins:[{name:'published-tool-runtime',setup(b){b.onResolve({filter:/^@deepseek-ai\/dsh-tools$/},a=>({path:pathToFileURL(runtime.resolve(a.path)).href,external:true}));}}]});
 
@@ -21,7 +24,7 @@ async function fixture(t){
   const {registerWorkbenchDevelopmentTools}=await import(pathToFileURL(bundle).href);
   const ctx=new Context(),calls=[],sessionId='session-bound-development';
   // Only prompt registration is stubbed; the registry and Fiber lifecycle are official.
-  ctx.provide('systemPrompt',{tools(){return()=>{};}});await ctx.plugin(Tools);
+  ctx.provide('systemPrompt',{tools(){return()=>{};}});await ctx.plugin(Tools);await ctx.plugin(ToolExecutor.default??ToolExecutor);
   const values={context:{development:{session:{sessionId}},requirements:{title:'检验周报'},candidates:[{fileName:'candidate.tgz',candidate:{package:{version:'1.0.0',sha256:'a'.repeat(64)}}}]},installation:{state:'installed',activation:'restart-required',opened:false}};
   const api={async readContext(id,signal){calls.push(['read',id,signal]);if(id!==sessionId)throw Error('workbench/development-access-denied');return values.context;},
     async verifyNativeInstallation(id,input,signal){calls.push(['verify',id,input,signal]);if(id!==sessionId)throw Error('workbench/development-access-denied');return values.installation;}};
@@ -114,20 +117,20 @@ test('timing observes ordinary official dispatch without replacing results or gr
  f.api.timing={async begin(scope,type){events.push(['begin',scope.key,type]);return async failed=>events.push(['end',failed]);}};
  f.api.resolveTimingScope=async id=>{if(id!==f.sessionId)throw Error('not-owned');return {key:'owned',source:'/source',sdkDirectory:'/sdk',guard:async()=>{}};};
  const runtime=f.ctx.get('tools'),signal=new AbortController().signal;
- const result=await runtime.execute({name:'workbench_read_development_context',arguments:{},callId:'timing-observed-1',agent:{id:f.sessionId},signal});
+ const result=await dispatch(runtime,{name:'workbench_read_development_context',arguments:{},callId:'timing-observed-1',agent:{id:f.sessionId},signal});
  assert.equal(result.isError,false,JSON.stringify(result));assert.deepEqual(result.value,f.values.context);assert.deepEqual(events,[['begin','owned','preparation'],['end',false]]);
  events.length=0;
- const denied=await runtime.execute({name:'workbench_read_development_context',arguments:{},callId:'timing-observed-2',agent:{id:'not-owned'},signal});
+ const denied=await dispatch(runtime,{name:'workbench_read_development_context',arguments:{},callId:'timing-observed-2',agent:{id:'not-owned'},signal});
  assert.equal(denied.isError,true);assert.deepEqual(events,[]);
  f.api.timing.begin=async()=>{throw Error('timing-disk-failed');};
- const unaffected=await runtime.execute({name:'workbench_read_development_context',arguments:{},callId:'timing-observed-3',agent:{id:f.sessionId},signal});assert.equal(unaffected.isError,false);
+ const unaffected=await dispatch(runtime,{name:'workbench_read_development_context',arguments:{},callId:'timing-observed-3',agent:{id:f.sessionId},signal});assert.equal(unaffected.isError,false);
 });
 
 test('native approval is timed separately and a missing approval owner still denies the operation',async t=>{
  const f=await fixture(t),events=[];f.api.resolveTimingScope=async()=>({key:'owned',source:'/source',sdkDirectory:'/sdk',guard:async()=>{}});f.api.timing={async begin(_scope,type){events.push(['begin',type]);return async failed=>events.push(['end',type,failed]);}};
  const runtime=f.ctx.get('tools'),signal=new AbortController().signal;
- await runtime.execute({name:'workbench_read_development_context',arguments:{},callId:'approval-bind',agent:{id:f.sessionId},signal});events.length=0;
+ await dispatch(runtime,{name:'workbench_read_development_context',arguments:{},callId:'approval-bind',agent:{id:f.sessionId},signal});events.length=0;
  f.ctx.on('tools/pre-execute',async()=>({kind:'ask'}));
- const result=await runtime.execute({name:'workbench_read_development_context',arguments:{},callId:'approval-denied',agent:{id:f.sessionId},signal});await new Promise(resolve=>setImmediate(resolve));
+ const result=await dispatch(runtime,{name:'workbench_read_development_context',arguments:{},callId:'approval-denied',agent:{id:f.sessionId},signal});await new Promise(resolve=>setImmediate(resolve));
  assert.equal(result.isError,true);assert.deepEqual(events,[['begin','approval'],['end','approval',true]]);
 });

@@ -1,3 +1,4 @@
+import {installedCordis} from './support/cordis-version.mjs';
 import {preflightExternals} from './support/preflight-externals.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ const build=options=>esbuildBuild({...options,plugins:[preflightExternals,...(op
 // Run the actual import Host and durable official JSON journal. Package execution
 // is a fixture: this tests authorization/iteration ordering, not installed bytes.
 const built = await build({ entryPoints: [join(root, 'packages/plugins/workbenches/src/runtime/profile-import-host.ts')], bundle: true, platform: 'node', format: 'esm', write: false,
-  alias: { 'workdsh-contracts': join(root, 'packages/contracts/src/index.ts') },
+  alias: { 'epuberdsh-contracts': join(root, 'packages/contracts/src/index.ts') },
   plugins: [{ name: 'iteration-install-fixture', setup(builder) {
     builder.onResolve({ filter: /^\.\/profile-target\.js$/ }, () => ({ path: 'target', namespace: 'iteration-fixture' }));
     builder.onResolve({ filter: /^\.\/profile-installer\.js$/ }, () => ({ path: 'installer', namespace: 'iteration-fixture' }));
@@ -64,7 +65,7 @@ async function fixture() {
   const profile = { name: 'preview', dir };
   provided.set('workdshIdentity', identity); provided.set('storageDomain', storage.storageDomain); provided.set('profileContext', profile);
   const ctx = { get: key => provided.get(key), provide: (key, value) => provided.set(key, value), fiber: { assertActive() {} }, effect: run => { disposers.push(run()); } };
-  const service = await mountProfileWorkbenchImportHost(ctx, { list: async () => [{ title: '质量分析', development: structuredClone(current) }] }, () => true, '4.0.5', {});
+  const service = await mountProfileWorkbenchImportHost(ctx, { list: async () => [{ title: '质量分析', development: structuredClone(current) }] }, () => true, installedCordis, {});
   const request = { developmentId: 'dev', expected, archivePath: 'fixture-archive', intent: { id: 'operation-1', iterationId: 'iteration-1', kind: 'install', inputHash: expected.sha256, target } };
   return { service, state, request, change: updates => { current = { ...current, ...updates }; },
     async cleanup() { for (const dispose of disposers.reverse()) await dispose?.(); await storage.fiber.dispose(); globalThis.__iterationImportFixture = previous; await rm(dir, { recursive: true, force: true }); },

@@ -3,7 +3,7 @@ import type { Context } from '@deepseek-ai/cordis';
 import Schema from '@deepseek-ai/schemastery';
 import { defineTool } from '@deepseek-ai/dsh-tools';
 import type {} from '@deepseek-ai/dsh-tools';
-import type { IdentityService } from 'workdsh-contracts';
+import type { IdentityService } from 'epuberdsh-contracts';
 import type {} from '@deepseek-ai/dsh-client-connection';
 import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
 

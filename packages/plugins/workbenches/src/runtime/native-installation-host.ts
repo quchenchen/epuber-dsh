@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import type { Context } from '@deepseek-ai/cordis';
 import type { ProfileContext } from '@deepseek-ai/dsh-app-boot';
 import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
-import { assertActorContext, type IdentityService, type WorkbenchDevelopment, type WorkbenchDescriptor } from 'workdsh-contracts';
+import { assertActorContext, type IdentityService, type WorkbenchDevelopment, type WorkbenchDescriptor } from 'epuberdsh-contracts';
 import type { WorkbenchDevelopmentService } from './development-service.js';
 import type { WorkbenchRequirementsService } from './requirements-service.js';
 import type { WorkbenchInstallationArchives } from './installation-archives.js';

@@ -26,7 +26,7 @@ for item in runtime['../../packages']:
         assert package['name'] == item['name']
         for field in ['dependencies', 'optionalDependencies', 'peerDependencies', 'devDependencies']:
             for name in package.get(field, {}):
-                if name.startswith('workdsh-'):
+                if name.startswith('epuberdsh-'):
                     assert name in allowed, (item['name'], field, name)
         scanned = []
         for member in members:

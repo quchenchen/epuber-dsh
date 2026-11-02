@@ -1,4 +1,4 @@
-import type {WorkbenchRequirementsDraft} from 'workdsh-contracts';
+import type {WorkbenchRequirementsDraft} from 'epuberdsh-contracts';
 import type {CreationRecord} from './creation-service.js';
 import type {WorkbenchRequirementsService} from './requirements-service.js';
 import type {WorkbenchDevelopmentService,VerifyWorkbenchDevelopmentSource,VerifyWorkbenchDevelopmentSession} from './development-service.js';

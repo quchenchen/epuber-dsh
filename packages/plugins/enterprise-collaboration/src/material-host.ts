@@ -4,6 +4,8 @@ import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-api-session-controller';
 import type {} from '@deepseek-ai/dsh-attachment';
 import type { SessionId } from '@deepseek-ai/dsh-session';
+import type {} from '@deepseek-ai/dsh-session-persistence';
+import { readColdSessionLog } from '@deepseek-ai/dsh-session-query';
 import { defineTool } from '@deepseek-ai/dsh-tools';
 import { createHash,randomUUID } from 'node:crypto';
 import { materialSnapshot } from './material-snapshot.js';
@@ -20,18 +22,18 @@ export function installMaterials(ctx:Context,client:CollaborationClient,conversa
         let value:unknown;
         if(input.action==='prepare'&&input.sessionId) {
           await client.verify(ctx.workdshIdentity,input.sessionId,request.signal);
-          const inspected=await ready.sessionController.inspect(input.sessionId as SessionId,request.signal);
-          const snapshot=materialSnapshot(inspected.events,{allowEmpty:true});
+          const log=await readColdSessionLog(ready.sessionPersistence,input.sessionId as SessionId,request.signal);
+          const snapshot=materialSnapshot(log.events,{allowEmpty:true});
           const kinds=new Map(snapshot.files.map(file=>[String(file.attachmentId),'原始资料']));
           if(snapshot.generated.length){
             const resolved=await ready.sessionController.resolveAgent(input.sessionId as SessionId);
             if('error' in resolved)throw new Error('无法读取成果所属会话');
             const fs=resolved.agent.ctx.get('fs');
             if(!fs)throw new Error('成果所属会话的文件服务不可用');
-            if(!inspected.meta.cwd)throw new Error('成果所属工作区未知');
-            const root=await fs.resolve(inspected.meta.cwd,{signal:request.signal});
+            if(!log.header.cwd)throw new Error('成果所属工作区未知');
+            const root=await fs.resolve(log.header.cwd,{signal:request.signal});
             for(const generated of snapshot.generated){
-              const target=await fs.resolve(generated.path,{cwd:inspected.meta.cwd,signal:request.signal});
+              const target=await fs.resolve(generated.path,{cwd:log.header.cwd,signal:request.signal});
               if(!fs.contains(root,target))throw new Error(`成果不在本会话工作区内，不能共享：${basename(generated.path)}`);
               const data=await fs.readBytes(target,request.signal,5*1024*1024);
               const ref=await ready.attachments.saveFile({data,name:basename(generated.path)});

@@ -12,7 +12,7 @@ const model = new WorkspaceAnalyzer({ root: fixture, faces: ['host'] }).analyze(
 writeFileSync(resolve(evidence, 'workdsh-typert-model.json'), JSON.stringify(model, null, 2));
 let artifacts;
 try {
-  artifacts = new WorkspaceTypertGenerator(fixture).generate(['workdsh-remote-probe-fixture'], ['host']);
+  artifacts = new WorkspaceTypertGenerator(fixture).generate(['epuberdsh-remote-probe-fixture'], ['host']);
   assert.equal(artifacts.length, 1, 'generator must discover exactly one fixture');
   assert.ok(artifacts[0].remote, 'generator must discover Remote methods');
 } catch (error) {

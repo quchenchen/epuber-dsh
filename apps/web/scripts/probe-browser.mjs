@@ -45,7 +45,7 @@ export async function probeBrowser(address, sessionCookie, screenshotPath, { ins
     await page.goto(`${address}/?diagnostics=1`, { waitUntil: 'domcontentloaded' });
     await dismissSetup(page);
     const later = page.getByRole('button', { name: 'Configure later', exact: true });
-    const graphRows = await page.evaluate(() => window.__DSH_BOOT__?.entries?.filter(row => row.id === 'workdsh-bundle'));
+    const graphRows = await page.evaluate(() => window.__DSH_BOOT__?.entries?.filter(row => row.id === 'epuberdsh-bundle'));
     const nav = page.getByRole('button', { name: 'WorkDSH 接入验证', exact: true });
     expect(graphRows).toHaveLength(installed ? 1 : 0);
     if (!installed) {
@@ -194,7 +194,7 @@ export async function probeBrowser(address, sessionCookie, screenshotPath, { ins
     await expect(page.getByRole('heading', { name: '接入验证', exact: true })).toBeVisible();
     await page.getByRole('button', { name: '读取 Host 状态', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Remote 已返回' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('workdsh-bundle · active', { exact: true })).toBeVisible();
+    await expect(page.getByText('epuberdsh-bundle · active', { exact: true })).toBeVisible();
     await page.screenshot({ path: screenshotPath, fullPage: true });
 
     expect(sockets.length).toBeGreaterThan(0);
@@ -208,7 +208,7 @@ export async function probeBrowser(address, sessionCookie, screenshotPath, { ins
     await page.getByRole('button', { name: '返回 Harness 会话', exact: true }).click();
     await nav.click();
     await page.getByRole('button', { name: '读取 Host 状态', exact: true }).click();
-    await expect(page.getByText('workdsh-bundle · active', { exact: true })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('epuberdsh-bundle · active', { exact: true })).toBeVisible({ timeout: 15000 });
     await page.getByRole('button', { name: '返回 Harness 会话', exact: true }).click();
     await expect.poll(() => new URL(page.url()).searchParams.get('workdsh-view')).toBe('conversation');
 
@@ -248,8 +248,8 @@ export async function probeProductWithoutSkills(address, sessionCookie) {
     await expect(page.getByRole('button', { name: '专家 · 技能 · 连接器', exact: true })).toHaveCount(0);
     await expect.poll(() => new URL(page.url()).searchParams.get('workdsh-view')).toBe('conversation');
     const graph = await page.evaluate(() => window.__DSH_BOOT__.entries.map(row => row.id));
-    expect(graph).toContain('workdsh-bundle');
-    expect(graph).not.toContain('workdsh-plugin-skills');
+    expect(graph).toContain('epuberdsh-bundle');
+    expect(graph).not.toContain('epuberdsh-plugin-skills');
     await page.getByRole('button', { name: '项目', exact: true }).click();
     await expect(page.getByRole('heading', { name: '项目', exact: true })).toBeVisible();
     await page.getByText(/新会话|New Session/, { exact: true }).first().click();

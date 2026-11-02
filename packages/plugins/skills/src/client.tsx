@@ -1,4 +1,4 @@
-import type { ActivityPresentation } from 'workdsh-contracts/activity';
+import type { ActivityPresentation } from 'epuberdsh-contracts/activity';
 declare module '@deepseek-ai/cordis' { interface Context { activityPresentation: ActivityPresentation; } }
 import { installSkillCommandMenu } from './client/CommandMenu.js';
 import type { Context } from '@deepseek-ai/cordis';
@@ -16,6 +16,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots';
 import { PendingSkillDraft, pendingDraftKey, skillManagementDraft, skillTaskDrafts, type SkillTaskKind } from './client/drafts.js';
 import { SkillsPanel } from './client/SkillsPanel.js';
 import { createSkillManagementClient } from './client/management.js';
+import { createSkillHubClient } from './client/skillhub.js';
 import { SkillNavigationIcon } from './client/SkillNavigationIcon.js';
 
 export const name = 'workdsh-skills-client';
@@ -35,6 +36,7 @@ export function apply(ctx: Context): void {
   // keep browser calls explicitly bound to the Session Controller client face.
   const sessions = ctx.sessions as unknown as ISessions;
   const management = createSkillManagementClient(ctx, lifetime.signal);
+  const skillHub = createSkillHubClient(ctx, lifetime.signal);
   installSkillCommandMenu(ctx, management);
   ctx.inject(['activityPresentation'], scope => scope.effect(() => scope.activityPresentation.registerSkillLabels(async () => {
     const rows = await management.list();
@@ -92,7 +94,7 @@ export function apply(ctx: Context): void {
   };
   const openCapability = (key: string): void => { ctx.layout.selectPanel(key as Parameters<typeof ctx.layout.selectPanel>[0]); };
   const hasCapability = (key: string): boolean => ctx.slots.entriesOfSlot('main').some(entry => entry.options.key === key);
-  ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'workdsh-skills', inject: () => ({ toggleNavigation: () => ctx.layout.toggleSidebar(), management, startSkillTask, startSkillTrial, openCapability, hasCapability }) }, SkillsPanel));
+  ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'workdsh-skills', inject: () => ({ toggleNavigation: () => ctx.layout.toggleSidebar(), management, skillHub, startSkillTask, startSkillTrial, openCapability, hasCapability }) }, SkillsPanel));
   ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
     name: 'sidebar.panellist', id: 'workdsh-skills', label: '专家 · 技能 · 连接器', order: 30,
   }, SkillNavigationIcon));

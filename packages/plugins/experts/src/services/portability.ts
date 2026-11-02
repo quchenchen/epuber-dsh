@@ -4,7 +4,7 @@ import type {
   DomainIssue,
   ExpertDefinition,
   ExpertExport,
-} from 'workdsh-contracts';
+} from 'epuberdsh-contracts';
 import { ExpertsError } from '../domain/values.js';
 import { byteLength, digestOf, sha256Bytes } from '../domain/digest.js';
 import { normalizeDefinition, validateDefinition } from '../domain/definition.js';

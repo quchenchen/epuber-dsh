@@ -1,9 +1,9 @@
-# workdsh-plugin-knowledge
+# epuberdsh-plugin-knowledge
 
 WorkDSH 的「知识库」一级能力。Host 通过 WeKnora REST `/api/v1` 直连知识库服务，
 Client 提供原生面板：知识库列表 → 文档列表（解析状态）→ 文档详情（预览文本 + 分块）→ 混合/语义/关键词检索。
 
-> 状态：`0.1.0-alpha.1`，**只读**。与现有「资料库」(`workdsh-plugin-library`) 并存，不修改其行为。
+> 状态：`0.1.0-alpha.1`，**只读**。与现有「资料库」(`epuberdsh-plugin-library`) 并存，不修改其行为。
 > 插件**不创建、不修改、不删除**任何知识库或文档（理由见「为什么不提供写入」），因此只用到 Key 的 `retrieve` 能力。
 > **当前部署的 Key 保持原样、未做收窄**（WeKnora 侧不为此调整），仍带 `ingest` / `manage_kbs`；
 > 这段多余能力只影响 Key 泄露时的爆炸半径，不影响插件功能。
@@ -16,7 +16,7 @@ Client 提供原生面板：知识库列表 → 文档列表（解析状态）�
 | 配置存储 | storage domain `workdsh_knowledge`：`connections`（**组织级**：`baseUrl`、默认 KB、凭据引用、超时，键 = `org_<organizationId>`）、`selections`（按成员 + Session 的知识库绑定）；API Key 值不入库 |
 | 凭据 | 通过 `ctx.credentials` 的引用保存（默认引用 `WEKNORA_API_KEY`），每个操作解析一次；只写不读、不进日志 |
 | Agent 工具 | `knowledge_list_kbs`（含 `search_mode`）、`knowledge_list_documents`、`knowledge_search`（结果带 `via`：inline 有 `knowledge_id`/`chunk_id`，wiki 有 `wiki_slug`/`source_knowledge_ids`）、`knowledge_read`、`knowledge_read_wiki`（读 wiki 页正文与来源文档） |
-| Client | `main` 槽位 key `workdsh-knowledge` + `sidebar.panellist` 一级入口「知识库」，使用 Harness 原生控件与 `workdsh-ui`，跟随主题 |
+| Client | `main` 槽位 key `workdsh-knowledge` + `sidebar.panellist` 一级入口「知识库」，使用 Harness 原生控件与 `epuberdsh-ui`，跟随主题 |
 | 对话引用 | `@知识库` 提及源 + 输入框左侧入口，绑定当前 Session；`system-prompt/assemble` 每轮注入 `<knowledge-base>` 说明块 |
 
 ## 对话中引用知识库
@@ -184,10 +184,10 @@ dsh web --profile <profile>
 ```bash
 export PATH="$HOME/.nvm/versions/node/v22.22.0/bin:$PATH"
 cd apps/web
-corepack pnpm --filter workdsh-plugin-knowledge typecheck
-corepack pnpm --filter workdsh-plugin-knowledge build
-corepack pnpm --filter workdsh-plugin-knowledge test           # 本地 HTTP stub 单测
-corepack pnpm --filter workdsh-plugin-knowledge test:live       # 真实 WeKnora 只读契约
+corepack pnpm --filter epuberdsh-plugin-knowledge typecheck
+corepack pnpm --filter epuberdsh-plugin-knowledge build
+corepack pnpm --filter epuberdsh-plugin-knowledge test           # 本地 HTTP stub 单测
+corepack pnpm --filter epuberdsh-plugin-knowledge test:live       # 真实 WeKnora 只读契约
 ```
 
 构建产物：`dist/index.js`（Host，ESM）、`dist/client.browser.js`（Client，`window.__ModuleLoader__` 包装）。
@@ -204,8 +204,8 @@ export PATH="$HOME/.nvm/versions/node/v22.22.0/bin:$PATH"
 
 # 1) 构建并打包
 cd apps/web && corepack pnpm install
-corepack pnpm --filter workdsh-plugin-knowledge typecheck
-corepack pnpm --filter workdsh-plugin-knowledge build
+corepack pnpm --filter epuberdsh-plugin-knowledge typecheck
+corepack pnpm --filter epuberdsh-plugin-knowledge build
 cd ../../packages/plugins/knowledge
 node ../../../apps/web/node_modules/pnpm/bin/pnpm.cjs pack --pack-destination /tmp/knowledge-pack
 
@@ -245,7 +245,7 @@ node tests/live-search.mjs   # 不可检索库返回 0 条不报错；可检索�
 > 已实测的本机变通：若 `dsh plugin --profile kbtest install/add` 在非 TTY 环境因
 > `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` 或 copied lockfile 的
 > `minimumReleaseAge` 供应链策略中止，可把同一 tgz 解包到
-> `kbtest/node_modules/workdsh-plugin-knowledge`（`tar xzf <tgz> --strip-components=1`），
+> `kbtest/node_modules/epuberdsh-plugin-knowledge`（`tar xzf <tgz> --strip-components=1`），
 > 并在其 `node_modules` 下用符号链接指向 Profile 已有的 `@deepseek-ai/*` 与 `zod`；
 > 这不会改变安装字节，只替代 pnpm 的链接步骤。
 

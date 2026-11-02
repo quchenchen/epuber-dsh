@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Icon } from 'workdsh-ui';
+import { Icon } from 'epuberdsh-ui';
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client';
-import type { LibraryComposerReference } from 'workdsh-contracts/library';
+import type { LibraryComposerReference } from 'epuberdsh-contracts/library';
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-client-connection/client';
 import type {} from '@deepseek-ai/dsh-client-ui-slots';
@@ -13,7 +13,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-workspace/client';
 import type {} from '@deepseek-ai/dsh-api-session-controller/client';
 import type {} from '@deepseek-ai/dsh-api-workspace-controller/client';
 import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client';
-import type { ProjectInputRef, ProjectSnapshot, ProjectCapabilityRef, ProjectTaskContext } from 'workdsh-contracts/projects';
+import type { ProjectInputRef, ProjectSnapshot, ProjectCapabilityRef, ProjectTaskContext } from 'epuberdsh-contracts/projects';
 import { createProjectClient } from './client/management.js';
 import { publishProjectFocus, ProjectsPanel } from './client/ProjectsPanel.js';
 import { ProjectConversationMenu, projectApi } from './client/components/project-composer/ProjectConversationMenu.js';

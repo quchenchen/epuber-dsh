@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Input, Select } from 'workdsh-ui';
+import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives';
+import { Button, Input, Select } from 'epuberdsh-ui';
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 import type {
   KnowledgeBase,
@@ -11,7 +12,16 @@ import type {
   KnowledgeSettings,
 } from '../services/knowledge-service.js';
 import type { KnowledgeClient } from './management.js';
+import { connectionHostLabel, credentialSourceLabel } from './connection-label.js';
+import { wikiLinksToMarkdown } from './wiki-markdown.js';
 import { knowledgeCss } from './styles.js';
+
+/**
+ * Fence and footnote chrome for the official markdown renderer. A module-level
+ * constant is deliberate: the renderer discards its streaming cache when the
+ * `labels` identity changes, so rebuilding it per render would defeat it.
+ */
+const markdownLabels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' };
 
 type Props = PropsRuntime<'main'> & InjectFace<{ management: KnowledgeClient; toggleNavigation: () => void }>;
 type View = 'kbs' | 'search' | 'settings';
@@ -180,7 +190,9 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
     }
     void run(async () => {
       const page = await management.readWiki(hit.knowledgeBaseId, slug);
-      setWikiBodies(current => ({ ...current, [slug]: page.text || '（该 wiki 页暂无正文）' }));
+      // Keep the stored markdown, not the flattened text: headings, lists and
+      // wiki links are part of what makes the page readable.
+      setWikiBodies(current => ({ ...current, [slug]: page.content || '（该 wiki 页暂无正文）' }));
     });
   };
 
@@ -350,7 +362,9 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
               <button type="button" onClick={() => openFromHit(hit)}>打开文档</button></>}
       </footer>
       {hit.via === 'wiki' && wikiBodies[hit.wiki?.slug ?? ''] !== undefined
-        ? <pre className="wd-knowledge-wiki-body" data-testid="hit-wiki-body">{wikiBodies[hit.wiki!.slug]}</pre>
+        ? <div className="wd-knowledge-wiki-body" data-testid="hit-wiki-body">
+            <MarkdownText text={wikiLinksToMarkdown(wikiBodies[hit.wiki!.slug])} labels={markdownLabels} variant="compact" />
+          </div>
         : null}
     </article>)}</div>
   </div>;
@@ -377,7 +391,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
       </label>
       <label>API Key
         <Input data-testid="settings-api-key" type="password" value={form.apiKey} placeholder={settings?.apiKeyConfigured ? '已配置（留空则保持不变）' : '输入租户 API Key'} onChange={event => setForm({ ...form, apiKey: event.currentTarget.value })} />
-        <small>凭据引用 {settings?.apiKeyRef ?? 'WEKNORA_API_KEY'} · {settings ? (settings.apiKeyConfigured ? `已配置（来源：${settings.apiKeySource ?? '未知'}）` : '未配置') : '读取中…'}。也可通过同名环境变量提供，密钥不会写入存储或日志。</small>
+        <small>凭据引用 {settings?.apiKeyRef ?? 'WEKNORA_API_KEY'} · {settings ? (settings.apiKeyConfigured ? `已配置（${credentialSourceLabel(settings.apiKeySource)}）` : '未配置') : '读取中…'}。密钥只由 Host 凭据服务持有，不进插件存储、不写日志；未在本机保存时也可用同名环境变量提供。</small>
       </label>
       <div className="wd-knowledge-form-actions">
         <Button variant="primary" data-testid="settings-save" disabled={busy || !settings?.canEdit} onClick={saveSettings}>保存设置</Button>
@@ -388,7 +402,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
 
   const content = view === 'settings' ? settingsView
     : view === 'search' ? searchView
-      : doc ? docDetailView : kb ? docListView : kbListView;
+        : doc ? docDetailView : kb ? docListView : kbListView;
 
   return <section className="wd-knowledge">
     <style>{knowledgeCss}</style>
@@ -410,10 +424,13 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
           <span className="wd-knowledge-kb-count">{item.knowledgeCount}</span>
         </button>)}
       </div>
-      <footer>
-        <span>{settings ? settings.baseUrl : '连接设置读取中…'}</span>
-        <span>{settings ? (settings.apiKeyConfigured ? `凭据已配置（${settings.apiKeySource ?? '凭据服务'}）` : '凭据未配置') : ''}</span>
-        <span>WeKnora · 只读</span>
+      <footer className="wd-knowledge-conn" data-state={settings ? (settings.apiKeyConfigured ? 'ready' : 'missing') : 'pending'}>
+        <span className="wd-knowledge-conn-mode">WeKnora · 只读</span>
+        {settings
+          ? settings.apiKeyConfigured
+            ? <span className="wd-knowledge-conn-meta" title={settings.baseUrl} data-testid="conn-credential">{connectionHostLabel(settings.baseUrl)} · 凭据已配置</span>
+            : <button type="button" className="wd-knowledge-conn-meta action" title={settings.baseUrl} data-testid="conn-credential" onClick={() => setView('settings')}>{connectionHostLabel(settings.baseUrl)} · <span className="wd-knowledge-conn-action">去配置凭据</span></button>
+          : <span className="wd-knowledge-conn-meta">连接设置读取中…</span>}
       </footer>
     </aside>
     <main className="wd-knowledge-content">{content}</main>

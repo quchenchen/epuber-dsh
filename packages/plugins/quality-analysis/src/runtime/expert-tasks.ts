@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import type {Context} from '@deepseek-ai/cordis';
-import type {ExpertsService,IdentityService} from 'workdsh-contracts';
+import type {ExpertsService,IdentityService} from 'epuberdsh-contracts';
 import type {QualityAnalysisRunService} from './run-service.js';
 import {verifyQualityExpertAssociation} from './expert-association.js';
 import {createQualityAnalysisInstruction} from '../client/analysis-instruction.js';

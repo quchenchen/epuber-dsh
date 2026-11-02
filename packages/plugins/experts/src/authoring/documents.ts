@@ -1,6 +1,6 @@
 import { validateResources, packageAvatar, type PackageAssets } from './package-resources.js';
 import { parse, stringify } from 'yaml';
-import type { ExpertDefinition } from 'workdsh-contracts';
+import type { ExpertDefinition } from 'epuberdsh-contracts';
 import { expertDefinitionSchema, normalizeDefinition, validateDefinition } from '../domain/definition.js';
 import { ExpertsError } from '../domain/values.js';
 

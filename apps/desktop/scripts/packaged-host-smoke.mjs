@@ -3,12 +3,12 @@ import { dirname, join, delimiter } from 'node:path'
 import { PRODUCT_PACKAGES } from './workdsh-package-boundary.mjs'
 
 export const PRODUCT_SERVICES = Object.freeze({
-  'workdsh-plugin-connectors': 'workdshConnectors',
-  'workdsh-plugin-experts': 'workdshExperts',
-  'workdsh-plugin-library': 'workdshLibrary',
-  'workdsh-plugin-projects': 'workdshProjects',
-  'workdsh-plugin-skills': 'workdshSkills',
-  'workdsh-plugin-workbenches': 'workdshWorkbenchRegistration',
+  'epuberdsh-plugin-connectors': 'workdshConnectors',
+  'epuberdsh-plugin-experts': 'workdshExperts',
+  'epuberdsh-plugin-library': 'workdshLibrary',
+  'epuberdsh-plugin-projects': 'workdshProjects',
+  'epuberdsh-plugin-skills': 'workdshSkills',
+  'epuberdsh-plugin-workbenches': 'workdshWorkbenchRegistration',
 })
 const REQUIRED_PLATFORM_SERVICES = ['profileContext', 'loader', 'storageDomain', 'connection', 'workdshIdentity', 'workdshAccess', 'sessionController', 'workspaceController', 'tools']
 
@@ -22,7 +22,7 @@ export function inspectStartedHost(ctx, products, platformServices) {
   for (const [name, service] of Object.entries(products)) {
     if (!selected.includes(name)) throw new Error('Packaged Host did not start selected product: ' + name)
     if (!ctx.get(service)) throw new Error('Packaged Host service is unavailable: ' + service)
-    const runtimeName = name === 'workdsh-plugin-workbenches' ? 'workdsh-workbenches' : name
+    const runtimeName = name === 'epuberdsh-plugin-workbenches' ? 'workdsh-workbenches' : name
     const fibers = runtimes.filter(runtime => runtime.name === runtimeName).flatMap(runtime => [...runtime.fibers])
     if (!fibers.length || fibers.some(fiber => fiber.state !== 2)) throw new Error('Packaged Host product initialization is incomplete: ' + name)
   }

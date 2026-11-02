@@ -4,7 +4,7 @@
 <p align="center">Inspired by WorkBuddy’s workflow and built on DeepSeek Harness plugins: start with personal use, then install Enterprise Connection for company models, collaboration, and colleague mentions.</p>
 <p align="center"><a href="#download-desktop">Download Desktop</a> · <a href="#from-material-to-deliverable">Explore the workflow</a> · <a href="#personal-and-enterprise-use">Personal and enterprise</a> · <a href="docs/user-guide.en.md">User guide</a> · <a href="README.zh-CN.md">简体中文</a></p>
 
-[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.3-176BFF)](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) [![GitHub stars](https://img.shields.io/github/stars/techflag/workdsh?label=stars)](https://github.com/techflag/workdsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.3-0B6FE0)](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) [![GitHub stars](https://img.shields.io/github/stars/techflag/workdsh?label=stars)](https://github.com/techflag/workdsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [![GitHub Actions](https://github.com/techflag/workdsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/techflag/workdsh/actions/workflows/ci.yml) [![Gitee stars](https://gitee.com/techflag/workdsh/badge/star.svg?theme=dark)](https://gitee.com/techflag/workdsh/stargazers) [![Gitee forks](https://gitee.com/techflag/workdsh/badge/fork.svg?theme=dark)](https://gitee.com/techflag/workdsh/members)
 
@@ -66,7 +66,7 @@ Run this example in your plugin's **Host entry**, not in its browser page. The E
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
-import type { EnterpriseService } from 'workdsh-contracts/enterprise'
+import type { EnterpriseService } from 'epuberdsh-contracts/enterprise'
 
 declare module '@deepseek-ai/cordis' {
   interface Context { workdshEnterprise: EnterpriseService }
@@ -87,7 +87,7 @@ export default {
 }
 ```
 
-This calls `POST /api/extensions/reports/list` on the company backend. Implement the business endpoint and its authorization without another login flow. Requires Desktop `2.0.6-alpha.3` and Enterprise Connection `0.1.0-alpha.2`. `workdsh-contracts` is not a published public npm SDK; see the [integration guide](docs/ENTERPRISE-PLUGIN-AUTH.md) for packaging the type dependency and request restrictions.
+This calls `POST /api/extensions/reports/list` on the company backend. Implement the business endpoint and its authorization without another login flow. Requires Desktop `2.0.6-alpha.3` and Enterprise Connection `0.1.0-alpha.2`. `epuberdsh-contracts` is not a published public npm SDK; see the [integration guide](docs/ENTERPRISE-PLUGIN-AUTH.md) for packaging the type dependency and request restrictions.
 
 ### From material to deliverable
 
@@ -300,7 +300,7 @@ Set `WORKDSH_DEPLOYMENT_CONFIG` to this file. Packaging writes it to `workdsh-co
 
 ## Community and acknowledgements
 
-Thanks to the maintainers and contributors of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), the foundation of our runtime and plugin system; [Tencent SkillHub](https://github.com/Tencent/skillhub), whose public catalog API powers skill discovery; [@cocofhu/skillhub](https://github.com/cocofhu/skillhub), the bundled DSH SkillHub plugin; and [dsh-market](https://github.com/dsh-market/dsh-market) with the [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) catalog, which power community plugin discovery. WorkBuddy inspired the workspace design. The bundled skill-creator adaptation retains its [Apache-2.0 notice](packages/plugins/skills/resources/skills/workdsh-skill-creator/NOTICE.md). Feedback and contributions: [GitHub Issues](https://github.com/techflag/workdsh/issues) · [Contributing](CONTRIBUTING.en.md)
+Thanks to the maintainers and contributors of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), the foundation of our runtime and plugin system; [Tencent SkillHub](https://github.com/Tencent/skillhub), whose public catalog API powers skill discovery; [@cocofhu/skillhub](https://github.com/cocofhu/skillhub), the bundled DSH SkillHub plugin; and [dsh-market](https://github.com/dsh-market/dsh-market) with the [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) catalog, which power community plugin discovery. WorkBuddy inspired the workspace design. The bundled skill-creator adaptation retains its [Apache-2.0 notice](packages/plugins/skills/resources/skills/skill-creator/NOTICE.md). Feedback and contributions: [GitHub Issues](https://github.com/techflag/workdsh/issues) · [Contributing](CONTRIBUTING.en.md)
 
 WorkDSH uses the [MIT License](LICENSE). It is an independent community project and is not affiliated with, partnered with, authorized by, or endorsed by DeepSeek or WorkBuddy. Those names appear only to describe technical origins, compatibility, and design references. Upstream contributors shown on GitHub are inherited from synchronized commit history; this does not imply that they maintain this repository.
 

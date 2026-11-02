@@ -39,13 +39,13 @@
 
 ## 表格资料
 
-CSV/XLSX 可上传、按类型检索并引用到任务；原始文件按字节保留。Host 转换在构建时复用共享 `workdsh-tabular` 的 CSV 解码/解析；表格提取模块与 PapaParse 随 Library 构建，运行时复用 ExcelJS，无需安装或激活 Office 插件即可导入和检索。CSV 支持 UTF-8、GB18030、UTF-16，以及逗号、分号和制表符；XLSX 提取工作表名称和单元格已有值，公式不重新计算，图表、图片和格式不进入检索文本。检索文本最多 1500 行/120 列/24000 单元格，XLSX 最多 20 个工作表；截取会显示警告，完整原件仍可下载。
+CSV/XLSX 可上传、按类型检索并引用到任务；原始文件按字节保留。Host 转换在构建时复用共享 `epuberdsh-tabular` 的 CSV 解码/解析；表格提取模块与 PapaParse 随 Library 构建，运行时复用 ExcelJS，无需安装或激活 Office 插件即可导入和检索。CSV 支持 UTF-8、GB18030、UTF-16，以及逗号、分号和制表符；XLSX 提取工作表名称和单元格已有值，公式不重新计算，图表、图片和格式不进入检索文本。检索文本最多 1500 行/120 列/24000 单元格，XLSX 最多 20 个工作表；截取会显示警告，完整原件仍可下载。
 
 原件预览通过公开可选注册表复用 Office：CSV 为只读表格，XLSX 使用现有隔离编辑器；普通预览导出副本，提供公开保存回调的业务工作台可明确保存为新修订，不覆盖旧原件。未启用 Office 预览时显示检索文本。个人与企业 Desktop、Web 复用相同导入和预览实现，实际资料授权保持不变。
 
 ## 公开资料选择组件
 
-客户端公开入口 `workdsh-plugin-library/client` 导出 `LibraryAssetPicker`、`LibraryAssetPickerProps`、`createLibraryClient` 与 `LibraryClient`。工作台可复用目录浏览和资料管理入口，无需创建对话或伪造sessionId。组件接收 `management.list`、`openLibrary` 和同步 `onSelect(entry)`；返回true关闭选择面板，返回false保留面板并提示重试。调用方保留选中资产及精确修订ID，再通过Host领域服务读取原件；选择组件不授予读取权限。通用组件不响应对话输入框的资料选择事件，原 `LibraryPicker` 继续承担对话引用插入。客户端的lifetime信号由所在插件拥有，卸载时取消。
+客户端公开入口 `epuberdsh-plugin-library/client` 导出 `LibraryAssetPicker`、`LibraryAssetPickerProps`、`createLibraryClient` 与 `LibraryClient`。工作台可复用目录浏览和资料管理入口，无需创建对话或伪造sessionId。组件接收 `management.list`、`openLibrary` 和同步 `onSelect(entry)`；返回true关闭选择面板，返回false保留面板并提示重试。调用方保留选中资产及精确修订ID，再通过Host领域服务读取原件；选择组件不授予读取权限。通用组件不响应对话输入框的资料选择事件，原 `LibraryPicker` 继续承担对话引用插入。客户端的lifetime信号由所在插件拥有，卸载时取消。
 
 
 ### 工作台编辑原件并保存新修订

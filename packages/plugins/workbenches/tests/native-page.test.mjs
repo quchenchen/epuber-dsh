@@ -7,7 +7,7 @@ const slotRequire = createRequire(new URL('../../workbench/package.json', import
 const { SlotCore } = await import(pathToFileURL(slotRequire.resolve('@deepseek-ai/dsh-client-ui-slots')).href);
 const reactRequire = createRequire(new URL('../../../ui/package.json', import.meta.url));
 const { build } = require('esbuild');
-const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/native-page.tsx', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { react: fileURLToPath(new URL('.', pathToFileURL(reactRequire.resolve('react')))), 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
+const built = await build({ entryPoints: [fileURLToPath(new URL('../src/client/native-page.tsx', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { react: fileURLToPath(new URL('.', pathToFileURL(reactRequire.resolve('react')))), 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/workbenches.ts', import.meta.url)) } });
 const { createNativeWorkbenchPagePorts, WORKBENCH_MANAGER_PANEL } = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const descriptor = { id: 'company.quality', title: '质量分析', description: '', protocolVersion: '1.0', layout: 'full-page', hostCompatibility: { sdk: '^1.0.0', harness: '0.2.0-rc.2' }, capabilities: [] };
 function fixture() {

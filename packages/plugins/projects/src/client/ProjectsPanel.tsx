@@ -1,7 +1,7 @@
 import { ProjectMenu } from './components/project-composer/ProjectMenu.js';
-import { Icon, Modal, Button, Select, Input, Textarea } from 'workdsh-ui';
+import { Icon, Modal, Button, Select, Input, Textarea } from 'epuberdsh-ui';
 import * as React from 'react';
-import type { Project, ProjectAssetRef, ProjectCapabilityKind, ProjectCapabilityRef, ProjectInputRef, ProjectSnapshot, ProjectTemplate, ProjectWorkItem } from 'workdsh-contracts/projects';
+import type { Project, ProjectAssetRef, ProjectCapabilityKind, ProjectCapabilityRef, ProjectInputRef, ProjectSnapshot, ProjectTemplate, ProjectWorkItem } from 'epuberdsh-contracts/projects';
 import { PROJECT_INSTRUCTION_TOKEN_BUDGET, estimateProjectInstructionTokens } from '../instruction-budget.js';
 import { mergeCapabilitySelection } from '../capability-selection.js';
 import type { ProjectClient } from './management.js'; import { projectsCss } from './styles.js';

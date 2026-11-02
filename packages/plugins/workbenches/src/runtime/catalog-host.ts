@@ -1,6 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis';
 import type { HostConnectionHandle } from '@deepseek-ai/dsh-client-connection';
-import { assertActorContext, type IdentityService, type WorkbenchDescriptor } from 'workdsh-contracts';
+import { assertActorContext, type IdentityService, type WorkbenchDescriptor } from 'epuberdsh-contracts';
 import { readInstalledWorkbenchCatalog, type WorkbenchCatalogManager } from './catalog-owner.js';
 import type { WorkbenchInstallationArchives } from './installation-archives.js';
 import type { HostWorkbenchRegistration } from './host-registration.js';

@@ -1,6 +1,6 @@
 import { realpath } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
-import type { ActorContext } from 'workdsh-contracts';
+import type { ActorContext } from 'epuberdsh-contracts';
 import type { VerifyWorkbenchDevelopmentSession } from './development-service.js';
 
 /** Host supplies its protected cold inspector and existing access service.

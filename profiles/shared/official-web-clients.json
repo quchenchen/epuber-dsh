@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
-  "dshVersion": "0.2.1-rc.3",
+  "dshVersion": "0.2.2-alpha.2",
   "sources": [
     {
       "package": "@deepseek-ai/dsh-base",
       "file": "cordis.patch.yml",
-      "sha256": "a2cc57868a4d016609801e28781262515483dde29b41c2742d9a3b27a6f52f77"
+      "sha256": "e8269baedbd434f04a9ec3c9106e874e744e195d27fd8476a5006a85eab8d3f7"
     },
     {
       "package": "@deepseek-ai/dsh-web-app",
       "file": "cordis.patch.yml",
-      "sha256": "cdceb423fc34c31ceb9c47ef2117a88eeda6fd9cc21f94d58cfd21e7c3e035de"
+      "sha256": "62b6436342fc05e9609454fac3587637df7c532f6faedc7dcb58415a68e4160f"
     }
   ],
   "note": "Derived from published dsh.client metadata in the locked base + Web patches. Includes dual-face services and their exact official conditions; this is not an authorization policy.",
@@ -18,7 +18,7 @@
     {
       "id": "typert",
       "package": "@deepseek-ai/dsh-typert-registry",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-base/cordis.patch.yml",
       "row": {
         "id": "typert",
@@ -34,7 +34,7 @@
     {
       "id": "typert-gateway",
       "package": "@deepseek-ai/dsh-api-gateway",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-base/cordis.patch.yml",
       "row": {
         "id": "typert-gateway",
@@ -53,7 +53,7 @@
     {
       "id": "remote-access",
       "package": "@deepseek-ai/dsh-api-remote-access",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-base/cordis.patch.yml",
       "row": {
         "id": "remote-access",
@@ -74,7 +74,7 @@
     {
       "id": "product-analytics",
       "package": "@deepseek-ai/dsh-client-product-analytics",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "product-analytics",
@@ -96,7 +96,7 @@
     {
       "id": "session-log-download",
       "package": "@deepseek-ai/dsh-session-log-export",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "session-log-download",
@@ -107,6 +107,7 @@
           "@deepseek-ai/dsh-client-locale",
           "@deepseek-ai/dsh-client-ui-commands",
           "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-layout",
           "@deepseek-ai/dsh-client-ui-renderer",
           "@deepseek-ai/dsh-client-ui-session"
         ],
@@ -117,7 +118,7 @@
     {
       "id": "ui-open-in-app",
       "package": "@deepseek-ai/dsh-client-ui-open-in-app",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-open-in-app",
@@ -143,7 +144,7 @@
     {
       "id": "session-controller",
       "package": "@deepseek-ai/dsh-api-session-controller",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "session-controller",
@@ -164,7 +165,7 @@
     {
       "id": "job-controller",
       "package": "@deepseek-ai/dsh-api-job-controller",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "job-controller",
@@ -185,7 +186,7 @@
     {
       "id": "terminal-controller",
       "package": "@deepseek-ai/dsh-api-terminal-controller",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "terminal-controller",
@@ -205,7 +206,7 @@
     {
       "id": "workspace-files",
       "package": "@deepseek-ai/dsh-api-workspace-files",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "workspace-files",
@@ -223,7 +224,7 @@
     {
       "id": "ui-settings-account",
       "package": "@deepseek-ai/dsh-client-ui-settings-account",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-account",
@@ -245,7 +246,7 @@
     {
       "id": "workspace-controller",
       "package": "@deepseek-ai/dsh-api-workspace-controller",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "workspace-controller",
@@ -266,7 +267,7 @@
     {
       "id": "client-hmr",
       "package": "@deepseek-ai/dsh-client-hmr",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "client-hmr",
@@ -284,7 +285,7 @@
     {
       "id": "modules",
       "package": "@deepseek-ai/dsh-client-modules",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "modules",
@@ -300,7 +301,7 @@
     {
       "id": "connection",
       "package": "@deepseek-ai/dsh-client-connection",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "connection",
@@ -322,7 +323,7 @@
     {
       "id": "file-upload",
       "package": "@deepseek-ai/dsh-client-file-upload",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "file-upload",
@@ -340,7 +341,7 @@
     {
       "id": "api-remotes",
       "package": "@deepseek-ai/dsh-api-remotes",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "api-remotes",
@@ -358,7 +359,7 @@
     {
       "id": "cordis-client-runner",
       "package": "@deepseek-ai/dsh-cordis-client-runner",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "cordis-client-runner",
@@ -378,7 +379,7 @@
     {
       "id": "ui-theme",
       "package": "@deepseek-ai/dsh-client-ui-theme",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-theme",
@@ -401,7 +402,7 @@
     {
       "id": "locale",
       "package": "@deepseek-ai/dsh-client-locale",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "locale",
@@ -422,7 +423,7 @@
     {
       "id": "shortcuts",
       "package": "@deepseek-ai/dsh-client-shortcuts",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "shortcuts",
@@ -439,7 +440,7 @@
     {
       "id": "ui-shortcuts",
       "package": "@deepseek-ai/dsh-client-ui-shortcuts",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-shortcuts",
@@ -459,7 +460,7 @@
     {
       "id": "ui-layout",
       "package": "@deepseek-ai/dsh-client-ui-layout",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-layout",
@@ -480,7 +481,7 @@
     {
       "id": "ui-renderer",
       "package": "@deepseek-ai/dsh-client-ui-renderer",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-renderer",
@@ -495,7 +496,7 @@
     {
       "id": "ui-session",
       "package": "@deepseek-ai/dsh-client-ui-session",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-session",
@@ -515,7 +516,7 @@
     {
       "id": "resources",
       "package": "@deepseek-ai/dsh-client-resources",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "resources",
@@ -532,7 +533,7 @@
     {
       "id": "ui-sidebar",
       "package": "@deepseek-ai/dsh-client-ui-sidebar",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-sidebar",
@@ -555,7 +556,7 @@
     {
       "id": "ui-sidebar-right",
       "package": "@deepseek-ai/dsh-client-ui-sidebar-right",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-sidebar-right",
@@ -577,7 +578,7 @@
     {
       "id": "ui-sidebar-documentpreview",
       "package": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-sidebar-documentpreview",
@@ -592,7 +593,8 @@
           "@deepseek-ai/dsh-client-ui-session",
           "@deepseek-ai/dsh-api-remotes",
           "@deepseek-ai/dsh-client-locale",
-          "@deepseek-ai/dsh-client-ui-settings"
+          "@deepseek-ai/dsh-client-ui-settings",
+          "@deepseek-ai/dsh-client-ui-file-drag"
         ],
         "platform": "web"
       },
@@ -601,7 +603,7 @@
     {
       "id": "ui-sidebar-browser",
       "package": "@deepseek-ai/dsh-client-ui-sidebar-browser",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-sidebar-browser",
@@ -621,7 +623,7 @@
     {
       "id": "ui-sidebar-terminal",
       "package": "@deepseek-ai/dsh-client-ui-sidebar-terminal",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-sidebar-terminal",
@@ -642,7 +644,7 @@
     {
       "id": "ui-sidebar-files",
       "package": "@deepseek-ai/dsh-client-ui-sidebar-files",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-sidebar-files",
@@ -663,7 +665,7 @@
     {
       "id": "ui-settings",
       "package": "@deepseek-ai/dsh-client-ui-settings",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings",
@@ -680,7 +682,7 @@
     {
       "id": "ui-settings-general",
       "package": "@deepseek-ai/dsh-client-ui-settings-general",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-general",
@@ -704,7 +706,7 @@
     {
       "id": "ui-settings-models",
       "package": "@deepseek-ai/dsh-client-ui-settings-models",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-models",
@@ -723,7 +725,7 @@
     {
       "id": "ui-plugin-manager",
       "package": "@deepseek-ai/dsh-client-ui-plugin-manager",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-plugin-manager",
@@ -743,7 +745,7 @@
     {
       "id": "ui-settings-plugin-inventory",
       "package": "@deepseek-ai/dsh-client-ui-settings-plugin-inventory",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-plugin-inventory",
@@ -764,7 +766,7 @@
     {
       "id": "ui-conversation",
       "package": "@deepseek-ai/dsh-client-ui-conversation",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-conversation",
@@ -788,7 +790,7 @@
     {
       "id": "ui-approval",
       "package": "@deepseek-ai/dsh-client-ui-approval",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-approval",
@@ -808,9 +810,30 @@
       "conditional": false
     },
     {
+      "id": "message-quotes",
+      "package": "@deepseek-ai/dsh-message-quotes",
+      "version": "0.2.2-alpha.2",
+      "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
+      "row": {
+        "id": "message-quotes",
+        "name": "@deepseek-ai/dsh-message-quotes"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-api-session-controller",
+          "@deepseek-ai/dsh-client-locale",
+          "@deepseek-ai/dsh-client-ui-chat",
+          "@deepseek-ai/dsh-client-ui-conversation",
+          "@deepseek-ai/dsh-client-ui-renderer"
+        ],
+        "platform": "web"
+      },
+      "conditional": false
+    },
+    {
       "id": "ui-chat",
       "package": "@deepseek-ai/dsh-client-ui-chat",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-chat",
@@ -820,6 +843,7 @@
         "inject": [
           "@deepseek-ai/dsh-api-session-controller",
           "@deepseek-ai/dsh-api-workspace-controller",
+          "@deepseek-ai/dsh-client-connection",
           "@deepseek-ai/dsh-client-locale",
           "@deepseek-ai/dsh-client-ui-conversation",
           "@deepseek-ai/dsh-client-ui-input-trigger",
@@ -828,7 +852,8 @@
           "@deepseek-ai/dsh-client-ui-session",
           "@deepseek-ai/dsh-client-ui-settings",
           "@deepseek-ai/dsh-client-ui-sidebar-right",
-          "@deepseek-ai/dsh-client-ui-workspace"
+          "@deepseek-ai/dsh-client-ui-workspace",
+          "@deepseek-ai/dsh-client-ui-file-drag"
         ],
         "platform": "web"
       },
@@ -837,7 +862,7 @@
     {
       "id": "ui-brand-official",
       "package": "@deepseek-ai/dsh-client-ui-brand-official",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-brand-official",
@@ -855,7 +880,7 @@
     {
       "id": "ui-attachment",
       "package": "@deepseek-ai/dsh-client-ui-attachment",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-attachment",
@@ -868,7 +893,25 @@
           "@deepseek-ai/dsh-client-ui-conversation",
           "@deepseek-ai/dsh-client-ui-renderer",
           "@deepseek-ai/dsh-client-ui-trajectory",
-          "@deepseek-ai/dsh-client-ui-tool"
+          "@deepseek-ai/dsh-client-ui-tool",
+          "@deepseek-ai/dsh-client-ui-file-drag"
+        ],
+        "platform": "web"
+      },
+      "conditional": false
+    },
+    {
+      "id": "ui-file-drag",
+      "package": "@deepseek-ai/dsh-client-ui-file-drag",
+      "version": "0.2.2-alpha.2",
+      "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
+      "row": {
+        "id": "ui-file-drag",
+        "name": "@deepseek-ai/dsh-client-ui-file-drag"
+      },
+      "client": {
+        "inject": [
+          "@deepseek-ai/dsh-client-ui-layout"
         ],
         "platform": "web"
       },
@@ -877,7 +920,7 @@
     {
       "id": "ui-tool",
       "package": "@deepseek-ai/dsh-client-ui-tool",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-tool",
@@ -897,7 +940,7 @@
     {
       "id": "ui-cordis",
       "package": "@deepseek-ai/dsh-client-ui-cordis",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-cordis",
@@ -921,7 +964,7 @@
     {
       "id": "ui-deliverables",
       "package": "@deepseek-ai/dsh-client-ui-deliverables",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-deliverables",
@@ -946,7 +989,7 @@
     {
       "id": "ui-workspace",
       "package": "@deepseek-ai/dsh-client-ui-workspace",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-workspace",
@@ -974,7 +1017,7 @@
     {
       "id": "ui-workflow-run",
       "package": "@deepseek-ai/dsh-client-ui-workflow-run",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-workflow-run",
@@ -997,7 +1040,7 @@
     {
       "id": "ui-input-trigger",
       "package": "@deepseek-ai/dsh-client-ui-input-trigger",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-input-trigger",
@@ -1017,7 +1060,7 @@
     {
       "id": "ui-commands",
       "package": "@deepseek-ai/dsh-client-ui-commands",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-commands",
@@ -1037,7 +1080,7 @@
     {
       "id": "ui-skill",
       "package": "@deepseek-ai/dsh-client-ui-skill",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-skill",
@@ -1061,7 +1104,7 @@
     {
       "id": "ui-subagent",
       "package": "@deepseek-ai/dsh-client-ui-subagent",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-subagent",
@@ -1086,7 +1129,7 @@
     {
       "id": "ui-reference",
       "package": "@deepseek-ai/dsh-client-ui-reference",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-reference",
@@ -1110,7 +1153,7 @@
     {
       "id": "ui-secret-mask",
       "package": "@deepseek-ai/dsh-client-ui-secret-mask",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-secret-mask",
@@ -1129,7 +1172,7 @@
     {
       "id": "ui-jobs",
       "package": "@deepseek-ai/dsh-client-ui-jobs",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-jobs",
@@ -1149,7 +1192,7 @@
     {
       "id": "ui-schedule",
       "package": "@deepseek-ai/dsh-client-ui-schedule",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-schedule",
@@ -1177,7 +1220,7 @@
     {
       "id": "ui-goal",
       "package": "@deepseek-ai/dsh-client-ui-goal",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-goal",
@@ -1200,7 +1243,7 @@
     {
       "id": "ui-message-feedback",
       "package": "@deepseek-ai/dsh-client-ui-message-feedback",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-message-feedback",
@@ -1221,7 +1264,7 @@
     {
       "id": "ui-model-selection",
       "package": "@deepseek-ai/dsh-client-ui-model-selection",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-model-selection",
@@ -1239,28 +1282,9 @@
       "conditional": false
     },
     {
-      "id": "ui-deepseek-model-label-1017",
-      "package": "@deepseek-ai/dsh-client-ui-deepseek-model-label-1017",
-      "version": "0.2.1-rc.3",
-      "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
-      "row": {
-        "id": "ui-deepseek-model-label-1017",
-        "name": "@deepseek-ai/dsh-client-ui-deepseek-model-label-1017"
-      },
-      "client": {
-        "inject": [
-          "@deepseek-ai/dsh-client-ui-model-selection",
-          "@deepseek-ai/dsh-client-ui-renderer",
-          "@deepseek-ai/dsh-client-locale"
-        ],
-        "platform": "web"
-      },
-      "conditional": false
-    },
-    {
       "id": "ui-permission",
       "package": "@deepseek-ai/dsh-client-ui-permission-presets",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-permission",
@@ -1283,7 +1307,7 @@
     {
       "id": "ui-agent-preset",
       "package": "@deepseek-ai/dsh-client-ui-agent-preset",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-agent-preset",
@@ -1307,7 +1331,7 @@
     {
       "id": "entry-customization",
       "package": "@deepseek-ai/dsh-client-ui-entry-customization",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "entry-customization",
@@ -1326,7 +1350,7 @@
     {
       "id": "ui-settings-session-log",
       "package": "@deepseek-ai/dsh-client-ui-settings-session-log",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-session-log",
@@ -1345,7 +1369,7 @@
     {
       "id": "ui-settings-plugins",
       "package": "@deepseek-ai/dsh-client-ui-settings-plugins",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-plugins",
@@ -1363,7 +1387,7 @@
     {
       "id": "ui-settings-shell",
       "package": "@deepseek-ai/dsh-client-ui-settings-shell",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-shell",
@@ -1382,7 +1406,7 @@
     {
       "id": "ui-settings-agent-loop",
       "package": "@deepseek-ai/dsh-client-ui-settings-agent-loop",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-agent-loop",
@@ -1401,7 +1425,7 @@
     {
       "id": "ui-settings-subagent",
       "package": "@deepseek-ai/dsh-client-ui-settings-subagent",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-subagent",
@@ -1421,7 +1445,7 @@
     {
       "id": "ui-settings-web-search",
       "package": "@deepseek-ai/dsh-client-ui-settings-web-search",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-settings-web-search",
@@ -1441,7 +1465,7 @@
     {
       "id": "ui-plan",
       "package": "@deepseek-ai/dsh-client-ui-plan",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-plan",
@@ -1465,7 +1489,7 @@
     {
       "id": "ui-user-questions",
       "package": "@deepseek-ai/dsh-client-ui-user-questions",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-user-questions",
@@ -1488,7 +1512,7 @@
     {
       "id": "ui-trajectory",
       "package": "@deepseek-ai/dsh-client-ui-trajectory",
-      "version": "0.2.1-rc.3",
+      "version": "0.2.2-alpha.2",
       "source": "@deepseek-ai/dsh-web-app/cordis.patch.yml",
       "row": {
         "id": "ui-trajectory",

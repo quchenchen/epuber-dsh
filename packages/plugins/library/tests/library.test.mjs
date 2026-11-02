@@ -242,7 +242,7 @@ test('CSV and XLSX import preserve originals, search cells and supply task conte
 });
 
 test('tabular extraction reports truncation and never evaluates formulas', async () => {
-  const { extractTabularText } = await import('workdsh-tabular');
+  const { extractTabularText } = await import('epuberdsh-tabular');
   const text = '名称,备注\n客户,"换行\n含|<script>"\n';
   const utf16 = new Uint8Array(Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]));
   const decoded = await extractTabularText('csv', utf16);
@@ -258,11 +258,11 @@ test('tabular extraction reports truncation and never evaluates formulas', async
 
 test('Library release imports tabular extraction without an unpublished Office runtime dependency', async () => {
   const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.dependencies['workdsh-plugin-office'], undefined);
-  assert.equal(manifest.devDependencies['workdsh-plugin-office'], undefined);
-  assert.equal(manifest.devDependencies['workdsh-tabular'], 'workspace:*');
+  assert.equal(manifest.dependencies['epuberdsh-plugin-office'], undefined);
+  assert.equal(manifest.devDependencies['epuberdsh-plugin-office'], undefined);
+  assert.equal(manifest.devDependencies['epuberdsh-tabular'], 'workspace:*');
   const host = await readFile(new URL('../dist/index.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(host, /(?:from\s*|import\s*\()\s*["'](?:workdsh-plugin-office|workdsh-tabular)/);
+  assert.doesNotMatch(host, /(?:from\s*|import\s*\()\s*["'](?:epuberdsh-plugin-office|epuberdsh-tabular)/);
 });
 
 test('original revision save preserves history, rejects stale writes and restores exact retry receipts',async()=>{

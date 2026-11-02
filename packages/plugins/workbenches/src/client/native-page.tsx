@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { Context } from '@deepseek-ai/cordis';
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client';
 import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client';
-import type { WorkbenchDescriptor } from 'workdsh-contracts';
+import type { WorkbenchDescriptor } from 'epuberdsh-contracts';
 import { WorkbenchPageLifecycle, type WorkbenchPageMount, type WorkbenchPagePorts } from './page-lifecycle.js';
 import type {WorkbenchShortcuts} from './shortcuts.js';
 import {createNativeFrame} from './native-frame.js';

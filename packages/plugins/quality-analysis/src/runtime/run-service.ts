@@ -7,7 +7,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import type {QualityInterpretationCandidate} from './interpretation-candidate.js';
 import type {QualityAnalysisConfiguration} from '../domain/configuration.js';
 import type { DomainFacility } from '@deepseek-ai/dsh-storage-domain';
-import { assertActorContext, type ActorContext, type IdentityService, type LibraryService, type ProjectService } from 'workdsh-contracts';
+import { assertActorContext, type ActorContext, type IdentityService, type LibraryService, type ProjectService } from 'epuberdsh-contracts';
 import { QualityAnalysisRunStore, type QualityExpertPlan } from './run-store';
 import type { CompleteQualityAnalysisRun, CreateAnalysisInput } from './analysis-run';
 import type { QualityAnalysisExecutor } from './analysis-executor';

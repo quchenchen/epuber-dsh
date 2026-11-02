@@ -1,11 +1,11 @@
-import { Button, Input } from 'workdsh-ui';
+import { Button, Input } from 'epuberdsh-ui';
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // The `main` slot PropsRuntime is augmented by the official layout client module;
 // without this side-effect type import the slot name resolves to `never`.
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client';
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
-import { Icon, Modal, type IconName } from 'workdsh-ui';
+import { Icon, Modal, type IconName } from 'epuberdsh-ui';
 import type { ExpertAvailability, ExpertSummary } from '../shared.js';
 import type { ExpertManagementClient } from './management.js';
 import { ExpertDetailModal } from './ExpertDetailModal.js';
@@ -264,10 +264,10 @@ export function ExpertsPanel({ toggleNavigation, management, openCapability, has
                 <span className="card-title"><strong title={summary.name}>{summary.name}</strong>
                   <span className="card-meta">{summary.profession || (summary.expertType === 'team' ? '专家团' : '专家')}{view === 'mine' && <span> · {stateLabel(summary)}</span>}</span></span>
               </button>
-              {summary.canManage && <div className="card-actions">
-                <Button variant="ghost" size="sm" className="more-button" aria-label={`管理专家 ${summary.name}`} aria-haspopup="menu" aria-expanded={actionMenu === summary.id}
-                  onClick={() => setActionMenu(current => (current === summary.id ? undefined : summary.id))}>•••</Button>
-                {actionMenu === summary.id && <div className="card-menu" role="menu">
+              <div className="card-actions">
+                {summary.canManage && <Button variant="ghost" size="sm" className="more-button" aria-label={`管理专家 ${summary.name}`} aria-haspopup="menu" aria-expanded={actionMenu === summary.id}
+                  onClick={() => setActionMenu(current => (current === summary.id ? undefined : summary.id))}>•••</Button>}
+                {summary.canManage && actionMenu === summary.id && <div className="card-menu" role="menu">
                   {draft
                     ? <button role="menuitem" onClick={() => { void editInConversation(summary.id); }}>继续编辑</button>
                     : <button role="menuitem" disabled={!usable || acting} onClick={() => void runSummon(summary.id, summary.publishedRevisionRef?.revisionId, undefined)}>召唤专家</button>}
@@ -278,7 +278,7 @@ export function ExpertsPanel({ toggleNavigation, management, openCapability, has
                   {summary.canManage && summary.availability === 'disabled' && <button role="menuitem" disabled={acting} onClick={() => void setAvailability(summary, 'enabled')}>启用</button>}
                   {summary.canManage && summary.availability !== 'archived' && <button className="danger" role="menuitem" disabled={acting} onClick={() => void setAvailability(summary, 'archived')}>归档</button>}
                 </div>}
-              </div>}
+              </div>
             </div>
             <p className="desc">{summary.description || <span className="muted">（暂无简介）</span>}</p>
             <div className="domain-tags">{(summary.tags ?? []).slice(0, 3).map(tag => <span key={tag}>{tag}</span>)}</div>
@@ -287,9 +287,17 @@ export function ExpertsPanel({ toggleNavigation, management, openCapability, has
               {!draft && <span className={`badge ${readiness.cls}`}>{readiness.label}</span>}
               {draft && <span className="badge">未发布</span>}
               {summary.origin === 'default' && <span className="badge">默认</span>}
-              <button className={`pin ${summary.pinned ? 'on' : ''}`} role="switch" aria-checked={summary.pinned}
-                aria-label={`${summary.pinned ? '取消置顶' : '置顶'}专家 ${summary.name}`}
-                onClick={() => void setPreference(summary, !summary.pinned)}>★</button>
+              {/* Summoning is the action most readers want. It stays in the foot
+                  so the title keeps its full width, and shares one right-aligned
+                  group with the pin. */}
+              <span className="card-foot-actions">
+                <button className={`pin ${summary.pinned ? 'on' : ''}`} role="switch" aria-checked={summary.pinned}
+                  aria-label={`${summary.pinned ? '取消置顶' : '置顶'}专家 ${summary.name}`}
+                  onClick={() => void setPreference(summary, !summary.pinned)}>★</button>
+                {usable && <Button variant="primary" size="sm" className="summon" disabled={acting}
+                  aria-label={`召唤专家 ${summary.name} 开始任务`}
+                  onClick={() => void runSummon(summary.id, summary.publishedRevisionRef?.revisionId, undefined)}>召唤</Button>}
+              </span>
             </div>
           </article>;
         })}{view === 'mine' && <button className="card create-card" disabled={acting} onClick={() => void createExpert()}><span aria-hidden>＋</span>创建{kind === 'team' ? '专家团' : '专家'}</button>}</div>}

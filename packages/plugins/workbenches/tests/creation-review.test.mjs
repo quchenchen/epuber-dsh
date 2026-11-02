@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 const web=createRequire(new URL('../../../../apps/web/package.json',import.meta.url));
-const built=await web('esbuild').build({stdin:{contents:"export * from './creation-review.ts';export {createWorkbenchRequirementsClient} from './requirements-client.ts';",resolveDir:fileURLToPath(new URL('../src/client',import.meta.url))},bundle:true,platform:'node',format:'esm',write:false,alias:{'workdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))}});
+const built=await web('esbuild').build({stdin:{contents:"export * from './creation-review.ts';export {createWorkbenchRequirementsClient} from './requirements-client.ts';",resolveDir:fileURLToPath(new URL('../src/client',import.meta.url))},bundle:true,platform:'node',format:'esm',write:false,alias:{'epuberdsh-contracts':fileURLToPath(new URL('../../../contracts/src/index.ts',import.meta.url))}});
 const {creationProposalReview,restoreCreationReview,createWorkbenchRequirementsClient}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const draft={title:'旅行管家·实测',scenario:'管理多次旅行',users:'个人',dataSources:'手动录入',workflow:'旅行列表、行程、费用、待办',firstIteration:'新增和独立管理多次旅行',acceptance:'关闭重开数据保留'};
 const creation={id:'creation',revision:'creation-revision',idea:'管理多次旅行',phase:'discussing',proposal:{...draft,title:'旅行管家·实测：多次旅行管理工作台'}};

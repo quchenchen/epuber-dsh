@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import type { WorkbenchRequirementsRevision } from 'workdsh-contracts';
+import type { WorkbenchRequirementsRevision } from 'epuberdsh-contracts';
 import { WorkbenchAdjustmentForm } from './WorkbenchAdjustmentForm.js';
 import { WorkbenchRequirementsForm } from './WorkbenchRequirementsForm.js';
 import { createWorkbenchRequirementsClient } from './requirements-client.js';

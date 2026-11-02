@@ -5,7 +5,7 @@ import { Context } from '@deepseek-ai/cordis';
 import type { PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry';
 import type {} from '@deepseek-ai/cordis-plugin-loader';
 import { homedir } from 'node:os';
-import type { ExpertDefinition, ExpertRevisionRef } from 'workdsh-contracts';
+import type { ExpertDefinition, ExpertRevisionRef } from 'epuberdsh-contracts';
 import { readFileSync } from 'node:fs';
 import { compilePersonaPrefix, compilePersonaSuffix } from '../domain/definition.js';
 import { sha256, shortDigest } from '../domain/digest.js';

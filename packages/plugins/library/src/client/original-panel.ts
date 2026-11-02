@@ -8,7 +8,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client';
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client';
 import type {ISessions} from '@deepseek-ai/dsh-api-session-controller/client';
 import type {} from '@deepseek-ai/dsh-api-workspace-controller/client';
-import type {LibraryOriginalPanelClient,LibraryOriginalPanelInput} from 'workdsh-contracts/library';
+import type {LibraryOriginalPanelClient,LibraryOriginalPanelInput} from 'epuberdsh-contracts/library';
 
 const knownKinds=new Set(['markdown','text','pdf','docx','pptx','html','csv','xlsx']);
 const pause=(signal:AbortSignal)=>new Promise<void>((resolve,reject)=>{

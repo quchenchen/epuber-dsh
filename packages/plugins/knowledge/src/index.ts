@@ -15,7 +15,7 @@ export * from './remote/connection-api.js';
 export * from './tools/knowledge-tools.js';
 export * from './runtime/context-injection.js';
 
-export const name = 'workdsh-plugin-knowledge';
+export const name = 'epuberdsh-plugin-knowledge';
 export const inject = ['storageDomain', 'connection', 'tools', 'credentials', 'workdshIdentity', 'systemPrompt'];
 
 export async function apply(ctx: Context, options: KnowledgeServiceOptions = {}): Promise<void> {

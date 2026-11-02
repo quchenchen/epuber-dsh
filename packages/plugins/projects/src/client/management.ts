@@ -11,7 +11,7 @@ import type {
   ProjectTaskLink,
   ProjectTemplate,
   ProjectWorkItem,
-} from 'workdsh-contracts/projects';
+} from 'epuberdsh-contracts/projects';
 
 const path = '/api/workdsh-projects';
 
@@ -56,7 +56,7 @@ export function createProjectClient(lifetime?: AbortSignal) {
     addAsset: (projectId: string, asset: Omit<ProjectAssetRef, 'id'|'projectId'|'createdAt'>) => invoke<ProjectAssetRef>('add-asset', { projectId, asset }, lifetime),
     removeAsset: (projectId: string, refId: string) => invoke<void>('remove-asset', { projectId, refId }, lifetime),
     validateInputRefs: (projectId: string, references: readonly ProjectInputRef[]) => invoke<readonly ProjectInputRef[]>('validate-input-refs', { projectId, references }, lifetime),
-    linkTask: (projectId: string, sessionId: string, title: string, workItemId?: string, references: readonly ProjectInputRef[] = [], capabilities?: readonly import('workdsh-contracts/projects').ProjectCapabilityRef[]) => invoke<ProjectTaskLink>('link-task', { projectId, sessionId, title, workItemId, references, capabilities }, lifetime),
+    linkTask: (projectId: string, sessionId: string, title: string, workItemId?: string, references: readonly ProjectInputRef[] = [], capabilities?: readonly import('epuberdsh-contracts/projects').ProjectCapabilityRef[]) => invoke<ProjectTaskLink>('link-task', { projectId, sessionId, title, workItemId, references, capabilities }, lifetime),
   };
 }
 

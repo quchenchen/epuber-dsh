@@ -1,4 +1,4 @@
-import type { WorkbenchDescriptor } from 'workdsh-contracts';
+import type { WorkbenchDescriptor } from 'epuberdsh-contracts';
 import type { VerifyWorkbenchInstallation } from './host-registration.js';
 import { verifyInstalledWorkbenchArtifact } from './installed-artifact.js';
 

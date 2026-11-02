@@ -45,7 +45,7 @@ if (source === 'local') {
   run('Install Web dependencies', corepack, ['pnpm', 'install', '--frozen-lockfile'], { cwd: webRoot })
   run('Check platform-independent official package resolution', process.execPath, ['--test', join(webRoot, 'tests/planning/official-package-resolution.test.mjs')])
   run('Build WorkDSH Web and plugins', corepack, ['pnpm', 'build'], { cwd: webRoot })
-  run('Build the bundled enterprise account plugin', corepack, ['pnpm', '--filter', 'workdsh-provider-identity-enterprise', 'build'], { cwd: webRoot })
+  run('Build the bundled enterprise account plugin', corepack, ['pnpm', '--filter', 'epuberdsh-provider-identity-enterprise', 'build'], { cwd: webRoot })
   run('Pack this commit\'s WorkDSH Profile', corepack, ['pnpm', 'release:project:pack'], { cwd: webRoot })
   const webReleaseDirectory = join(webRoot, '.artifacts', `project-v${version}`)
   const manifest = JSON.parse(readFileSync(join(webReleaseDirectory, 'release-manifest.json'), 'utf8'))

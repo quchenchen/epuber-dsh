@@ -1,4 +1,4 @@
-import { parseWorkbenchRequirementsDraft, resolveWorkbenchEditTarget, type WorkbenchRequirementsDraft, type WorkbenchEditTarget } from 'workdsh-contracts';
+import { parseWorkbenchRequirementsDraft, resolveWorkbenchEditTarget, type WorkbenchRequirementsDraft, type WorkbenchEditTarget } from 'epuberdsh-contracts';
 
 /** Persist the current iteration request in a new requirement revision. Earlier
  * revisions retain the previous scope; resource and workflow definitions stay intact. */

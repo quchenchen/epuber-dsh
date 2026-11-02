@@ -1,6 +1,6 @@
 import { realpath } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { WorkbenchDevelopmentOperation } from 'workdsh-contracts';
+import type { WorkbenchDevelopmentOperation } from 'epuberdsh-contracts';
 import { importWorkbenchArchive } from './import-owner.js';
 import { verifyInstalledWorkbenchArtifact } from './installed-artifact.js';
 import { inspectWorkbenchPackageArtifact } from './package-artifact.js';

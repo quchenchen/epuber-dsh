@@ -103,8 +103,8 @@ export async function afterPack(context: PackContext): Promise<void> {
   }
   const productPackages = new Set(PRODUCT_PACKAGES)
   const selected = profileManifest.dsh?.profile?.bundles ?? []
-  const selectedWorkdsh = selected.filter(name => name.startsWith('workdsh-'))
-  const directWorkdsh = Object.keys(profileManifest.dependencies ?? {}).filter(name => name.startsWith('workdsh-'))
+  const selectedWorkdsh = selected.filter(name => name.startsWith('epuberdsh-'))
+  const directWorkdsh = Object.keys(profileManifest.dependencies ?? {}).filter(name => name.startsWith('epuberdsh-'))
   if (selectedWorkdsh.length !== productPackages.size || selectedWorkdsh.some(name => !productPackages.has(name))) {
     throw new Error(`Desktop must select exactly ${productPackages.size} WorkDSH product bundles, found ${selectedWorkdsh.join(', ')}`)
   }
@@ -130,7 +130,7 @@ export async function afterPack(context: PackContext): Promise<void> {
   const patch = readFileSync(join(profile, 'cordis.patch.yml'), 'utf8')
   verifyDefaultComposition(patch)
   for (const name of release.packages.map(item => item.name).filter(name => !productPackages.has(name) && !ENTERPRISE_PACKAGES.includes(name))) {
-    if (['workdsh-contracts', 'workdsh-ui', 'workdsh-provider-browser-session'].includes(name)) continue // inserted by the bundle patch
+    if (['epuberdsh-contracts', 'epuberdsh-ui', 'epuberdsh-provider-browser-session'].includes(name)) continue // inserted by the bundle patch
     if (!patch.includes(`name: ${name}`)) throw new Error(`Internal WorkDSH service is missing from Profile patch: ${name}`)
   }
   if (/file:(?:\/|[a-z]:)/iu.test(lockfile)) {
@@ -144,14 +144,27 @@ export async function afterPack(context: PackContext): Promise<void> {
   // Official release binaries carry the upstream signing identity. The owned
   // package must permit separately published native plugin dependencies; final
   // Developer ID signing, when requested, follows this afterPack check.
+  let firstExecBudget = 30_000
   if (context.electronPlatformName === 'darwin') {
     const entitlements = fileURLToPath(new URL('./node-runtime-entitlements.plist', import.meta.url))
     const signed = spawnSync('/usr/bin/codesign', ['--force', '--sign', '-', '--options', 'runtime', '--entitlements', entitlements, node], { encoding: 'utf8', timeout: 30_000 })
     if (signed.error || signed.status !== 0) throw new Error('Packaged Node runtime signing failed: ' + String(signed.error ?? signed.stderr))
+    // Seal the carrier after the Node binary above so the signature covers
+    // these entitlements. A carrier that is unsigned, or whose seal no longer
+    // matches, sends every nested Mach-O through an online trust evaluation on
+    // first exec; hosts that cannot reach Apple's trust services stall the
+    // bundled runtime for minutes and the gate below can never start.
+    const bundle = join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`)
+    const adhoc = spawnSync('/usr/bin/codesign', ['--force', '--deep', '--sign', '-', bundle], { encoding: 'utf8', timeout: 900_000 })
+    if (adhoc.error || adhoc.status !== 0) throw new Error('macOS carrier ad-hoc signing failed: ' + String(adhoc.error ?? adhoc.stderr))
+    // The first exec of the freshly sealed 125 MB runtime still pays a one-time
+    // local validation pass, so exercising it gets a wider budget than the
+    // follow-up spawns that reuse the warmed binary.
+    firstExecBudget = 300_000
   }
   const native = spawnSync(node, ['--input-type=module', '-e',
     "import { createRequire } from 'node:module'; const root = createRequire(process.argv[1]); createRequire(root.resolve('@deepseek-ai/cordis-plugin-loader'))('node-addon-require-builtin'); console.log('native runtime load passed')", join(profile, 'package.json')],
-    { encoding: 'utf8', timeout: 30_000 })
+    { encoding: 'utf8', timeout: firstExecBudget })
   if (native.error || native.status !== 0) throw new Error('Packaged Node cannot load the official native plugin dependency: ' + String(native.error ?? native.stderr))
   process.stdout.write(native.stdout)
   const pnpm = join(runtime, 'primary-runtime', 'dependencies', 'pnpm', 'bin', 'pnpm.cjs')

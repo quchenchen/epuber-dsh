@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { WorkbenchDevelopmentIndexEntry, WorkbenchRequirementsRevision } from 'workdsh-contracts';
+import type { WorkbenchDevelopmentIndexEntry, WorkbenchRequirementsRevision } from 'epuberdsh-contracts';
 import { WorkbenchRequirementsEditor } from './WorkbenchRequirementsEditor.js';
 import { createWorkbenchDevelopmentClient } from './development-client.js';
 import { prepareSavedWorkbenchDevelopment } from './authoring-controller.js';

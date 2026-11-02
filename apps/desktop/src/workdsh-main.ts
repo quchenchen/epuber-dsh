@@ -126,7 +126,7 @@ function openWindow(url: string, connection: DesktopConnection = { mode: 'person
     ...(previous && typeof previous.getBounds === 'function' ? previous.getBounds() : {}),
     minWidth: 960,
     minHeight: 640,
-    title: 'WorkDSH',
+    title: 'EpuberDSH',
     icon,
     backgroundColor: '#111113',
     show: false,
@@ -142,7 +142,7 @@ function openWindow(url: string, connection: DesktopConnection = { mode: 'person
   entrySurface = carrier
   window.on('page-title-updated', event => {
     event.preventDefault()
-    page.setTitle('WorkDSH')
+    page.setTitle('EpuberDSH')
   })
   if (connection.mode === 'enterprise') enterpriseWindows.add(page)
   window.webContents.setWindowOpenHandler(({ url: target }) => {
@@ -391,7 +391,7 @@ function connectEntryNavigation(entry: BrowserWindow): void {
 }
 
 function enterprisePluginAvailable():boolean {
- try{return installedEnterprisePlugins(join(runtimeHome(),'profiles',PROFILE_NAME),JSON.parse(readFileSync(join(bundledProfileDirectory(),'node_modules','@deepseek-ai','dsh','package.json'),'utf8')).version).includes('workdsh-provider-identity-enterprise')}
+ try{return installedEnterprisePlugins(join(runtimeHome(),'profiles',PROFILE_NAME),JSON.parse(readFileSync(join(bundledProfileDirectory(),'node_modules','@deepseek-ai','dsh','package.json'),'utf8')).version).includes('epuberdsh-provider-identity-enterprise')}
  catch{return false}
 }
 
@@ -407,7 +407,7 @@ async function activateEnterprise(existingHome: boolean): Promise<void> {
   selected.dsh ??= {}; selected.dsh.profile ??= {}; selected.dsh.profile.bundles ??= []
   const bundles = selected.dsh.profile.bundles
   // Disable personal identity at composition, rather than allow an identity fallback.
-  selected.dsh.profile.bundles = bundles.filter(name => name !== 'workdsh-provider-identity-local')
+  selected.dsh.profile.bundles = bundles.filter(name => name !== 'epuberdsh-provider-identity-local')
   for (const name of pluginNames) {
     if (!selected.dsh.profile.bundles.includes(name)) selected.dsh.profile.bundles.push(name)
   }
@@ -415,7 +415,7 @@ async function activateEnterprise(existingHome: boolean): Promise<void> {
   session.authority = await startEnterpriseAuthority(session.login, session.deviceId, () => { void returnToEntry() }, () => { void returnToEntry() })
   // Record before writing either file, so a partial patch failure is also cleaned.
   session.authFile = join(session.home, 'enterprise-auth.json')
-  const patch = desktopEnterprisePatch(session.home, session.authority, session.login.actor, session.login.backendUrl, session.deviceId, pluginNames.includes('workdsh-plugin-enterprise-collaboration'))
+  const patch = desktopEnterprisePatch(session.home, session.authority, session.login.actor, session.login.backendUrl, session.deviceId, pluginNames.includes('epuberdsh-plugin-enterprise-collaboration'))
   session.authFile = patch.authFile
   const connection: DesktopConnection = { mode: 'enterprise', portalOrigin: session.login.backendUrl, organizationId: session.login.actor.organizationId, principalId: session.login.actor.id }
   if (window) await window.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(connectionLoadingHtml('正在启动企业工作区')))
@@ -479,7 +479,7 @@ if (desktopUserData) {
   if (!isAbsolute(desktopUserData)) throw new Error('Desktop user data override must be absolute')
   app.setPath('userData', desktopUserData)
 }
-app.setName('WorkDSH')
+app.setName('EpuberDSH')
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {

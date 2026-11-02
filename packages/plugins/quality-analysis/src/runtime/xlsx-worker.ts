@@ -1,6 +1,6 @@
 import {parentPort,workerData} from 'node:worker_threads';
 import {createHash} from 'node:crypto';
-import {readWorksheetTable} from 'workdsh-tabular';
+import {readWorksheetTable} from 'epuberdsh-tabular';
 if(!parentPort)throw new Error('quality/worker-only');
 try {
   const result=await readWorksheetTable(workerData.bytes,{worksheet:workerData.worksheet,headerRow:workerData.headerRow});

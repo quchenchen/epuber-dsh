@@ -3,9 +3,9 @@ import { test } from 'node:test';
 import { withoutRedundantAgentTeamProfile } from '../../scripts/preview-agent-team.mjs';
 
 test('preview keeps only the WorkDSH-owned Agent Team bundle', () => {
-  const input = { dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', 'workdsh-plugin-experts', '@deepseek-ai/dsh-experimental-agent-team-profile', 'workdsh-plugin-library'] } } };
+  const input = { dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', 'epuberdsh-plugin-experts', '@deepseek-ai/dsh-experimental-agent-team-profile', 'epuberdsh-plugin-library'] } } };
   const output = withoutRedundantAgentTeamProfile(input);
-  assert.deepEqual(output.dsh.profile.bundles, ['@deepseek-ai/dsh-base', 'workdsh-plugin-experts', 'workdsh-plugin-library']);
+  assert.deepEqual(output.dsh.profile.bundles, ['@deepseek-ai/dsh-base', 'epuberdsh-plugin-experts', 'epuberdsh-plugin-library']);
   assert.equal(input.dsh.profile.bundles.length, 4);
   assert.equal(withoutRedundantAgentTeamProfile(output), undefined);
 });

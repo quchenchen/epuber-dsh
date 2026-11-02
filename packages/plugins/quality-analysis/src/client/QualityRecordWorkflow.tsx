@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import type {LibraryTreeEntry} from 'workdsh-contracts/library';
+import type {LibraryTreeEntry} from 'epuberdsh-contracts/library';
 import {QualityCleaningEditor} from './QualityCleaningEditor.js';
 import {QualityLibraryInput,type QualityLibraryInputProps} from './QualityLibraryInput.js';
 import {QualityMappingForm} from './QualityMappingForm.js';

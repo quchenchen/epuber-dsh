@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
-import type {LibraryOriginalPreviewRegistry,LibraryTreeEntry} from 'workdsh-contracts/library';
+import type {LibraryOriginalPreviewRegistry,LibraryTreeEntry} from 'epuberdsh-contracts/library';
 import type {LibraryClient} from './management.js';
 import {createLibraryOriginalRevisionSave} from './original-revision-save.js';
 

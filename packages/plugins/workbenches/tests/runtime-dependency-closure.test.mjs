@@ -64,7 +64,13 @@ async function isolatedProfile(directory, omitted = []) {
       catch { manifest = officialRequire.resolve(`${name}/package.json`); }
       target = dirname(await realpath(manifest));
       const installed = JSON.parse(await readFile(join(target, 'package.json'), 'utf8'));
-      assert.equal(installed.version, required[name], `fixture must use the exact declared ${name}`);
+      // A peer may be declared as a range (the supported Cordis generation), so
+      // compare against the declaration rather than demanding an exact version.
+      const declared = required[name];
+      assert.ok(/^\d/.test(declared)
+        ? installed.version === declared
+        : sdkRequire('semver').satisfies(installed.version, declared, {includePrerelease: true}),
+        `fixture must use a declared ${name} (installed ${installed.version}, declared ${declared})`);
     }
     const link = join(directory, 'node_modules', name);
     await mkdir(dirname(link), {recursive: true});

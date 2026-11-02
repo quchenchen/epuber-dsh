@@ -2,7 +2,7 @@ import { definitionFromDocuments, parseExpertDocument } from '../authoring/docum
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import type { ConnectorManagementService } from 'workdsh-contracts';
+import type { ConnectorManagementService } from 'epuberdsh-contracts';
 import { Context, Service } from '@deepseek-ai/cordis';
 import type { KvTable } from '@deepseek-ai/dsh-storage-domain';
 import type { SessionCreateRequest, SessionCreateValue } from '@deepseek-ai/dsh-api-session-controller';
@@ -51,8 +51,8 @@ import type {
   PublishReceipt,
   ResourceOwner,
   SkillRevisionRef,
-} from 'workdsh-contracts';
-import type { SkillManagementService } from 'workdsh-contracts/skills';
+} from 'epuberdsh-contracts';
+import type { SkillManagementService } from 'epuberdsh-contracts/skills';
 import { expertsDomainSpec, keys } from '../storage/domain.js';
 import { COMPILER_VERSION, compileExpertPreset, presetIdFor, verifyPackageFiles } from '../runtime/preset-compiler.js';
 import { ConfirmationStore } from '../runtime/confirmation.js';
@@ -215,6 +215,7 @@ export class ExpertsManager extends Service implements ExpertsService {
   private operations?: KvTable<string, Operation>;
   private mutationTail: Promise<void> = Promise.resolve();
   private seeding?: Promise<void>;
+  private defaultsChecked = false;
 
   private readonly confirmations = new ConfirmationStore();
   private readonly executionPlans = new TtlStore<ExecutionPlan>(PLAN_TTL_MS);
@@ -383,29 +384,59 @@ export class ExpertsManager extends Service implements ExpertsService {
   // ── default seeding ───────────────────────────────────────────────────────
 
   /**
-   * Seed the three shipped default experts once, the first time the catalog is
-   * read in a deployment. They become ordinary personal-owned experts (copyable,
-   * disable-able), never a hidden second source of truth. A compilation failure
-   * (e.g. no writable preset root) skips that template rather than breaking reads.
+   * Seed every shipped default this deployment has never had, the first time the
+   * catalog is read. They become ordinary personal-owned experts (copyable,
+   * disable-able), never a hidden second source of truth.
+   *
+   * The check is per template id, not "is the catalog empty": a release that adds
+   * a default must reach deployments seeded by an earlier release, while an id
+   * that already has a row — including one the user disabled or archived — is
+   * left exactly as the user left it. A compilation failure (e.g. no writable
+   * preset root) skips that template rather than breaking reads.
    */
   private async ensureSeeded(actor: ActorContext, signal?: AbortSignal): Promise<void> {
-    if (this.expertsTable().size > 0) return;
+    const missing = () => DEFAULT_TEMPLATES.filter((template) => this.expertsTable().get(keys.expert(template.id)) === undefined);
+    if (!missing().length && this.defaultsChecked) return;
     if (!this.seeding) {
       this.seeding = this.enqueue(async () => {
-        if (this.expertsTable().size > 0) return;
         for (const template of DEFAULT_TEMPLATES) {
+          const row = this.expertsTable().get(keys.expert(template.id));
+          // An existing default is only rebuilt when its compiled preset no longer
+          // resolves — the Profile was reinstalled, the preset store was reset, and
+          // the row would otherwise stay permanently unusable. Its owner,
+          // creation time and availability (including a user's archive) survive.
+          if (row && !(await this.defaultNeedsRefresh(row, template.definition))) continue;
           try {
-            await this.seedTemplate(actor, template.id, template.definition, signal);
+            await this.seedTemplate(actor, template.id, template.definition, signal, row);
           } catch (error) {
             await this.audit(actor, 'experts.create-draft', template.id, 'failed', errorCode(error, 'experts/seed-failed'));
           }
         }
+        this.defaultsChecked = true;
       }).then(() => undefined, () => undefined).finally(() => { this.seeding = undefined; });
     }
     await this.seeding;
   }
 
-  private async seedTemplate(actor: ActorContext, expertId: string, definition: ExpertDefinition, signal?: AbortSignal): Promise<void> {
+  /** A shipped default is refreshed when its bytes changed in this release
+   * (defaults are immutable, so no user edit can be overwritten) or when its
+   * compiled preset no longer resolves after a Profile reinstall. */
+  private async defaultNeedsRefresh(row: Expert, definition: ExpertDefinition): Promise<boolean> {
+    if (row.origin !== 'default') return false;
+    const ref = row.publishedRevisionRef;
+    if (ref === undefined) return true;
+    const revision = this.revisionsTable().get(keys.revision(row.id, ref.revisionId));
+    if (revision === undefined) return true;
+    if (revision.definitionDigest !== definitionDigest(normalizeDefinition(definition))) return true;
+    try {
+      const preset = await this.ctx.agentPresets.resolve(revision.presetRevisionRef);
+      return Boolean(preset.broken);
+    } catch {
+      return true;
+    }
+  }
+
+  private async seedTemplate(actor: ActorContext, expertId: string, definition: ExpertDefinition, signal?: AbortSignal, previous?: Expert): Promise<void> {
     signal?.throwIfAborted();
     const now = new Date().toISOString();
     const normalized = normalizeDefinition(definition);
@@ -424,9 +455,11 @@ export class ExpertsManager extends Service implements ExpertsService {
     };
     const draft: ExpertDraft = { expertId, revision: draftRevision, definition: normalized, validationIssues: [] };
     const expert: Expert = {
-      id: expertId, owner: this.newOwner(actor), origin: 'default', availability: 'enabled',
+      id: expertId, owner: previous?.owner ?? this.newOwner(actor), origin: 'default',
+      availability: previous?.availability ?? 'enabled',
       revision: `r-${randomUUID()}`, draftRevision,
-      publishedRevisionRef: { expertId, revisionId }, createdAt: now, updatedAt: now,
+      publishedRevisionRef: { expertId, revisionId },
+      createdAt: previous?.createdAt ?? now, updatedAt: now,
     };
     await this.revisionsTable().put(keys.revision(expertId, revisionId), revision);
     await this.draftsTable().put(keys.draft(expertId), draft);

@@ -92,17 +92,17 @@ async function api(host, endpoint, payload = {}) {
   return response.json();
 }
 try {
-  await command(pnpm, ['--filter', 'workdsh-plugin-skills', 'pack', '--pack-destination', artifacts], root);
+  await command(pnpm, ['--filter', 'epuberdsh-plugin-skills', 'pack', '--pack-destination', artifacts], root);
   await cli('--profile', 'skills', '--from-default-profile', 'web', '--dump-config');
   await cli('plugin', '--profile', 'skills', 'add', tarball, '--offline');
   const config = await cli('--profile', 'skills', '--dump-config');
   assert.equal(config.split('id: workdsh-skills').length - 1, 1);
-  assert.ok(!config.includes('workdsh-bundle'));
-  const installedRoot = join(home, 'profiles/skills/node_modules/workdsh-plugin-skills');
+  assert.ok(!config.includes('epuberdsh-bundle'));
+  const installedRoot = join(home, 'profiles/skills/node_modules/epuberdsh-plugin-skills');
   const installed = JSON.parse(await readFile(join(installedRoot, 'package.json'), 'utf8'));
   assert.equal(installed.version, manifest.version);
   assert.ok(installed.dsh.bundle && installed.dsh.client);
-  assert.ok(!(await readFile(join(installedRoot, 'dist/shared.d.ts'), 'utf8')).includes('workdsh-contracts/'));
+  assert.ok(!(await readFile(join(installedRoot, 'dist/shared.d.ts'), 'utf8')).includes('epuberdsh-contracts/'));
   pass('Skill tarball installed outside checkout; one independent Profile layer; no product bundle');
   browser = await chromium.launch({ headless: true });
   let host = await start();
@@ -111,7 +111,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   const graph = await page.evaluate(() => window.__DSH_BOOT__.entries.map(row => row.id));
   assert.equal(graph.filter(id => id === manifest.name).length, 1);
-  assert.ok(!graph.includes('workdsh-bundle'));
+  assert.ok(!graph.includes('epuberdsh-bundle'));
   // Catalog reads: status, metadata merge, icon bytes and eligibility keep
   // Host as the only reader of catalog files.
   const catalogSummary = await api(host, 'catalog');
@@ -146,7 +146,7 @@ try {
   const catalogInstall = page.getByRole('button', { name: '安装技能 目录样例技能', exact: true });
   await expect(catalogInstall).toBeVisible();
   await expect(page.getByRole('button', { name: '安装技能 超限样例技能', exact: true })).toBeDisabled();
-  // The catalog preview rides the shared Modal shell (workdsh-ui) while plugin
+  // The catalog preview rides the shared Modal shell (epuberdsh-ui) while plugin
   // classes keep it compact: narrow width, 48px mark and calm 20px title.
   await page.getByRole('button', { name: `查看技能 ${catalogSkill}`, exact: true }).click();
   const previewDialog = page.locator('.wd-dialog.catalog-dialog');
@@ -204,7 +204,7 @@ try {
   // Bundled skills keep the WorkDSH prefix so the unprefixed `skill-creator`
   // name stays available to the user's own skills; each registers exactly once.
   const bundledSkills = (await api(host, 'list')).value;
-  for (const name of ['workdsh-skill-creator', 'workdsh-ppt-design', 'workdsh-word-design', 'workdsh-excel-design', 'workdsh-web-design']) {
+  for (const name of ['skill-creator', 'ppt-design', 'word-design', 'excel-design', 'web-design']) {
     assert.equal(bundledSkills.filter(row => row.name === name).length, 1, `${name} is registered exactly once`);
   }
   await page.getByRole('button', { name: `查看技能 ${fixture}`, exact: true }).click();

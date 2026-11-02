@@ -22,6 +22,6 @@ const result = await build({
 });
 await writeFile(
   new URL('dist/client.browser.js', entry),
-  `window.__ModuleLoader__.load({id: "workdsh-plugin-knowledge", factory: function(require) { const module = {exports:{}};\n${result.outputFiles[0].text}\nreturn module.exports; }});\n`,
+  `window.__ModuleLoader__.load({id: "epuberdsh-plugin-knowledge", factory: function(require) { const module = {exports:{}};\n${result.outputFiles[0].text}\nreturn module.exports; }});\n`,
 );
 console.log('Knowledge client bundle: dist/client.browser.js');

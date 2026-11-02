@@ -8,6 +8,8 @@ import Storage from '@deepseek-ai/dsh-storage';
 import * as JsonStorage from '@deepseek-ai/dsh-storage-json';
 import * as StorageDomain from '@deepseek-ai/dsh-storage-domain';
 import Tools from '@deepseek-ai/dsh-tools';
+import * as ToolExecutor from '@deepseek-ai/dsh-tool-executor-native';
+import { coldReadPersistence } from '../helpers/session-persistence.mjs';
 import { AccessManager, SessionAccessBridge, ToolAccessBridge } from '../../../../packages/plugins/access/dist/index.js';
 import { createRequire } from 'node:module';
 const { ApiSessionNotFound } = await import(createRequire(new URL('../../../../packages/plugins/access/package.json', import.meta.url)).resolve('@deepseek-ai/dsh-api-session-controller'));
@@ -89,6 +91,7 @@ async function boot(root, selectedBySession, config = {}) {
     await ctx.plugin(JsonStorage, { root });
     await ctx.plugin(StorageDomain, { backend: 'json' });
     await ctx.plugin(Tools);
+    await ctx.plugin(ToolExecutor);
     await ctx.plugin(AuditJournal);
     await ctx.plugin(AccessManager);
     await ctx.plugin(ToolAccessBridge, { runtimeId: 'test-runtime', ...config });
@@ -100,13 +103,12 @@ async function boot(root, selectedBySession, config = {}) {
 }
 
 async function execute(ctx, sessionId, name = 'governed_echo') {
-  return ctx.tools.execute({
-    callId: `call-${sessionId}-${name}-${Math.random()}`,
-    name,
-    arguments: {},
+  const batch = await ctx.tools.execute({
+    calls: [{ type: 'tool-call', id: `call-${sessionId}-${name}-${Math.random()}`, name, arguments: '{}' }],
     agent: { id: sessionId },
     signal: new AbortController().signal,
   });
+  return batch.results[0]?.result;
 }
 
 test('official tool pipeline auto-binds a personal Session, denies unauthorized actors and audits final outcomes', async () => {
@@ -196,21 +198,18 @@ test('trusted Session ingress binds before create, preserves retry ownership and
   const createCalls = [];
   const resumeCalls = [];
   const failCreate = new Set(['session-retry']);
-  const existingSessions = new Set(['session-orphan']);
+  const existingSessions = new Map([['session-orphan', { header: { id: 'session-orphan' }, events: [] }]]);
   let ctx;
   try {
     ctx = await boot(root, selected, { autoBindPersonalSessions: false });
+    ctx.provide('sessionPersistence', coldReadPersistence(sessionId => existingSessions.get(sessionId)));
     ctx.provide('sessionController', {
-      async inspect(sessionId) {
-        if (existingSessions.has(String(sessionId))) return { header: { id: sessionId }, events: [] };
-        throw new ApiSessionNotFound('fixture Session not found');
-      },
       async create(request) {
         const sessionId = String(request.sessionId);
         assert.equal(ctx.workdshAccess.sessionOwner(sessionId)?.ownerPrincipalId, 'owner-a', 'owner is durable before official create');
         createCalls.push(sessionId);
         if (failCreate.delete(sessionId)) throw Object.assign(new Error('fixture create failed'), { code: 'session/create-fixture' });
-        existingSessions.add(sessionId);
+        existingSessions.set(sessionId, { header: { id: sessionId }, events: [] });
         return { sessionId: request.sessionId };
       },
       async resolveAgent(sessionId) {
@@ -292,9 +291,9 @@ test('enterprise Session listing and cold reads hide foreign and unbound session
   const actor=id=>({principalId:id,organizationId:'personal-owner',requestId:'read-'+id,resolvedBy:'test'});
   await ctx.workdshAccess.bindSession(actor('owner-a'),{sessionId:'session-own'});
   await ctx.workdshAccess.bindSession(actor('member-a'),{sessionId:'session-foreign'});
+  ctx.provide('sessionPersistence', coldReadPersistence(sessionId=>{inspected.push(sessionId);return {header:{id:sessionId},events:[]}}));
   ctx.provide('sessionController',{
    async list(){return {items:['session-own','session-foreign','session-legacy'].map(sessionId=>({sessionId,title:sessionId}))}},
-   async inspect(sessionId){inspected.push(sessionId);return {meta:{id:sessionId},events:[]}},
   });
   await ctx.plugin(SessionAccessBridge,{runtimeId:'enterprise-read'});
   assert.deepEqual((await ctx.workdshSessionAccess.list({},new AbortController().signal)).items.map(x=>x.sessionId),['session-own']);
@@ -308,11 +307,12 @@ test('enterprise Session listing and cold reads hide foreign and unbound session
 
 test('personal Session reads retain native listing and unbound historical inspection',async()=>{
  const root=await mkdtemp(join(tmpdir(),'workdsh-personal-read-'));let ctx;
- try{ctx=await boot(root,new Map());const value={items:[{sessionId:'legacy-personal'}]},history={meta:{id:'legacy-personal'},events:[]};
- ctx.provide('sessionController',{async list(){return value},async inspect(){return history}});
+ try{ctx=await boot(root,new Map());const value={items:[{sessionId:'legacy-personal'}]};
+ ctx.provide('sessionPersistence',coldReadPersistence(()=>({header:{id:'legacy-personal'},events:[]})));
+ ctx.provide('sessionController',{async list(){return value}});
  await ctx.plugin(SessionAccessBridge);
  assert.equal(await ctx.workdshSessionAccess.list({},new AbortController().signal),value);
- assert.equal(await ctx.workdshSessionAccess.inspect('legacy-personal'),history);
+ assert.deepEqual(await ctx.workdshSessionAccess.inspect('legacy-personal'),{meta:{id:'legacy-personal'},inheritedEventCount:0,events:[]});
  }finally{if(ctx)await ctx.fiber.dispose();await rm(root,{recursive:true,force:true})}
 });
 
@@ -327,13 +327,15 @@ test('fixed-member Session inspection binds a native empty Session and rejects f
     const resolve = ctx.workdshIdentity.resolve.bind(ctx.workdshIdentity);
     ctx.workdshIdentity.resolve = async (...args) => { if (!active) throw Error('member revoked'); return resolve(...args); };
     await ctx.workdshAccess.bindSession({ principalId: 'member-a', organizationId: 'personal-owner', requestId: 'foreign', resolvedBy: 'test' }, { sessionId: 'foreign' });
-    ctx.provide('sessionController', { async inspect(sessionId) {
+    ctx.provide('sessionPersistence', coldReadPersistence(sessionId => {
       inspected.push(sessionId);
-      if (sessionId === 'missing') throw new ApiSessionNotFound('missing');
+      if (sessionId === 'missing') return undefined;
       if (sessionId === 'revoked-during-read') active = false;
       if (sessionId === 'changed-during-read') selected.set(sessionId, ['member-a', 'personal-owner']);
-      return { meta: { id: sessionId }, events: [] };
-    } });
+      return { header: { id: sessionId }, events: [] };
+    }));
+    // The bridge keeps its Controller dependency for create/list/resume; this fixture only reads.
+    ctx.provide('sessionController', { async list() { return { items: [] }; }, async create() { throw Error('fixture create'); }, async resolveAgent() { return { agent: {} }; } });
     await ctx.plugin(SessionAccessBridge, { autoBindFixedMemberSessions: true });
     assert.equal((await ctx.workdshSessionAccess.inspect('new-empty')).events.length, 0);
     assert.equal(ctx.workdshAccess.sessionOwner('new-empty').ownerPrincipalId, 'owner-a');
@@ -359,7 +361,8 @@ test('native Session adoption requires both an explicit switch and a trusted fix
     try {
       ctx = await boot(root, new Map(), { identityKind: 'team', autoBindPersonalSessions: false });
       if (processIdentity) ctx.workdshIdentity.id = 'workdsh-enterprise-process';
-      ctx.provide('sessionController', { async inspect() { reads++; return { events: [] }; } });
+      ctx.provide('sessionPersistence', coldReadPersistence(() => { reads++; return { header: { id: 'unbound' }, events: [] }; }));
+      ctx.provide('sessionController', { async list() { return { items: [] }; }, async create() { throw Error('fixture create'); }, async resolveAgent() { return { agent: {} }; } });
       await ctx.plugin(SessionAccessBridge, { autoBindFixedMemberSessions: enabled });
       await assert.rejects(ctx.workdshSessionAccess.inspect('unbound'), ApiSessionNotFound);
       assert.equal(reads, 0); assert.equal(ctx.workdshAccess.sessionOwner('unbound'), undefined);

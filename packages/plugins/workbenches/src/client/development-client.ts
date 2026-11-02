@@ -1,5 +1,5 @@
 import {parseSourceCheckpoints,parseVerifiedSourceCheckpoint} from './source-checkpoints.js';
-import { parseWorkbenchDevelopmentIndexEntry } from 'workdsh-contracts';
+import { parseWorkbenchDevelopmentIndexEntry } from 'epuberdsh-contracts';
 export class WorkbenchDevelopmentRequestError extends Error {
   constructor(readonly code: string, readonly status: number) { super('开发操作未完成，请核对实际状态。'); }
 }

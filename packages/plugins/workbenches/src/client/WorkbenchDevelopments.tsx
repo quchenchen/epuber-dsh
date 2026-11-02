@@ -3,7 +3,7 @@ import {WorkbenchSourceCheckpoints} from './WorkbenchSourceCheckpoints.js';
 import type {SourceCheckpointSummary,VerifiedSourceCheckpoint} from './source-checkpoints.js';
 import React, { useEffect, useRef, useState } from 'react';
 import type { WorkbenchCatalogEntry } from './catalog-client.js';
-import type { WorkbenchDevelopmentIndexEntry, WorkbenchDevelopmentState } from 'workdsh-contracts';
+import type { WorkbenchDevelopmentIndexEntry, WorkbenchDevelopmentState } from 'epuberdsh-contracts';
 
 export interface WorkbenchDevelopmentsProps {
   readonly verifyCheckpoint?:(id:string,hash:string,signal?:AbortSignal)=>Promise<VerifiedSourceCheckpoint>;

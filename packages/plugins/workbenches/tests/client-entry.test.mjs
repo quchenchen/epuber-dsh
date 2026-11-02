@@ -10,7 +10,7 @@ test('built browser module loads through native envelope and withdraws authoring
  const events=new EventTarget(),listeners=new Set();
  runInNewContext(code, { AbortController,AbortSignal, fetch: async(path) => {assert.equal(path,'/api/workdsh-workbench-shortcuts');return {ok:true,json:async()=>({ok:true,value:{organizationId:'fixture-org',principalId:'fixture-user',ids:[]}})};}, window: {
   addEventListener:(type,listener)=>{listeners.add(listener);events.addEventListener(type,listener);},removeEventListener:(type,listener)=>{listeners.delete(listener);events.removeEventListener(type,listener);},
-  __ModuleLoader__: { load(module) { assert.equal(module.id, 'workdsh-plugin-workbenches'); loaded = module.factory(id=>id==='@deepseek-ai/dsh-client-ui-primitives'?{Menu:()=>null}:require(id)); } } } });
+  __ModuleLoader__: { load(module) { assert.equal(module.id, 'epuberdsh-plugin-workbenches'); loaded = module.factory(id=>id==='@deepseek-ai/dsh-client-ui-primitives'?{Menu:()=>null}:require(id)); } } } });
  assert.equal(loaded.name, 'workdsh-workbenches-client');
  const rows = [], stops = []; let panel = 'workdsh-workbench-authoring';
  const ctx = { get: () => ({ locate() {}, resolve() {} }), effect: body => { const stop=body(); stops.push(stop); return stop; }, provide: (name,service) => { assert.equal(name,'workdshWorkbenchClientRegistration'); assert.equal(typeof service.registerManaged,'function'); }, slots: { inject: (_name, cb) => { const stop = cb(); stops.push(stop); return stop; }, register: (options, component) => {

@@ -14,7 +14,7 @@ test('captures the action browser for its owning session only', async () => {
   const ctx = {
     effect: () => undefined,
     on(name, handler) { handlers.set(name, handler); },
-    tools: { async execute(call) { calls.push(call); return { isError: false, content: [image] }; } },
+    tools: { async execute(call) { calls.push(call); return { results: [{ result: { isError: false, content: [image] } }] }; } },
     attachments: { async readImage() { return { data: Uint8Array.of(1, 2, 3, 4) }; } },
     connection: { fetch: { register({ fetch }) { fetchHandler = fetch; return () => { disposed = true; }; } } },
   };
@@ -32,9 +32,9 @@ test('captures the action browser for its owning session only', async () => {
     const response = await fetchHandler(new Request('http://localhost/api/workdsh-agent-browser', { method: 'POST', body: JSON.stringify({ sessionId }) }));
     return (await response.json()).frame;
   };
-  assert.deepEqual(calls.map(call => call.name), ['mcp__playwright-mcp__browser_take_screenshot']);
+  assert.deepEqual(calls.map(call => call.calls[0].name), ['mcp__playwright-mcp__browser_take_screenshot']);
   assert.equal(calls[0].agent, agent);
-  assert.equal(calls[0].parent.description, 'call');
+  assert.match(calls[0].calls[0].id, /^workdsh-browser-view-/);
   assert.deepEqual(await frameFor('session-a'), {
     sessionId: 'session-a', revision: 1, url: 'https://example.test/',
     image: 'data:image/png;base64,AQIDBA==',
@@ -49,11 +49,11 @@ test('uses raw MCP screenshots when model-facing image projection is unavailable
   const ctx = {
     effect: () => undefined,
     on(name, handler) { handlers.set(name, handler); },
-    tools: { async execute() { return {
+    tools: { async execute() { return { results: [{ result: {
       isError: false,
       content: [{ type: 'text', text: '[image unavailable]' }],
       value: { content: [{ type: 'image', mimeType: 'image/png', data: 'AQIDBA==' }] },
-    }; } },
+    } }] }; } },
     attachments: { async readImage() { throw new Error('Raw image needs no store'); } },
     connection: { fetch: { register({ fetch }) { fetchHandler = fetch; return () => {}; } } },
   };
@@ -71,7 +71,7 @@ test('uses raw MCP screenshots when model-facing image projection is unavailable
 function fixture(execute=async()=>({isError:false,content:[],value:{content:[{type:'image',mimeType:'image/png',data:'AQIDBA=='}]}}),readImage=async()=>({data:Uint8Array.of(1,2,3,4)})) {
   const handlers=new Map(),calls=[];let fetchHandler;
   registerBrowserView({effect:()=>undefined,on:(name,handler)=>handlers.set(name,handler),
-    tools:{execute:async call=>{calls.push(call);return execute(call);}},attachments:{readImage},
+    tools:{execute:async call=>{calls.push(call);return {results:[{result:await execute(call)}]};}},attachments:{readImage},
     connection:{fetch:{register({fetch}){fetchHandler=fetch;return()=>{};}}}});
   const agent={session:{id:'session-close'},ctx:{effect:()=>undefined}};
   handlers.get('agent/created')({agent});
@@ -154,7 +154,7 @@ function clientFixture(status,{providerEnabled=false}={}) {
     effect(body){const stop=body();if(typeof stop==='function')cleanups.push(stop);},
     slots:{inject(_slot,body){const stop=body();if(typeof stop==='function')cleanups.push(stop);},register(){return()=>{};},entriesOfSlot(){return[];}},
     layout:{selectPanel(){}},
-    remote:{pluginInventory:{async list(){return{ok:true,value:{entries:providerEnabled?[{moduleName:'workdsh-provider-browser-session',enabled:true}]:[]}};}}},
+    remote:{pluginInventory:{async list(){return{ok:true,value:{entries:providerEnabled?[{moduleName:'epuberdsh-provider-browser-session',enabled:true}]:[]}};}}},
     sidebarRightTabs:{register(){return()=>{};}},
     sidebarRight:{
       openTabs:{getSnapshot:()=>tabs},

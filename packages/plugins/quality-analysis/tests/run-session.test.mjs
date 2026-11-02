@@ -31,6 +31,11 @@ async function fixture(t,kind='personal'){
  workspaceRegistry:native.workspaceRegistry,
  workspaceController:{async create({path}){const prior=native.workspaceRegistry.list().find(w=>w.path===path),workspace=await native.workspaceRegistry.create(path);return {workspace:{workspaceId:workspace.id,path:workspace.path},created:!prior};}},
  sessionController:{async create({sessionId,workspaceId}){creates++;const workspace=native.workspaceRegistry.get(workspaceId);assert.ok(workspace,'native creation requires a real registered Workspace');const prior=sessions.get(sessionId);if(prior)assert.equal(prior.meta.cwd,workspace.path,'native Session immutable cwd');else sessions.set(sessionId,{meta:{id:sessionId,cwd:workspace.path},events:[]});await workspace.attachSession(sessionId);return {sessionId};},async inspect(sessionId){const value=sessions.get(sessionId);if(!value)throw Error('fixture/session-not-found');return structuredClone(value);}}};
+ // The governed bridge is mounted in every real profile; enterprise fixtures omit it on purpose.
+ let bridge;
+ Object.defineProperty(services,'workdshSessionAccess',{configurable:true,
+  get:()=>bridge??(services.workdshIdentity.profile().organization.kind==='personal'?{inspect:(id,signal)=>services.sessionController.inspect(id,signal),create:(request,signal)=>services.sessionController.create(request,signal)}:undefined),
+  set:value=>{bridge=value;}});
  const ctx={get:key=>services[key],fiber:{assertActive(){}}};roots.set(ctx,root);
  return {ctx,native,root,actor,services,owners,sessions,creates:()=>creates,switchAccount:()=>{principal='other';}};
 }

@@ -28,7 +28,7 @@ for item in manifest['../../packages']:
         assert all(m.name.startswith('package/') and '..' not in pathlib.PurePosixPath(m.name).parts for m in members)
         package = json.loads(archive.extractfile('package/package.json').read())
         assert package['name'] == item['name'] and package['version'] == item['version']
-        dependencies = {name for field in ('dependencies', 'optionalDependencies', 'peerDependencies', 'devDependencies') for name in package.get(field, {}) if name.startswith('workdsh-')}
+        dependencies = {name for field in ('dependencies', 'optionalDependencies', 'peerDependencies', 'devDependencies') for name in package.get(field, {}) if name.startswith('epuberdsh-')}
         assert not dependencies & external, (filename, dependencies & external)
         scanned = 0
         for member in members:

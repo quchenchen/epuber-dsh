@@ -1,5 +1,5 @@
 {
-  "name": "workdsh-plugin-quality-analysis",
+  "name": "epuberdsh-plugin-quality-analysis",
   "version": "3.0.0-alpha.57",
   "private": true,
   "type": "module",
@@ -27,14 +27,14 @@
     "client": {
       "platform": "web",
       "inject": [
-        "workdsh-plugin-workbenches",
+        "epuberdsh-plugin-workbenches",
         "@deepseek-ai/dsh-client-ui-layout",
         "@deepseek-ai/dsh-client-ui-conversation",
         "@deepseek-ai/dsh-client-ui-workspace"
       ],
       "external": [
-        "workdsh-plugin-library/client",
-        "workdsh-plugin-workbenches/client"
+        "epuberdsh-plugin-library/client",
+        "epuberdsh-plugin-workbenches/client"
       ]
     }
   },
@@ -47,7 +47,7 @@
       "layout": "full-page",
       "hostCompatibility": {
         "sdk": "^1.0.0",
-        "harness": "0.2.1-rc.3"
+        "harness": "0.2.2-alpha.2"
       },
       "capabilities": []
     }
@@ -63,32 +63,36 @@
     "saxes": "5.0.1"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-tools": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-tools": "0.2.2-alpha.2",
     "@deepseek-ai/cordis": "4.0.5",
-    "@deepseek-ai/dsh-storage-domain": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-connection": "0.2.1-rc.3",
-    "workdsh-plugin-library": "0.1.0-alpha.8",
-    "workdsh-plugin-workbenches": "3.0.0-alpha.49",
-    "@deepseek-ai/dsh-client-ui-layout": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-ui-workspace": "0.2.1-rc.3"
+    "@deepseek-ai/dsh-storage-domain": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-client-connection": "0.2.2-alpha.2",
+    "epuberdsh-plugin-library": "0.1.0-alpha.8",
+    "epuberdsh-plugin-workbenches": "3.0.0-alpha.49",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session-persistence": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-workspace": "0.2.2-alpha.2"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-tools": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-tools": "0.2.2-alpha.2",
     "@deepseek-ai/cordis": "4.0.5",
-    "@deepseek-ai/dsh-storage-domain": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-connection": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-storage-domain": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-client-connection": "0.2.2-alpha.2",
     "@types/node": "22.19.0",
     "@types/react": "19.2.14",
     "react": "19.2.4",
-    "workdsh-contracts": "workspace:*",
-    "workdsh-plugin-library": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-layout": "0.2.1-rc.3",
-    "workdsh-tabular": "workspace:*",
-    "workdsh-plugin-workbenches": "workspace:*",
-    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.2.1-rc.3",
-    "@deepseek-ai/dsh-client-ui-workspace": "0.2.1-rc.3"
+    "epuberdsh-contracts": "workspace:*",
+    "epuberdsh-plugin-library": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.2-alpha.2",
+    "epuberdsh-tabular": "workspace:*",
+    "epuberdsh-plugin-workbenches": "workspace:*",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session-persistence": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-workspace": "0.2.2-alpha.2"
   }
 }

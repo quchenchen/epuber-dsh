@@ -1,5 +1,5 @@
 {
-  "name": "workdsh-ui",
+  "name": "epuberdsh-ui",
   "version": "0.1.0-alpha.7",
   "private": true,
   "type": "module",
@@ -20,12 +20,12 @@
   },
   "peerDependencies": {
     "react": "^19.2.4",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.3"
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-alpha.2"
   },
   "devDependencies": {
     "react": "19.2.4",
     "@types/react": "19.2.14",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-alpha.2",
     "@types/node": "22.19.0"
   },
   "sideEffects": false

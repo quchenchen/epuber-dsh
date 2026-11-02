@@ -2,6 +2,9 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {materialSnapshot} from '../dist/material-snapshot.js';
 import {colleagueMentionSource} from '../dist/colleague-mentions.js';
 const text=text=>[{type:'text',text}];
+// Cold-read seam for fixtures: mirrors `persistence.open(id,'read')`, the official
+// path the material Host uses to read a stored Session without activating it.
+const coldRead=(events,cwd)=>({async open(sessionId){return{header:{id:sessionId,...cwd?{cwd}:{}},inheritedEventCount:0,async read(){return{events:[...events]};},async close(){}};}});
 const events=[
  {type:'system/message',seq:0,data:{message:{content:text('private secret')}}},
  {type:'user/message',seq:1,data:{source:{kind:'user'},content:[...text('分析 Excel'),{type:'file',attachment:{attachmentId:'hash',name:'a.xlsx',bytes:50}}]}},
@@ -31,7 +34,7 @@ test('material handoff streams original bytes and handles the official sha256-pr
  let route,bundle;const conversations=new Map();
  const ctx={inject(_services,callback){callback(this);},effect(callback){callback();},
   workdshIdentity:{},connection:{fetch:{register(value){if(value.path==='/api/workdsh-collaboration-materials')route=value;return()=>{};}}},tools:{register(){return()=>{};}},
-  sessionController:{async inspect(){return{events:[{type:'user/message',seq:1,data:{source:{kind:'user'},content:[...text('核对'),{type:'file',attachment:file}]}},{type:'assistant/message',seq:2,data:{message:{content:text('已核对')}}}]};}},
+  sessionPersistence:coldRead([{type:'user/message',seq:1,data:{source:{kind:'user'},content:[...text('核对'),{type:'file',attachment:file}]}},{type:'assistant/message',seq:2,data:{message:{content:text('已核对')}}}]),
   attachments:{async *readFileStream(){yield bytes.subarray(0,5);yield bytes.subarray(5);}}};
  const client={async verify(){},async colleagues(){return[{id:'b'}];},async sendMaterials(_identity,value){bundle=value;return{id:'handoff'};}};
  installMaterials(ctx,client,conversations);
@@ -54,7 +57,8 @@ test('generated outcomes are read through the scoped filesystem, frozen in attac
  const routes=new Map();let bundle;let inside=true;let resolveCount=0;
  const ctx={inject(_services,callback){callback(this);},effect(callback){callback();},workdshIdentity:{},
   connection:{fetch:{register(route){routes.set(route.path,route);return()=>{};}}},tools:{register(){return()=>{};}},
-  sessionController:{async inspect(){return{meta:{cwd:'/workspace'},events:[events[1],{type:'deliverables/presented',seq:2,data:{files:[{path:'output/report.docx'}]}},events[4]]};},async resolveAgent(){resolveCount++;return{agent:{ctx:{get fs(){throw new Error('cannot get property fs without inject');},get(name){assert.equal(name,'fs');return {async resolve(path){return path;},contains(){return inside;},async readBytes(){return bytes;}};}}}};}},
+  sessionPersistence:coldRead([events[1],{type:'deliverables/presented',seq:2,data:{files:[{path:'output/report.docx'}]}},events[4]],'/workspace'),
+  sessionController:{async resolveAgent(){resolveCount++;return{agent:{ctx:{get fs(){throw new Error('cannot get property fs without inject');},get(name){assert.equal(name,'fs');return {async resolve(path){return path;},contains(){return inside;},async readBytes(){return bytes;}};}}}};}},
   attachments:{async saveFile(){return{attachmentId:`sha256:${digest}`,name:'report.docx',bytes:bytes.length};},async *readFileStream(){yield bytes;}}};
  const client={async verify(){},async colleagues(){return[{id:'b'}];},async sendMaterials(_identity,value){bundle=value;return{id:'share'};},async materials(_identity,id){if(id==='denied')throw new Error('denied');return{context:'analysis',files:[{name:'report.docx',sha256:digest,data:bytes.toString('base64')}]};}};
  installMaterials(ctx,client,new Map());

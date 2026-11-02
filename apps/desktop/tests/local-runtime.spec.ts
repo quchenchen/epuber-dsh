@@ -18,7 +18,7 @@ function fixture() {
   writeFileSync(join(source, 'node_modules/@deepseek-ai/dsh-app-boot/lib/index.js'), '')
   writeFileSync(join(source, 'node_modules/pnpm/bin/pnpm.cjs'), '')
   writeFileSync(join(source, 'node_modules/pnpm/package.json'), JSON.stringify({ name: 'pnpm', version: '11.7.0' }))
-  const base = { packageManager: 'pnpm@11.7.0', dependencies: { '@deepseek-ai/dsh': '0.2.0-rc.2', 'workdsh-plugin-skills': '1.0.0' }, dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', 'workdsh-plugin-skills'] } } }
+  const base = { packageManager: 'pnpm@11.7.0', dependencies: { '@deepseek-ai/dsh': '0.2.0-rc.2', 'epuberdsh-plugin-skills': '1.0.0' }, dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', 'epuberdsh-plugin-skills'] } } }
   writeFileSync(join(source, 'package.json'), JSON.stringify(base))
   writeFileSync(join(source, 'profile-installation.json'), JSON.stringify(base))
   return { root, source, home, base }
@@ -36,7 +36,7 @@ it('uses official installation anchoring without a shared writable module symlin
   expect(readFileSync(manifest, 'utf8')).toBe(JSON.stringify(user))
   expect(readFileSync(lock, 'utf8')).toBe('user lock')
   expect(readFileSync(join(first.profile, 'cordis.patch.yml'), 'utf8')).toContain('user configuration')
-  base.dependencies['workdsh-plugin-skills'] = '1.0.1'; writeFileSync(join(source, 'package.json'), JSON.stringify(base))
+  base.dependencies['epuberdsh-plugin-skills'] = '1.0.1'; writeFileSync(join(source, 'package.json'), JSON.stringify(base))
   expect(materializeRuntimeProfile(source, home).changed).toBe(false)
   expect(JSON.parse(readFileSync(manifest, 'utf8')).dependencies).toEqual({ 'user-plugin': 'file:custom.tgz' })
   markProfileUpdated(source, first.profile)
@@ -53,7 +53,7 @@ it('isolates account/backend directories, device records and credential/skill en
   expect(env.DEEPSEEK_API_KEY).toBeUndefined(); expect(env.WORKDSH_SERVICE_KEY).toBeUndefined(); expect(env.NODE_OPTIONS).toBeUndefined()
   expect(env.DSH_AGENTS_HOME).toBe(join(a.root, 'agents')); expect(env.HOME).toBe(join(a.root, 'home'))
   const bridge = desktopEnterprisePatch(a.home, { url: 'http://127.0.0.1:12345', key: 'capability', close: async () => {} }, actor, 'https://company.test', a.deviceId)
-  expect(readFileSync(bridge.patch, 'utf8')).toContain('workdsh-provider-identity-enterprise/desktop')
+  expect(readFileSync(bridge.patch, 'utf8')).toContain('epuberdsh-provider-identity-enterprise/desktop')
   expect(readFileSync(bridge.patch, 'utf8')).not.toContain('id: workdsh-identity-enterprise\n  disabled: true')
   expect(readFileSync(bridge.patch, 'utf8')).not.toContain('capability')
   expect(JSON.parse(readFileSync(bridge.authFile, 'utf8')).principalId).toBe('A')

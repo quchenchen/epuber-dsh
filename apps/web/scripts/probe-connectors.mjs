@@ -16,7 +16,9 @@ const ctx = new Context();
 const signal = new AbortController().signal;
 let sequence = 0;
 const execute = async (name, arguments_) => {
-  const output = await ctx.tools.execute({ name, arguments: arguments_, callId: `connector-probe-${++sequence}`, agent: { id: 'connector-probe' }, signal });
+  const batch = await ctx.tools.execute({ calls: [{ type: 'tool-call', id: `connector-probe-${++sequence}`, name, arguments: JSON.stringify(arguments_ ?? {}) }], agent: { id: 'connector-probe' }, signal });
+  const output = batch.results[0]?.result;
+  if (!output) throw new Error(`连接器工具 ${name} 没有返回结果。`);
   if (output.isError) throw output.error;
   return output.value;
 };
@@ -88,8 +90,13 @@ try {
 
   const disabled = await manager.setEnabled('workdsh-example', false);
   if (disabled.state !== 'disabled' || tools.get('mcp__workdsh-example__search_catalog')) throw new Error('Disabling did not unregister MCP tools.');
-  const unknown = await tools.execute({ name: 'mcp__workdsh-example__search_catalog', arguments: {}, callId: 'connector-disabled', agent: { id: 'connector-probe' }, signal });
-  if (!unknown.isError) throw new Error('Disabled MCP tool remained callable.');
+  // A disabled MCP tool must be neither registered nor callable: either the batch rejects the call or every result is an error.
+  let callable = false;
+  try {
+    const batch = await tools.execute({ calls: [{ type: 'tool-call', id: 'connector-disabled', name: 'mcp__workdsh-example__search_catalog', arguments: '{}' }], agent: { id: 'connector-probe' }, signal });
+    callable = batch.results.some(entry => entry?.result && !entry.result.isError);
+  } catch { callable = false; }
+  if (callable) throw new Error('Disabled MCP tool remained callable.');
 
   const restored = await manager.setEnabled('workdsh-example', true);
   if (restored.state !== 'ready' || !tools.get('mcp__workdsh-example__search_catalog')) throw new Error('Re-enabling did not restore MCP tools.');

@@ -11,7 +11,7 @@ vi.mock('../src/enterprise-auth.ts', () => ({
   EnterpriseLogin: { login: async (origin: string) => { state.logins.push(origin); return { backendUrl: origin, actor, verify: state.verify, logout: state.logout, cancelRequests() {} } } },
   startEnterpriseAuthority: async () => ({ url: 'http://127.0.0.1:19898', key: 'a'.repeat(64), close: state.closed }),
 }))
-vi.mock('../src/enterprise-plugins.ts',()=>({installedEnterprisePlugins:vi.fn(()=>['workdsh-provider-identity-enterprise','workdsh-plugin-enterprise-collaboration']),composeInstalledEnterprisePlugins:vi.fn(async()=>['workdsh-provider-identity-enterprise','workdsh-plugin-enterprise-collaboration'])}))
+vi.mock('../src/enterprise-plugins.ts',()=>({installedEnterprisePlugins:vi.fn(()=>['epuberdsh-provider-identity-enterprise','epuberdsh-plugin-enterprise-collaboration']),composeInstalledEnterprisePlugins:vi.fn(async()=>['epuberdsh-provider-identity-enterprise','epuberdsh-plugin-enterprise-collaboration'])}))
 vi.mock('../src/owned-process.ts', () => ({ trackOwnedProcess: vi.fn(), stopOwnedProcess: state.stop, cleanOwnedProcessTree: vi.fn(async () => {}) }))
 vi.mock('node:child_process', () => ({ spawn: vi.fn() }))
 vi.mock('electron', async () => {
@@ -59,10 +59,10 @@ it('enforces the packaged backend, uses explicitly installed enterprise identity
   writeFileSync(join(source, 'profile-installation.json'), readFileSync(join(source, 'package.json')))
   mkdirSync(home); writeFileSync(join(home, 'retained'), 'personal data')
   const enterprise = enterpriseSpace(state.userData, 'https://company.test', actor)
-  const builtIn = join(source, 'node_modules/workdsh-provider-identity-enterprise')
+  const builtIn = join(source, 'node_modules/epuberdsh-provider-identity-enterprise')
   mkdirSync(builtIn, { recursive: true })
   writeFileSync(join(builtIn, 'package.json'), JSON.stringify({ exports: { './desktop': './dist/desktop.js' }, peerDependencies: { '@deepseek-ai/dsh': '0.2.0-rc.2' } }))
-  const collaboration = join(source, 'node_modules/workdsh-plugin-enterprise-collaboration')
+  const collaboration = join(source, 'node_modules/epuberdsh-plugin-enterprise-collaboration')
   mkdirSync(collaboration, {recursive:true})
   writeFileSync(join(collaboration, 'package.json'), JSON.stringify({exports:{'./desktop':'./dist/desktop.js'},peerDependencies:{'@deepseek-ai/dsh':'0.2.0-rc.2'}}))
   vi.stubEnv('WORKDSH_BUNDLED_PROFILE', source); vi.stubEnv('WORKDSH_DSH_HOME', home)
@@ -94,7 +94,7 @@ it('enforces the packaged backend, uses explicitly installed enterprise identity
     expect(readFileSync(join(state.userData, 'enterprise-backend.json'), 'utf8')).toBe(savedBackend)
     expect(spawn).toHaveBeenCalledOnce()
     expect(state.handlers['workdsh:enterprise-install']).toBeUndefined()
-    expect(existsSync(join(enterprise.home, 'profiles/workdsh/node_modules/workdsh-provider-identity-enterprise'))).toBe(false)
+    expect(existsSync(join(enterprise.home, 'profiles/workdsh/node_modules/epuberdsh-provider-identity-enterprise'))).toBe(false)
     const launch = vi.mocked(spawn).mock.calls[0]!
     expect(launch[2]?.env?.DSH_HOME).toBe(enterprise.home)
     expect(launch[2]?.env?.DSH_AGENTS_HOME).toBe(join(enterprise.root, 'agents'))

@@ -1,7 +1,7 @@
 import {WorkbenchDelivery} from './WorkbenchDelivery.js';
 import {prepareWorkbenchResume,resumeFailureMessage} from './resume-development.js';
 import {createWorkbenchRequirementsClient} from './requirements-client.js';
-import type {WorkbenchDevelopmentIndexEntry} from 'workdsh-contracts';
+import type {WorkbenchDevelopmentIndexEntry} from 'epuberdsh-contracts';
 import {NativeWorkbenchConversation} from './native-conversation.js';
 import {createWorkbenchCreationClient,type CreationView} from './creation-client.js';
 import type {AuthoringEntry} from './authoring-navigation.js';

@@ -1,4 +1,4 @@
-import type { ExpertDefinition } from 'workdsh-contracts';
+import type { ExpertDefinition } from 'epuberdsh-contracts';
 import { ExpertsError } from '../domain/values.js';
 
 export type PackageAssets = NonNullable<ExpertDefinition['packageAssets']>;

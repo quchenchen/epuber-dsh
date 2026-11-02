@@ -27,7 +27,7 @@ const built = await build({stdin:{contents:[
   "export {catalogStatus} from './client/catalog-status.ts';",
 ].join('\n'),resolveDir:join(root,'packages/plugins/workbenches/src'),loader:'ts'},
   bundle:true,platform:'node',format:'esm',write:false,plugins:[preflightExternals],
-  alias:{'workdsh-contracts':join(root,'packages/contracts/src/index.ts')}});
+  alias:{'epuberdsh-contracts':join(root,'packages/contracts/src/index.ts')}});
 const {HostWorkbenchRegistration,ClientWorkbenchRegistration,createWorkbenchRegistrationClient,handleWorkbenchRegistrationRequest,
   InstalledWorkbenchManifestReader,createWorkbenchInstallationVerifier,catalogStatus}=await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 

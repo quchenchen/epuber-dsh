@@ -3,7 +3,7 @@ import type {ProfileContext} from '@deepseek-ai/dsh-app-boot';
 import type {HostConnectionHandle} from '@deepseek-ai/dsh-client-connection';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
-import {assertActorContext,type IdentityService} from 'workdsh-contracts';
+import {assertActorContext,type IdentityService} from 'epuberdsh-contracts';
 import type {WorkbenchDevelopmentService} from './development-service.js';
 import type {WorkbenchRequirementsService} from './requirements-service.js';
 import type {WorkbenchDevelopmentToolsApi} from './development-tools.js';

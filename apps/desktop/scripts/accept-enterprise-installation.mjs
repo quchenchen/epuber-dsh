@@ -89,13 +89,13 @@ try {
  await returnedPersonal.getByText('项目',{exact:true}).first().waitFor();
  report.checks.personalAfterLogout=true;
  await returnedPersonal.getByText('插件',{exact:true}).first().click();
- await returnedPersonal.getByText('workdsh-enterprise-connection',{exact:true}).click();
- await returnedPersonal.getByRole('button',{name:/卸载.*workdsh-enterprise-connection/}).click();
+ await returnedPersonal.getByText('epuberdsh-enterprise-connection',{exact:true}).click();
+ await returnedPersonal.getByRole('button',{name:/卸载.*epuberdsh-enterprise-connection/}).click();
  await returnedPersonal.getByRole('button',{name:'卸载',exact:true}).click();
- await returnedPersonal.getByText('workdsh-enterprise-connection',{exact:false}).first().waitFor({state:'hidden',timeout:60000});
+ await returnedPersonal.getByText('epuberdsh-enterprise-connection',{exact:false}).first().waitFor({state:'hidden',timeout:60000});
  report.checks.uninstalledThroughOfficialUi=true;
  const personalManifest=JSON.parse(readFileSync(join(env.WORKDSH_DESKTOP_USER_DATA,'dsh-home/profiles/workdsh/package.json'),'utf8'));
- report.checks.enterpriseDependencyRemoved=!personalManifest.dependencies?.['workdsh-enterprise-connection'];
+ report.checks.enterpriseDependencyRemoved=!personalManifest.dependencies?.['epuberdsh-enterprise-connection'];
  await returnedPersonal.getByRole('button',{name:'添加插件',exact:true}).click();
  await returnedPersonal.getByPlaceholder('例如 dsh-plugin-whale-pet').fill(process.env.WORKDSH_TEST_ENTERPRISE_ARCHIVE);
  await returnedPersonal.getByRole('button',{name:'安装',exact:true}).click();

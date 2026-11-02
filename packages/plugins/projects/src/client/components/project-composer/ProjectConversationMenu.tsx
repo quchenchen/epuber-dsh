@@ -2,7 +2,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 import type { InputTriggerController } from '@deepseek-ai/dsh-client-ui-input-trigger/client';
-import type { ProjectCapabilityRef, ProjectTaskContext, ProjectSnapshot } from 'workdsh-contracts/projects';
+import type { ProjectCapabilityRef, ProjectTaskContext, ProjectSnapshot } from 'epuberdsh-contracts/projects';
 import type { ProjectClient } from '../../management.js';
 import { ProjectMenu, type ProjectMenuKind, type ProjectMenuItem } from './ProjectMenu.js';
 

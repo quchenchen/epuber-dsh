@@ -8,7 +8,7 @@ import { join } from 'node:path';
 const webRequire = createRequire(new URL('../../../../apps/web/package.json', import.meta.url));
 const runtimeRequire = createRequire(new URL('../../projects/package.json', import.meta.url));
 const { build } = webRequire('esbuild');
-const built = await build({ entryPoints: [fileURLToPath(new URL('../src/runtime/development-operations.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'workdsh-contracts': fileURLToPath(new URL('../../../contracts/src/index.ts', import.meta.url)) }, plugins: [{ name: 'official-runtime', setup(builder) { builder.onResolve({ filter: /^(?:@deepseek-ai\/dsh-storage-domain|zod)$/ }, args => ({ path: pathToFileURL(runtimeRequire.resolve(args.path)).href, external: true })); } }] });
+const built = await build({ entryPoints: [fileURLToPath(new URL('../src/runtime/development-operations.ts', import.meta.url))], bundle: true, platform: 'node', format: 'esm', write: false, alias: { 'epuberdsh-contracts': fileURLToPath(new URL('../../../contracts/src/index.ts', import.meta.url)) }, plugins: [{ name: 'official-runtime', setup(builder) { builder.onResolve({ filter: /^(?:@deepseek-ai\/dsh-storage-domain|zod)$/ }, args => ({ path: pathToFileURL(runtimeRequire.resolve(args.path)).href, external: true })); } }] });
 const { WorkbenchDevelopmentOperations } = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`);
 const load = async name => import(pathToFileURL(runtimeRequire.resolve(name)).href);
 const { Context } = await load('@deepseek-ai/cordis');

@@ -4,6 +4,7 @@ import { after, test } from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { Context } from '@deepseek-ai/cordis';
 import Tools from '@deepseek-ai/dsh-tools';
+import * as ToolExecutor from '@deepseek-ai/dsh-tool-executor-native';
 import * as Plugin from '../dist/index.js';
 import { enterpriseMemberCollaboration } from '../dist/member.js';
 
@@ -75,10 +76,12 @@ async function instance(member, memberToken) {
   ctx.provide('systemPrompt', { tools() {}, section() {}, getSectionOrder() { return 0; } });
   ctx.provide('workdshIdentity', { async resolve() { return { principalId: member, organizationId: 'org' }; } });
   await ctx.plugin(Tools);
+  await ctx.plugin(ToolExecutor);
   const fiber = await ctx.plugin(enterpriseMemberCollaboration(adminUrl, async () => `Bearer ${memberToken}`));
   async function call(name, args = {}, callId = randomUUID()) {
-    return ctx.tools.execute({ name, arguments: args, callId,
+    const batch = await ctx.tools.execute({ calls: [{ type: 'tool-call', id: callId, name, arguments: JSON.stringify(args) }],
       agent: { id: `session-${member}` }, signal: new AbortController().signal });
+    return batch.results[0]?.result;
   }
   return { ctx, fiber, call, route: request => route.fetch(request) };
 }
@@ -97,6 +100,7 @@ test('handoff plugin waits for enterprise identity instead of exposing unusable 
     ctx.provide('connection', { fetch: { register() { return () => {}; } } });
     ctx.provide('systemPrompt', { tools() {}, section() {}, getSectionOrder() { return 0; } });
     await ctx.plugin(Tools);
+  await ctx.plugin(ToolExecutor);
     const fiber = ctx.plugin(Plugin, { adminUrl, memberAuthorization: async () => `Bearer ${[...tokens.keys()][0]}` });
     assert.equal(fiber.state, 0, 'missing required identity keeps Fiber PENDING');
     assert.equal(ctx.tools.get('workdsh_collaboration_send'), undefined);
@@ -115,6 +119,7 @@ test('invalid collaboration service origin leaves Fiber FAILED with no registere
     ctx.provide('systemPrompt', { tools() {}, section() {}, getSectionOrder() { return 0; } });
     ctx.provide('workdshIdentity', { async resolve() { return { principalId: a, organizationId: 'org' }; } });
     await ctx.plugin(Tools);
+  await ctx.plugin(ToolExecutor);
     const fiber = ctx.plugin(Plugin, {
       adminUrl: 'http://example.com', memberAuthorization: async () => `Bearer ${[...tokens.keys()][0]}`,
     });
@@ -189,9 +194,11 @@ test('a mismatched DSH principal cannot call the member service', async () => {
   ctx.provide('systemPrompt', { tools() {}, section() {}, getSectionOrder() { return 0; } });
   ctx.provide('workdshIdentity', { async resolve() { return { principalId: b, organizationId: 'org' }; } });
   await ctx.plugin(Tools);
+  await ctx.plugin(ToolExecutor);
   const fiber = await ctx.plugin(Plugin, { adminUrl, memberAuthorization: async () => `Bearer ${[...tokens.keys()][0]}` });
-  const result = await ctx.tools.execute({ name: 'workdsh_collaboration_colleagues', arguments: {}, callId: 'mismatch',
+  const batch = await ctx.tools.execute({ calls: [{ type: 'tool-call', id: 'mismatch', name: 'workdsh_collaboration_colleagues', arguments: '{}' }],
     agent: { id: 'session-mismatch' }, signal: new AbortController().signal });
+  const result = batch.results[0]?.result;
   assert.equal(result.isError, true);
   await fiber.dispose(); await ctx.fiber.dispose();
 });

@@ -110,15 +110,18 @@ export function registerBrowserView(ctx: Context): void {
     const preceding = queues.get(sessionId) ?? Promise.resolve();
     const queued = preceding.catch(() => undefined).then(async () => {
       if (disposed || controller.signal.aborted || frames.get(sessionId) !== frame) return;
-      const screenshot = await ctx.tools.execute({
-        callId: ToolCallId(`workdsh-browser-view-${randomUUID()}`),
-        rootCallId: exec.rootCallId,
-        parent: exec.token,
-        name: screenshotName,
-        arguments: {},
+      const screenshotBatch = await ctx.tools.execute({
+        calls: [{
+          type: 'tool-call',
+          id: ToolCallId(`workdsh-browser-view-${randomUUID()}`),
+          name: screenshotName,
+          arguments: '{}',
+        }],
         agent: exec.agent,
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
       });
+      const screenshot = screenshotBatch.results[0]?.result;
+      if (screenshot === undefined) throw new Error('浏览器截图没有返回结果。');
       if (disposed || controller.signal.aborted) return;
       const current = frames.get(sessionId);
       if (current !== frame) return;
@@ -166,11 +169,13 @@ export function registerBrowserView(ctx: Context): void {
         const action = browserActionCall(body.action);
         const agent = agents.get(sessionId);
         if (!action || !agent || !frames.has(sessionId)) return Response.json({ error: 'Browser action unavailable' }, { status: 400 });
-        const result = await ctx.tools.execute({
-          callId: ToolCallId(`workdsh-browser-input-${randomUUID()}`), name: action.name,
-          arguments: action.arguments, agent, signal: AbortSignal.timeout(20_000),
+        const actionBatch = await ctx.tools.execute({
+          calls: [{ type: 'tool-call', id: ToolCallId(`workdsh-browser-input-${randomUUID()}`), name: action.name, arguments: JSON.stringify(action.arguments) }],
+          agent,
+          signal: AbortSignal.timeout(20_000),
         });
-        if (result.isError) return Response.json({ error: 'Browser action failed' }, { status: 502 });
+        const result = actionBatch.results[0]?.result;
+        if (result === undefined || result.isError) return Response.json({ error: 'Browser action failed' }, { status: 502 });
       }
       const frame = frames.get(sessionId) ?? null;
       const unchanged = frame !== null && body?.afterRevision === frame.revision;
