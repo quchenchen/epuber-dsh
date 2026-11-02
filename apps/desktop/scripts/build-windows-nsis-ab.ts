@@ -16,6 +16,7 @@ import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'no
 import { fileURLToPath } from 'node:url'
 import { withoutWindowsSigningSecrets } from './package-win.ts'
 import { assertPortableExecutable } from './verify-win-installer.ts'
+import { PRODUCT_NAME } from './product-name.mjs'
 import {
   WINDOWS_NSIS_AB_BUILDER_VERSION,
   WINDOWS_NSIS_AB_SCHEMA_VERSION,
@@ -305,7 +306,7 @@ export function buildWindowsNsisAb(options: WindowsNsisAbBuildOptions): WindowsN
     )
   }
 
-  const installerName = `WorkDSH-${version}-x64-Setup.exe`
+  const installerName = `${PRODUCT_NAME}-${version}-x64-Setup.exe`
   const directInstaller = join(directOutput, installerName)
   const stagedInstaller = join(stagedOutput, installerName)
   assertPortableExecutable(directInstaller, 'direct-extract NSIS installer')

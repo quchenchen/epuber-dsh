@@ -42,7 +42,7 @@ try {
   }
   for (const bundle of bundles) {
     if (!bundle.enabled || bundle.installed !== installedInProfile || bundle.removable || bundle.error) {
-      throw new Error(`WorkDSH product bundle is inactive or invalid: ${bundle.name}: ${JSON.stringify(bundle)}`)
+      throw new Error(`EpuberDSH product bundle is inactive or invalid: ${bundle.name}: ${JSON.stringify(bundle)}`)
     }
   }
   for (const name of Object.keys(CATALOG_PACKAGES)) {
@@ -51,7 +51,7 @@ try {
       throw new Error(`Community catalog integration is inactive or invalid: ${name}: ${JSON.stringify(bundle)}`)
     }
   }
-  console.log(`Verified plugin manager exposes exactly ${expected.length} ${installedInProfile ? 'installed' : 'installation-provided'} WorkDSH product bundles: ${names.join(', ')}`)
+  console.log(`Verified plugin manager exposes exactly ${expected.length} ${installedInProfile ? 'installed' : 'installation-provided'} EpuberDSH product bundles: ${names.join(', ')}`)
 } finally {
   try {
     await ctx?.fiber.dispose()

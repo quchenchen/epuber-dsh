@@ -1,5 +1,5 @@
 import {composeInstalledEnterprisePlugins,installedEnterprisePlugins} from './enterprise-plugins.ts'
-/** Minimal Electron carrier for the bundled WorkDSH release profile. */
+/** Minimal Electron carrier for the bundled EpuberDSH release profile. */
 
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron'
 import { spawn, type ChildProcess } from 'node:child_process'
@@ -80,7 +80,7 @@ function browserWorkerRequest(): { port: number, profile: string } | undefined {
   const profile = process.argv.find(arg => arg.startsWith('--workdsh-browser-worker-profile='))
     ?.slice('--workdsh-browser-worker-profile='.length)
   if (!Number.isInteger(port) || port < 1024 || port > 65535 || !profile || !isAbsolute(profile) || !existsSync(profile)) {
-    throw new Error('Invalid WorkDSH browser worker arguments')
+    throw new Error('Invalid EpuberDSH browser worker arguments')
   }
   return { port, profile }
 }
@@ -111,7 +111,7 @@ function startBrowserWorker(request: { port: number, profile: string }): void {
     await page.loadURL('about:blank')
     process.stdout.write('WORKDSH_BROWSER_WORKER_READY\n')
   }).catch(error => {
-    process.stderr.write(`WorkDSH browser worker failed: ${String(error)}\n`)
+    process.stderr.write(`EpuberDSH browser worker failed: ${String(error)}\n`)
     app.exit(1)
   })
 }
@@ -545,7 +545,7 @@ if (!app.requestSingleInstanceLock()) {
     installLoginHandlers()
     showConnectionEntry()
   }).catch(cause => {
-    process.stderr.write(`WorkDSH failed to start: ${cause instanceof Error ? cause.stack ?? cause.message : String(cause)}\n`)
+    process.stderr.write(`EpuberDSH failed to start: ${cause instanceof Error ? cause.stack ?? cause.message : String(cause)}\n`)
     app.quit()
   })
 }

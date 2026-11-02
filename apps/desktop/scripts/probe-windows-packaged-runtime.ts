@@ -7,6 +7,7 @@ import {
   smokeBundledWorkdshProfile,
   type PackagedElectronSmoke,
 } from './verify-electron-fuses.ts'
+import { PRODUCT_NAME } from './product-name.mjs'
 
 export interface InstalledWindowsRuntimeProbe {
   readonly installRoot: string
@@ -28,7 +29,7 @@ export function probeInstalledWindowsRuntime(
   platform: NodeJS.Platform = process.platform,
 ): InstalledWindowsRuntimeProbe {
   const root = resolve(installRoot)
-  const executable = join(root, 'WorkDSH.exe')
+  const executable = join(root, `${PRODUCT_NAME}.exe`)
   try {
     if (platform !== 'win32') {
       throw new Error('installed Windows runtime probe requires a native Windows host')
@@ -39,8 +40,8 @@ export function probeInstalledWindowsRuntime(
       electronPlatformName: 'win32',
       arch: 1,
       packager: {
-        executableName: 'WorkDSH',
-        appInfo: { productFilename: 'WorkDSH' },
+        executableName: PRODUCT_NAME,
+        appInfo: { productFilename: PRODUCT_NAME },
       },
     })
     return { installRoot: root, executable, success: true, error: null }

@@ -15,8 +15,25 @@ export function selectCommandSpace(context: { personalHome: string; active?: Com
   if (space.mode === 'enterprise' && (!space.root || !isAbsolute(space.root) || space.home !== join(space.root, 'dsh'))) throw new Error('Invalid enterprise command space')
   return space
 }
+/**
+ * Locate the application data directory that holds `command-context.json`.
+ *
+ * The packaged app renames its data directory with `productName`, and an
+ * install created before the product rename still writes to the old one. Probe
+ * both so a terminal `dsh` keeps working across an in-place upgrade instead of
+ * failing on a directory that no longer exists.
+ */
+function resolveUserData(): string {
+  const override = process.env.WORKDSH_DESKTOP_USER_DATA
+  if (override) return override
+  const base = process.platform === 'win32'
+    ? (process.env.APPDATA ?? '')
+    : join(homedir(), 'Library/Application Support')
+  const candidates = ['EpuberDSH', 'WorkDSH'].map(name => join(base, name))
+  return candidates.find(candidate => existsSync(join(candidate, 'command-context.json'))) ?? candidates[0]!
+}
 async function main(): Promise<void> {
-  const userData = process.env.WORKDSH_DESKTOP_USER_DATA ?? (process.platform === 'win32' ? join(process.env.APPDATA ?? '', 'WorkDSH') : join(homedir(), 'Library/Application Support/WorkDSH'))
+  const userData = resolveUserData()
   const context = JSON.parse(readFileSync(join(userData, 'command-context.json'), 'utf8')) as { personalHome: string; active?: CommandSpace }
   const args = process.argv.slice(2), spaceOption = args.findIndex(value => value.startsWith('--workdsh-space='))
   const request = spaceOption < 0 ? undefined : args.splice(spaceOption, 1)[0]!.slice('--workdsh-space='.length)
@@ -30,7 +47,7 @@ async function main(): Promise<void> {
   const patches = [...(existsSync(basePatch) ? ['--patch', basePatch] : []), ...(space.mode === 'enterprise' ? ['--patch', patch] : [])]
   const env = space.mode === 'enterprise' ? enterpriseEnvironment(space.root!, process.execPath, process.env) : { ...process.env }
   Object.assign(env, { DSH_HOME: space.home, DSH_AGENTS_HOME: space.mode === 'enterprise' ? join(space.root!, 'agents') : join(space.home, 'agents'), DSH_BUNDLED_PRIMARY_RUNTIME: primary, ELECTRON_RUN_AS_NODE: undefined })
-  process.stderr.write(`WorkDSH：${space.label}\n`)
+  process.stderr.write(`EpuberDSH：${space.label}\n`)
   const child = spawn(process.execPath, [launcher, '--profile', 'workdsh', ...patches, ...args], { cwd: space.home, env, stdio: 'inherit' })
   child.once('error', error => { process.stderr.write(error.message + '\n'); process.exitCode = 1 })
   child.once('exit', code => { process.exitCode = code ?? 1 })

@@ -45,7 +45,7 @@ export function runtimeFailureDetail(ready: boolean, code: number | null, output
   if (/EADDRINUSE/u.test(diagnostic)) {
     const port = diagnostic.match(/(?:127\.0\.0\.1|localhost|\[::1\]):(\d+)/u)?.[1]
       ?? diagnostic.match(/\bport:\s*(\d+)/u)?.[1];
-    reasons.push(`本机服务端口${port ? ` ${port}` : ''}已被占用。请关闭此前的 WorkDSH 工作区后重试。`);
+    reasons.push(`本机服务端口${port ? ` ${port}` : ''}已被占用。请关闭此前的 EpuberDSH 工作区后重试。`);
   }
   for (const match of diagnostic.matchAll(/Cannot find (?:module|package) ['"]([^'"\n]+)['"]/gu)) {
     if (/^(?:@[\w.-]+\/)?[\w.-]+(?:\/[\w.-]+)*$/u.test(match[1]!)) reasons.push(`缺少运行依赖：${match[1]}。请使用包含完整依赖的安装包。`);

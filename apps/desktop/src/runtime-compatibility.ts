@@ -52,7 +52,7 @@ export function syncBundledCompatibility(sourceProfile: string, targetProfile: s
     if (existsSync(target)) current = readGrants(target)
     if (existsSync(previousBundledFile)) previousBundled = readGrants(previousBundledFile)
   } catch (error) {
-    console.warn(`WorkDSH cannot update ${target}; repair its compatibility metadata to receive bundled plugin grants: ${String(error)}`)
+    console.warn(`EpuberDSH cannot update ${target}; repair its compatibility metadata to receive bundled plugin grants: ${String(error)}`)
     return
   }
   for (const [key, versions] of Object.entries(bundled)) {
