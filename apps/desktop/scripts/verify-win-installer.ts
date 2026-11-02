@@ -45,6 +45,18 @@ function readVersion(desktopRoot: string): string {
   return manifest.version
 }
 
+/** Electron Builder names the artifact and the executable after the configured product name. */
+function readProductName(desktopRoot: string): string {
+  const manifest = JSON.parse(readFileSync(join(desktopRoot, 'package.json'), 'utf8')) as {
+    build?: { productName?: unknown }
+  }
+  const productName = manifest.build?.productName
+  if (typeof productName !== 'string' || productName.length === 0) {
+    throw new Error(`desktop package at ${desktopRoot} has no build.productName`)
+  }
+  return productName
+}
+
 /** Verify that a generated Windows artifact has a valid PE header. */
 export function assertPortableExecutable(path: string, label: string): void {
   const stat = statSync(path)
@@ -89,11 +101,14 @@ export function verifyWindowsInstaller(
   options: WindowsInstallerVerificationOptions = defaultOptions(),
 ): WindowsInstallerArtifacts {
   const distDir = join(options.desktopRoot, 'dist')
+  // Both names come from the build configuration: a renamed product must not need
+  // this verifier edited in lockstep, which is exactly how the two drifted apart.
+  const productName = readProductName(options.desktopRoot)
   const installerPath = join(
     distDir,
-    `WorkDSH-${options.version}-x64-Setup.exe`,
+    `${productName}-${options.version}-x64-Setup.exe`,
   )
-  const applicationPath = join(distDir, 'win-unpacked', 'WorkDSH.exe')
+  const applicationPath = join(distDir, 'win-unpacked', `${productName}.exe`)
 
   assertPortableExecutable(installerPath, 'Windows NSIS installer')
   assertPortableExecutable(applicationPath, 'unpacked Windows application')

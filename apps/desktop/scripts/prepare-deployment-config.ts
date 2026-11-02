@@ -4,8 +4,13 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseDeploymentConfig } from '../src/deployment-config.ts'
 
-export function prepareDeploymentConfig(outputDirectory: string, inputFile?: string): void {
+export function prepareDeploymentConfig(
+  outputDirectory: string,
+  inputFile?: string,
+  registryToken: string | undefined = process.env.WORKDSH_SKILLHUB_TOKEN,
+): void {
   const output = join(outputDirectory, 'workdsh-config.json')
+  const packagedToken = join(outputDirectory, 'workdsh-skillhub.json')
   // A personal build, or a failed company build, must never reuse another
   // organization's previously generated configuration.
   rmSync(output, { force: true })
@@ -17,6 +22,11 @@ export function prepareDeploymentConfig(outputDirectory: string, inputFile?: str
   const config = parseDeploymentConfig(input)
   mkdirSync(outputDirectory, { recursive: true })
   writeFileSync(output, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
+  // The skill registry is internal, so a member needs a token before the catalog answers.
+  // An enterprise build ships one and a member never types it; the file always exists so
+  // packaging stays deterministic, and the base installer ships it empty.
+  const token = registryToken?.trim()
+  writeFileSync(packagedToken, JSON.stringify(token ? { token } : {}, null, 2) + '\n', { mode: 0o600 })
 }
 
 export default function beforePack(): void {

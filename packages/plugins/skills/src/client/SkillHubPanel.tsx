@@ -41,7 +41,7 @@ function SetupCard({ client, settings, onSaved }: { client: SkillHubClient; sett
 
   return <section className="skillhub-config" aria-label="连接技能中心">
     <h2>{settings?.configured ? '修改技能中心连接' : '连接企业技能中心'}</h2>
-    <p className="muted">技能中心负责技能的版本、上架审核与授权。这里只保存服务地址与令牌变量；令牌写入本机凭据存储，不进入任何项目文件。</p>
+    <p className="muted">技能中心负责技能的版本、上架审核与授权。这里的技能默认只对空间成员可见，需要访问令牌才能浏览与安装；令牌写入本机凭据存储，不进入任何项目文件。</p>
     <label className="skillhub-field"><span>服务地址</span>
       <Input value={registryUrl} placeholder="https://skillhub.example.com" spellCheck={false} onChange={event => setRegistryUrl(event.currentTarget.value)} />
     </label>

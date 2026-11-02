@@ -31,7 +31,8 @@ function argument(name, fallback) {
 const registry = (argument('registry', process.env.SKILLHUB_URL) ?? 'http://127.0.0.1:8080').replace(/\/+$/, '');
 const namespace = argument('namespace', process.env.SKILLHUB_NAMESPACE) ?? 'epuberdsh';
 const token = argument('token', process.env.SKILLHUB_TOKEN);
-const visibility = argument('visibility');
+/** Team skills are internal by default; publishing them to the public catalog must be deliberate. */
+const visibility = argument('visibility') ?? 'namespace-only';
 const only = argument('only');
 const dryRun = process.argv.includes('--dry-run');
 /** The registry rate-limits publishing; a burst of 16 uploads trips it. */

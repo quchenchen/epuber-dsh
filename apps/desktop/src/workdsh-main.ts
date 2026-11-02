@@ -175,6 +175,19 @@ function openWindow(url: string, connection: DesktopConnection = { mode: 'person
   page.on('closed', () => { enterpriseWindows.delete(page); if (window === page) window = undefined })
 }
 
+/**
+ * A deployment may ship one registry token so members never type it. The base installer
+ * ships the file empty; packaging writes it from WORKDSH_SKILLHUB_TOKEN.
+ */
+function packagedRegistryToken(): string | undefined {
+  try {
+    const file = join(process.resourcesPath ?? '', 'workdsh-skillhub.json')
+    if (!existsSync(file)) return undefined
+    const value = JSON.parse(readFileSync(file, 'utf8')) as { token?: unknown }
+    return typeof value.token === 'string' && value.token.trim() ? value.token.trim() : undefined
+  } catch { return undefined }
+}
+
 function runtimeEnvironment(home: string): NodeJS.ProcessEnv {
   return {
     ...(enterprise ? enterpriseEnvironment(enterprise.root, bundledNodeExecutable(), process.env) : process.env),
@@ -183,6 +196,7 @@ function runtimeEnvironment(home: string): NodeJS.ProcessEnv {
     DSH_BUNDLED_PRIMARY_RUNTIME: bundledPrimaryRuntime(),
     DSH_ELECTRON_EXECUTABLE: process.execPath,
     WORKDSH_ELECTRON_APP: app.isPackaged ? undefined : app.getAppPath(),
+    WORKDSH_SKILLHUB_TOKEN: packagedRegistryToken(),
     ELECTRON_RUN_AS_NODE: undefined,
   }
 }

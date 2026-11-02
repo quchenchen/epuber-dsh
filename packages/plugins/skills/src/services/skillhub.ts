@@ -189,10 +189,15 @@ export class SkillHubManager extends Service implements SkillHubManagementServic
       credentialConfigured = info.configured !== false;
       credentialWritable = info.writable !== false;
     } catch { available = false; }
+    // A packaged build ships a token through the carrier, so a member is not asked for one.
+    credentialConfigured ||= Boolean(process.env.WORKDSH_SKILLHUB_TOKEN?.trim())
     try { await this.table(); } catch { persisted = false; }
     return {
       available, persisted,
-      configured: Boolean(current.updatedAt) || this.hasDeploymentRegistry(),
+      // A saved address alone does not make the catalog readable: these skills are scoped to
+      // their namespace, so an anonymous query legitimately answers nothing. Requiring the
+      // token keeps the panel from showing an unexplained empty list.
+      configured: credentialConfigured && Boolean(current.updatedAt || this.hasDeploymentRegistry()),
       registryUrl: current.registryUrl,
       namespace: current.namespace, credentialRef: current.credentialRef, credentialConfigured, credentialWritable,
       ...(current.updatedAt ? { updatedAt: current.updatedAt } : {}),
@@ -241,8 +246,13 @@ export class SkillHubManager extends Service implements SkillHubManagementServic
   }
 
   private async token(name: string): Promise<string | undefined> {
-    try { return (await this.ctx.credentials.resolve(this.ref(name)))?.value; }
-    catch { return undefined; }
+    try {
+      const stored = (await this.ctx.credentials.resolve(this.ref(name)))?.value
+      if (stored) return stored
+    } catch { /* A missing credential backend must not hide a deployment-provided token. */ }
+    // A packaged enterprise build ships one so a member never types it. A credential the
+    // member saved themselves still wins above, so an override is never silently ignored.
+    return process.env.WORKDSH_SKILLHUB_TOKEN?.trim() || undefined
   }
 
   private async call(path: string, signal: AbortSignal | undefined, timeoutMs: number): Promise<unknown> {

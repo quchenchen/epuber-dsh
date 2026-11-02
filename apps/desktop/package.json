@@ -179,6 +179,10 @@
     },
     "extraResources": [
       {
+        "from": "build/deployment/workdsh-skillhub.json",
+        "to": "workdsh-skillhub.json"
+      },
+      {
         "from": "build/deployment/workdsh-config.json",
         "to": "workdsh-config.json"
       },

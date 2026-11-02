@@ -15,6 +15,9 @@ function portableExecutable(): Buffer {
   return executable
 }
 
+/** Electron Builder derives both names from build.productName, so the fixture must declare it. */
+const PRODUCT_NAME = 'EpuberDSH'
+
 function fixture(version = '2.0.0'): {
   readonly root: string
   readonly installer: string
@@ -22,11 +25,12 @@ function fixture(version = '2.0.0'): {
 } {
   const root = mkdtempSync(join(tmpdir(), 'dsh-win-installer-'))
   temporaryRoots.push(root)
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'dsh-plugin-desktop', version, build: { productName: PRODUCT_NAME } }))
   const dist = join(root, 'dist')
   const unpacked = join(dist, 'win-unpacked')
   mkdirSync(unpacked, { recursive: true })
-  const installer = join(dist, `WorkDSH-${version}-x64-Setup.exe`)
-  const application = join(unpacked, 'WorkDSH.exe')
+  const installer = join(dist, `${PRODUCT_NAME}-${version}-x64-Setup.exe`)
+  const application = join(unpacked, `${PRODUCT_NAME}.exe`)
   writeFileSync(installer, portableExecutable())
   writeFileSync(application, portableExecutable())
   const runtime = join(unpacked, 'resources', 'workdsh-runtime', 'primary-runtime')
@@ -56,7 +60,7 @@ describe('Windows installer artifact verification', () => {
     const value = fixture('1.9.0')
 
     expect(() => verifyWindowsInstaller({ desktopRoot: value.root, version: '2.0.0' }))
-      .toThrow('WorkDSH-2.0.0-x64-Setup.exe')
+      .toThrow(`${PRODUCT_NAME}-2.0.0-x64-Setup.exe`)
   })
 
   it('rejects an artifact without a Windows PE header', () => {
