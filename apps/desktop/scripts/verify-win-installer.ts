@@ -3,7 +3,7 @@
 import { closeSync, openSync, readFileSync, readSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DSH_VERSION } from './runtime-version.mjs'
+import { assertOfficialPrimaryRuntime } from './official-runtime-provenance.mjs'
 
 /** Verify a complete in-memory Windows PE image. */
 export function assertPortableExecutableBuffer(data: Buffer, label: string, source: string): void {
@@ -113,16 +113,12 @@ export function verifyWindowsInstaller(
   assertPortableExecutable(installerPath, 'Windows NSIS installer')
   assertPortableExecutable(applicationPath, 'unpacked Windows application')
   const runtimeRoot = join(distDir, 'win-unpacked', 'resources', 'workdsh-runtime', 'primary-runtime')
-  const runtime = JSON.parse(readFileSync(join(runtimeRoot, 'runtime.json'), 'utf8')) as {
-    desktopVersion?: unknown
-    platform?: unknown
-    arch?: unknown
-    python?: unknown
-    node?: unknown
-  }
-  if (runtime.desktopVersion !== DSH_VERSION || runtime.platform !== 'win32'
-    || runtime.arch !== 'x64' || runtime.python !== '3.12.14' || runtime.node !== '24.21.0') {
-    throw new Error(`Windows installer has mismatched bundled primary runtime: ${JSON.stringify(runtime)}`)
+  const runtime: unknown = JSON.parse(readFileSync(join(runtimeRoot, 'runtime.json'), 'utf8'))
+  // The bundled interpreters come from an official Desktop archive, which is versioned on
+  // its own release line. Comparing it against the npm DSH version rejects a correct build.
+  try { assertOfficialPrimaryRuntime(runtime, 'win-x64') }
+  catch (error) {
+    throw new Error(`Windows installer has mismatched bundled primary runtime: ${JSON.stringify(runtime)} (${(error as Error).message})`)
   }
   assertPortableExecutable(join(runtimeRoot, 'dependencies', 'python', 'python.exe'), 'bundled Python')
   assertPortableExecutable(join(runtimeRoot, 'dependencies', 'node', 'bin', 'node.exe'), 'bundled Node')
