@@ -49,3 +49,6 @@ apps/desktop/build/official-release-cache/
 
 # Local agent session memory (WorkBuddy), never source.
 /.workbuddy/
+
+# Local CI artifact downloads
+dist-windows/
