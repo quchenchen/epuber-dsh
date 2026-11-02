@@ -190,6 +190,24 @@
     ]
   },
   {
+    "path": "../../packages/plugins/knowledge",
+    "title": "知识库",
+    "status": "implemented",
+    "directories": [
+      "src/client",
+      "src/remote",
+      "src/runtime",
+      "src/services",
+      "src/storage",
+      "src/tools",
+      "tests"
+    ],
+    "requirements": [
+      "R07"
+    ],
+    "moduleVersion": "0.1"
+  },
+  {
     "path": "../../packages/plugins/library",
     "title": "资料库",
     "status": "implemented",

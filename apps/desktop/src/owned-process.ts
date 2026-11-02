@@ -82,9 +82,25 @@ async function cleanWindowsTree(child: ChildProcess): Promise<void> {
   if (!state) throw new Error('Windows 本机进程缺少所有权记录，未停止未知进程')
   const deadline = Date.now() + 12_000
   const budget = (): number => { const remaining = deadline - Date.now(); if (remaining <= 0) throw new Error('Windows 本机进程树清理超时'); return Math.min(4000, remaining) }
+  /**
+   * The first CIM query in a session pays for cold WMI start-up, which can exceed the
+   * per-query budget on a freshly booted or heavily loaded machine. One retry inside the
+   * same deadline separates that warm-up from a query that is genuinely stuck.
+   */
+  const snapshot = async (pids: number[]): Promise<WindowsProcessIdentity[]> => {
+    try { return await windowsSnapshot(pids, budget()) }
+    catch (error) {
+      if (!/查询超时/u.test((error as Error).message)) throw error
+      // The retry spends what is left of the deadline rather than repeating the same
+      // cap: a warm-up that overran 4s needs more than another 4s to finish.
+      const remaining = deadline - Date.now()
+      if (remaining <= 0) throw error
+      return windowsSnapshot(pids, remaining)
+    }
+  }
   for (let pass = 0; pass < 8; pass++) {
     const queried = new Set([state.pid, ...state.known.map(row => row.pid)])
-    const rows = await windowsSnapshot([...queried], budget())
+    const rows = await snapshot([...queried])
     const selected = selectOwnedWindowsProcesses(rows, state, state.known)
     for (const row of selected) if (!state.known.some(known => known.pid === row.pid && known.createdAt === row.createdAt)) state.known.push(row)
     if (state.known.length > 128) throw new Error('Windows 本机进程树超出安全清理范围')
