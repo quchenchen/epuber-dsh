@@ -70,6 +70,9 @@ export const skillsBrandCss = `${brandCss}
 .wd-skills .switch{background:var(--wd-brand)}
 .wd-skills .switch[aria-checked="false"]{background:var(--wd-border-strong)}
 .wd-skills .switch::after{box-shadow:0 1px 2px rgba(16,24,40,.18)}
+/* Built-in skills are read-only: the panel used to draw a disabled switch for them, which
+   reads as "broken / unavailable". They now get a quiet tag instead of a dead control. */
+.wd-skills .builtin-tag{flex:none;padding:1px 8px;border:1px solid var(--wd-border);border-radius:999px;color:var(--wd-text-tertiary);font-size:11px;line-height:18px;white-space:nowrap;letter-spacing:.02em}
 
 /* ---------- dialogs ---------- */
 .wd-skills .skill-mark.large{font-size:22px}
