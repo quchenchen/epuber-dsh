@@ -27,4 +27,4 @@ Desktop 与 Web 的 DSH Host、Client 和 SDK npm 包统一为 `0.2.2-alpha.2`�
 
 当前产品仍为 Alpha。升级前请备份本地配置和数据。第三方插件仍须满足当前 DSH 版本要求。
 
-开源地址：[github.com/techflag/workdsh](https://github.com/techflag/workdsh)
+开源地址：[github.com/quchenchen/epuber-dsh](https://github.com/quchenchen/epuber-dsh)

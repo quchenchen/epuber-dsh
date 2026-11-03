@@ -4,11 +4,11 @@
 
 ## 普通用户：使用、反馈与传播
 
-- 遇到问题或异常，[提 issue](https://github.com/techflag/workdsh/issues)：说明操作系统（macOS / Windows）、应用版本和复现步骤。
+- 遇到问题或异常，[提 issue](https://github.com/quchenchen/epuber-dsh/issues)：说明操作系统（macOS / Windows）、应用版本和复现步骤。
 - 有功能想法或改进建议，也欢迎提 issue 讨论。
 - 参与[社区交流](README.zh-CN.md#社区与致谢)（微信群、QQ 群、Discord），帮助其他用户解决问题。
 - 写使用教程、体验文章，或帮助完善和翻译文档。
-- 通过 [issue](https://github.com/techflag/workdsh/issues) 推荐生态项目。
+- 通过 [issue](https://github.com/quchenchen/epuber-dsh/issues) 推荐生态项目。
 
 ## 插件作者：扩展生态
 
@@ -49,7 +49,7 @@ corepack yarn dev     # 有图形环境时启动应用
 
 ## 加入技术团队
 
-如果你希望参与维护 EpuberDSH，请在 [GitHub Issues](https://github.com/techflag/workdsh/issues) 提出建议或说明可参与的方向。
+如果你希望参与维护 EpuberDSH，请在 [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues) 提出建议或说明可参与的方向。
 
 ## 行为准则
 

@@ -4,9 +4,9 @@
 <p align="center">参考 WorkBuddy 的工作体验，基于 DeepSeek Harness 的开放插件体系：个人开箱使用，安装企业连接插件后接入公司模型、协作与 @同事。</p>
 <p align="center"><a href="#下载桌面版">下载桌面版</a> · <a href="#从资料到成果">了解工作流</a> · <a href="#个人与企业使用">个人与企业</a> · <a href="docs/user-guide.md">使用指南</a> · <a href="README.md">English</a></p>
 
-[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.3-0B6FE0)](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) [![GitHub stars](https://img.shields.io/github/stars/techflag/workdsh?label=stars)](https://github.com/techflag/workdsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.4-0B6FE0)](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.4) [![GitHub stars](https://img.shields.io/github/stars/quchenchen/epuber-dsh?label=stars)](https://github.com/quchenchen/epuber-dsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[![GitHub Actions](https://github.com/techflag/workdsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/techflag/workdsh/actions/workflows/ci.yml) [![Gitee stars](https://gitee.com/techflag/workdsh/badge/star.svg?theme=dark)](https://gitee.com/techflag/workdsh/stargazers) [![Gitee forks](https://gitee.com/techflag/workdsh/badge/fork.svg?theme=dark)](https://gitee.com/techflag/workdsh/members)
+[![GitHub Actions](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml)
 
 ## 每个人，都能定制自己的 AI 服务
 
@@ -24,15 +24,15 @@
 
 | 我要反馈 | 点击这里 | 建议提供 |
 | --- | --- | --- |
-| 🐛 功能异常、安装失败或界面问题 | [提交 Bug](https://github.com/techflag/workdsh/issues/new?template=bug_report.yml) | 应用版本、个人/企业模式、操作步骤及报错截图。 |
-| 💡 新功能或体验改进 | [提交功能建议](https://github.com/techflag/workdsh/issues/new?template=feature_request.yml) | 你的使用场景、目前的困难、希望达到的效果。 |
-| 🔎 查看已有反馈与处理进展 | [查看 Issues](https://github.com/techflag/workdsh/issues) | 先搜索相同问题；已有反馈可补充信息或点赞。 |
+| 🐛 功能异常、安装失败或界面问题 | [提交 Bug](https://github.com/quchenchen/epuber-dsh/issues/new?template=bug_report.yml) | 应用版本、个人/企业模式、操作步骤及报错截图。 |
+| 💡 新功能或体验改进 | [提交功能建议](https://github.com/quchenchen/epuber-dsh/issues/new?template=feature_request.yml) | 你的使用场景、目前的困难、希望达到的效果。 |
+| 🔎 查看已有反馈与处理进展 | [查看 Issues](https://github.com/quchenchen/epuber-dsh/issues) | 先搜索相同问题；已有反馈可补充信息或点赞。 |
 
-GitHub 提交需要登录账号。暂时不知道属于哪类？[从反馈入口开始](https://github.com/techflag/workdsh/issues/new/choose)。公司账号、权限或模型转发的后台问题，请到 [EpuberDSH Admin 提交](https://github.com/techflag/workdsh-admin/issues)。**Issue 是公开的，请勿上传密码、Token、API Key 或公司敏感资料。**
+GitHub 提交需要登录账号。暂时不知道属于哪类？[从反馈入口开始](https://github.com/quchenchen/epuber-dsh/issues/new/choose)。公司账号、权限或模型转发的后台问题，请到 [EpuberDSH Admin 提交](https://github.com/techflag/workdsh-admin/issues)。**Issue 是公开的，请勿上传密码、Token、API Key 或公司敏感资料。**
 
 **个人工作台 + 可安装的企业能力，是 EpuberDSH 的特色。** 资料库、项目、专家、技能和连接器共用同一套功能；企业连接插件按需安装，登录公司账号后使用协作、@同事分享正文与文件，并可在模型设置中添加公司模型。独立业务插件还能通过 `epuberdshEnterprise` 复用成员认证，连接自己的公司业务接口。
 
-企业插件目前**未上架插件市场**：[下载企业连接包](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz)，在“插件 → 添加插件”填写下载文件的完整路径，安装并启用，再到“设置 → 企业账号”连接公司后台。[安装与登录步骤](#企业连接插件下载安装与登录) · [业务插件认证调用](#企业插件开放认证服务业务插件不用重复登录) · [独立管理后台](https://github.com/techflag/workdsh-admin)
+企业插件目前**未上架插件市场**：[下载企业连接包](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz)，在“插件 → 添加插件”填写下载文件的完整路径，安装并启用，再到“设置 → 企业账号”连接公司后台。[安装与登录步骤](#企业连接插件下载安装与登录) · [业务插件认证调用](#企业插件开放认证服务业务插件不用重复登录) · [独立管理后台](https://github.com/techflag/workdsh-admin)
 
 ![EpuberDSH 项目主页：项目、模板与完整桌面侧栏](apps/web/assets/screenshots/epuberdsh-projects-alpha8-dark.png)
 
@@ -161,9 +161,9 @@ Windows：C:\Users\你的用户名\Downloads\epuberdsh-enterprise-connection-0.1
 
 请换成自己电脑上的真实路径，不要直接复制示例用户名。macOS 可在 Finder 选中文件，按 `Option + Command + C` 复制完整路径；Windows 可右键文件选择“复制文件地址”，若带外层引号，粘贴时去掉引号。将路径粘贴到“插件 → 添加插件”的输入框，点击安装，再点击“立即启用”。不是填写插件名称，也不是把文件上传到管理后台。
 
-[下载本版企业连接插件 tgz](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz)。如果浏览器自动解压，请保留或重新下载原始 `.tgz` 文件，不要填写解压后的文件夹路径。
+[下载本版企业连接插件 tgz](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz)。如果浏览器自动解压，请保留或重新下载原始 `.tgz` 文件，不要填写解压后的文件夹路径。
 
-企业连接包由本项目 [GitHub Releases](https://github.com/techflag/workdsh/releases) 独立交付，不依赖第三方插件市场。下载 `epuberdsh-enterprise-connection-<版本>.tgz`，在添加插件时填写完整路径；Desktop 2.0.6-alpha.5 起会将本地插件包复制到应用自己的账号缓存目录，安装成功后移动或删除原始下载文件不会影响后续插件安装；发行附件包含兼容 DSH 版本的清单及 `SHA256SUMS`。
+企业连接包由本项目 [GitHub Releases](https://github.com/quchenchen/epuber-dsh/releases) 独立交付，不依赖第三方插件市场。下载 `epuberdsh-enterprise-connection-<版本>.tgz`，在添加插件时填写完整路径；Desktop 2.0.6-alpha.5 起会将本地插件包复制到应用自己的账号缓存目录，安装成功后移动或删除原始下载文件不会影响后续插件安装；发行附件包含兼容 DSH 版本的清单及 `SHA256SUMS`。
 
 在个人空间打开“插件 → 添加插件”，输入管理员提供的“企业连接”包路径或安装地址，确认来源并安装，安装完成后点击“立即启用”。一个包提供账号和协作，无需分别安装。完成后进入“设置 → 企业账号”，点击“连接企业”，填写后台地址并登录。安装过程复用官方进度与错误提示，不需要终端命令。目前企业插件未发布到可搜索目录，不能仅凭名称搜索安装。
 
@@ -247,19 +247,17 @@ EpuberDSH Admin：组织概览。
 
 ## 下载桌面版
 
-桌面安装包 **3.0.0-alpha.3** 已发布，并设为 Latest（Alpha 版本）。[GitHub Release](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) 提供以下完整安装包：
+桌面安装包 **3.0.0-alpha.4** 已发布，为预发布（Alpha）版本。[GitHub Release](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.4) 提供以下完整安装包：
 
 | 平台 | 下载 |
 | --- | --- |
-| Windows x64 | [EpuberDSH Setup.exe](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.3-x64-Setup.exe) |
-| macOS Apple Silicon | [EpuberDSH arm64.dmg](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.3-arm64.dmg) |
-| macOS Intel | [EpuberDSH x64.dmg](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.3-x64.dmg) |
+| Windows x64 | [EpuberDSH Setup.exe](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.4-x64-Setup.exe) |
+| macOS Apple Silicon | [EpuberDSH arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.4-arm64.dmg) |
+| macOS Intel | [EpuberDSH x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.4-x64.dmg) |
 
-**国内下载（旧版镜像）**：[Gitee 2.0.6-alpha.3 发行](https://gitee.com/techflag/workdsh/releases/tag/desktop-v2.0.6-alpha.3) 提供 Windows x64 和 macOS Apple Silicon 分卷。受当前仓库单附件 100 MB、附件总量 1 GB 限制，需下载对应平台的全部分卷及合并脚本，按发行页说明恢复安装包；脚本通过 SHA256 校验后才生成安装文件。Intel Mac 或希望下载单个完整安装包的用户，请使用上表 GitHub 链接。企业插件 TGZ/ZIP 也可从 Gitee 发行页直接下载。
+**开发与反馈**：GitHub 是唯一主开发仓库与发行渠道，欢迎通过 [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues) 反馈问题。
 
-**开发与反馈**：GitHub 是唯一主开发仓库，Gitee 同步源码和发行包。欢迎通过 [Gitee Issues](https://gitee.com/techflag/workdsh/issues) 或 [GitHub Issues](https://github.com/techflag/workdsh/issues) 反馈问题。查看[国内发行路线图](https://gitee.com/techflag/workdsh/issues/IKJN8I)、[跨平台测试征集](https://gitee.com/techflag/workdsh/issues/IKJN8J)和[业务插件认证示例任务](https://gitee.com/techflag/workdsh/issues/IKJN8K)。Gitee 的有效代码贡献经审查纳入 GitHub 后再同步，不维护第二套产品代码。
-
-Desktop 安装包默认内置 Node.js、pnpm 和 Python 运行时，普通用户无需单独安装。当前为 **Alpha 版**：项目资料引用、专家执行及不同 Office 格式的端到端体验仍在验收中。macOS DMG 未签名；更新请从 [Releases](https://github.com/techflag/workdsh/releases) 下载。开始使用前请阅读[用户指南](docs/user-guide.md)和[常见问题](docs/faq.md)。
+Desktop 安装包默认内置 Node.js、pnpm 和 Python 运行时，普通用户无需单独安装。当前为 **Alpha 版**：项目资料引用、专家执行及不同 Office 格式的端到端体验仍在验收中。macOS DMG 未签名；更新请从 [Releases](https://github.com/quchenchen/epuber-dsh/releases) 下载。开始使用前请阅读[用户指南](docs/user-guide.md)和[常见问题](docs/faq.md)。
 
 Desktop 基础包不预装企业插件，安装企业插件后启用企业登录。已有下载版本的功能以对应发行说明为准。
 
@@ -308,10 +306,10 @@ scripts/        产品构建与发布检查
 
 ## 社区与致谢
 
-感谢 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 社区提供运行时与插件底座；[腾讯 SkillHub](https://github.com/Tencent/skillhub) 提供公开的技能目录 API；[@cocofhu/skillhub](https://github.com/cocofhu/skillhub) 提供随桌面版集成的 DSH SkillHub 插件；[dsh-market](https://github.com/dsh-market/dsh-market) 与 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 社区提供插件市场与目录。WorkBuddy 是工作台设计参考。内置 skill-creator 的改编保留了原 [Apache-2.0 来源说明](packages/plugins/skills/resources/skills/skill-creator/NOTICE.md)。反馈与参与：[GitHub Issues](https://github.com/techflag/workdsh/issues) · [参与贡献](CONTRIBUTING.md)
+感谢 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 社区提供运行时与插件底座；[腾讯 SkillHub](https://github.com/Tencent/skillhub) 提供公开的技能目录 API；[@cocofhu/skillhub](https://github.com/cocofhu/skillhub) 提供随桌面版集成的 DSH SkillHub 插件；[dsh-market](https://github.com/dsh-market/dsh-market) 与 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 社区提供插件市场与目录。WorkBuddy 是工作台设计参考。内置 skill-creator 的改编保留了原 [Apache-2.0 来源说明](packages/plugins/skills/resources/skills/skill-creator/NOTICE.md)。反馈与参与：[GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues) · [参与贡献](CONTRIBUTING.md)
 
 EpuberDSH 采用 [MIT License](LICENSE)，是独立社区项目，与 DeepSeek 或 WorkBuddy 不存在隶属、合作、授权或背书关系。相关名称仅用于说明技术来源、兼容性与设计参考。GitHub Contributors 中的上游贡献者来自继承和同步的提交历史，不表示其参与本仓库维护。
 
 ## Star 趋势
 
-[![EpuberDSH Star 趋势](https://api.star-history.com/chart?repos=techflag/workdsh&type=date)](https://www.star-history.com/?repos=techflag%2Fepuberdsh&type=date)
+[![EpuberDSH Star 趋势](https://api.star-history.com/chart?repos=quchenchen/epuber-dsh&type=date)](https://www.star-history.com/?repos=quchenchen%2Fepuber-dsh&type=date)

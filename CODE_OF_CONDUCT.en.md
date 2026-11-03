@@ -61,7 +61,7 @@ representative at an online or offline event.
 ## Enforcement
 
 To report abusive, harassing, or otherwise unacceptable behavior, use
-[GitHub Issues](https://github.com/techflag/workdsh/issues) to request a private
+[GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues) to request a private
 channel with the maintainers. Do not disclose incident details or personal
 information in a public issue.
 All complaints will be reviewed and investigated promptly and fairly.

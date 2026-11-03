@@ -8,7 +8,7 @@ No. EpuberDSH is an independent community project built on [DeepSeek Harness](ht
 
 ## Which platforms are supported?
 
-Check the actual assets attached to [GitHub Releases](https://github.com/techflag/workdsh/releases). Current build targets are Windows x64 and separate macOS arm64 and x64 packages. There is no Universal or Linux installer.
+Check the actual assets attached to [GitHub Releases](https://github.com/quchenchen/epuber-dsh/releases). Current build targets are Windows x64 and separate macOS arm64 and x64 packages. There is no Universal or Linux installer.
 
 ## Must I install Node.js, Python, or DSH myself?
 
@@ -24,4 +24,4 @@ DSH home is under local application data. Library, experts, skills and MCP/conne
 
 ## How do I update?
 
-The current carrier has no automatic update manager. Download a newer installer manually from [Releases](https://github.com/techflag/workdsh/releases), backing up important data first. Report problems through [GitHub Issues](https://github.com/techflag/workdsh/issues).
+The current carrier has no automatic update manager. Download a newer installer manually from [Releases](https://github.com/quchenchen/epuber-dsh/releases), backing up important data first. Report problems through [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues).

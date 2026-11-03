@@ -4,11 +4,11 @@ Thank you for wanting to contribute to EpuberDSH. This is a community project â€
 
 ## Regular users: use, report, and spread the word
 
-- Report problems or odd behavior in an [issue](https://github.com/techflag/workdsh/issues): include your operating system (macOS / Windows), application version, and reproduction steps.
+- Report problems or odd behavior in an [issue](https://github.com/quchenchen/epuber-dsh/issues): include your operating system (macOS / Windows), application version, and reproduction steps.
 - Feature ideas and improvement suggestions are welcome as issues too.
 - Join the [community channels](README.md#community-and-acknowledgements) (WeChat group, QQ group, Discord) and help other users.
 - Write tutorials or experience posts, or help improve and translate the documentation.
-- Suggest ecosystem projects for an [issue](https://github.com/techflag/workdsh/issues).
+- Suggest ecosystem projects for an [issue](https://github.com/quchenchen/epuber-dsh/issues).
 
 ## Plugin authors: extend the ecosystem
 
@@ -45,7 +45,7 @@ corepack yarn dev     # launch the application when a graphical session is avail
 
 ## Join the technical team
 
-If you would like to help maintain EpuberDSH, open a [GitHub issue](https://github.com/techflag/workdsh/issues) to suggest an area where you can contribute.
+If you would like to help maintain EpuberDSH, open a [GitHub issue](https://github.com/quchenchen/epuber-dsh/issues) to suggest an area where you can contribute.
 
 ## Code of conduct
 

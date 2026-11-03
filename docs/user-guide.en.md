@@ -4,7 +4,7 @@
 
 ## Install and launch
 
-Download a release with actual installer assets from [GitHub Releases](https://github.com/techflag/workdsh/releases). Use the x64 Setup or Portable package on Windows. On macOS, choose the Apple Silicon (arm64) or Intel (x64) DMG for your computer. The installer includes Electron, Node, and a pinned DSH Profile; ordinary users do not need to install Node.js or Python.
+Download a release with actual installer assets from [GitHub Releases](https://github.com/quchenchen/epuber-dsh/releases). Use the x64 Setup or Portable package on Windows. On macOS, choose the Apple Silicon (arm64) or Intel (x64) DMG for your computer. The installer includes Electron, Node, and a pinned DSH Profile; ordinary users do not need to install Node.js or Python.
 
 Choose personal or enterprise use when the application starts. Both modes run the official DSH service from that Profile locally and open its page in the application window. Library, experts, skills and MCP/connectors ship by default; the enterprise account plugin ships with the runtime and activates only after enterprise login. Projects, EpuberDSH Office, activity, collaboration and notifications require explicit external plugin installation. See the [Desktop connection guide](DESKTOP-PERSONAL-ENTERPRISE.md) for enterprise login and managed company packages. Closing the Windows window exits the application; macOS follows its normal window lifecycle. The current carrier does not include the former tray, multi-Profile selector, or automatic update panel described in older documentation.
 
@@ -16,6 +16,6 @@ EpuberDSH features update with the downloaded release. To add third-party plugin
 
 ## Updates and troubleshooting
 
-The current Desktop has no automatic update manager. To upgrade, download a newer installer for your platform from [Releases](https://github.com/techflag/workdsh/releases). Back up important workspaces and application data first.
+The current Desktop has no automatic update manager. To upgrade, download a newer installer for your platform from [Releases](https://github.com/quchenchen/epuber-dsh/releases). Back up important workspaces and application data first.
 
-If no window appears, check that the installer matches your OS architecture, restart, and record the error. Include the OS, EpuberDSH version, reproduction steps, and error in a [GitHub Issue](https://github.com/techflag/workdsh/issues). See the [architecture](architecture.en.md) for development and packaging boundaries.
+If no window appears, check that the installer matches your OS architecture, restart, and record the error. Include the OS, EpuberDSH version, reproduction steps, and error in a [GitHub Issue](https://github.com/quchenchen/epuber-dsh/issues). See the [architecture](architecture.en.md) for development and packaging boundaries.

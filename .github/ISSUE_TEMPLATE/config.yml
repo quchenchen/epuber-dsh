@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: User guide / 使用指南
-    url: https://github.com/techflag/workdsh/blob/main/docs/user-guide.md
+    url: https://github.com/quchenchen/epuber-dsh/blob/main/docs/user-guide.md
     about: Read the usage guide before submitting / 提交前可查看使用指南
   - name: EpuberDSH Admin backend / 企业管理后台问题
     url: https://github.com/techflag/workdsh-admin/issues

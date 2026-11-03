@@ -4,9 +4,9 @@
 <p align="center">Inspired by WorkBuddy’s workflow and built on DeepSeek Harness plugins: start with personal use, then install Enterprise Connection for company models, collaboration, and colleague mentions.</p>
 <p align="center"><a href="#download-desktop">Download Desktop</a> · <a href="#from-material-to-deliverable">Explore the workflow</a> · <a href="#personal-and-enterprise-use">Personal and enterprise</a> · <a href="docs/user-guide.en.md">User guide</a> · <a href="README.zh-CN.md">简体中文</a></p>
 
-[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.3-0B6FE0)](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) [![GitHub stars](https://img.shields.io/github/stars/techflag/workdsh?label=stars)](https://github.com/techflag/workdsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.4-0B6FE0)](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.4) [![GitHub stars](https://img.shields.io/github/stars/quchenchen/epuber-dsh?label=stars)](https://github.com/quchenchen/epuber-dsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[![GitHub Actions](https://github.com/techflag/workdsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/techflag/workdsh/actions/workflows/ci.yml) [![Gitee stars](https://gitee.com/techflag/workdsh/badge/star.svg?theme=dark)](https://gitee.com/techflag/workdsh/stargazers) [![Gitee forks](https://gitee.com/techflag/workdsh/badge/fork.svg?theme=dark)](https://gitee.com/techflag/workdsh/members)
+[![GitHub Actions](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml)
 
 ## Everyone can tailor their own AI service
 
@@ -24,15 +24,15 @@ Describe what you need, confirm the scope, and let the native AI build a workben
 
 | Feedback | Where to submit | What helps |
 | --- | --- | --- |
-| 🐛 Broken features, installation or UI problems | [Report a bug](https://github.com/techflag/workdsh/issues/new?template=bug_report.yml) | App version, personal/enterprise mode, reproduction steps and error screenshots. |
-| 💡 New features or usability improvements | [Request a feature](https://github.com/techflag/workdsh/issues/new?template=feature_request.yml) | Your use case, current difficulty and desired outcome. |
-| 🔎 Existing reports and progress | [Browse Issues](https://github.com/techflag/workdsh/issues) | Search first; add details or a reaction to an existing report. |
+| 🐛 Broken features, installation or UI problems | [Report a bug](https://github.com/quchenchen/epuber-dsh/issues/new?template=bug_report.yml) | App version, personal/enterprise mode, reproduction steps and error screenshots. |
+| 💡 New features or usability improvements | [Request a feature](https://github.com/quchenchen/epuber-dsh/issues/new?template=feature_request.yml) | Your use case, current difficulty and desired outcome. |
+| 🔎 Existing reports and progress | [Browse Issues](https://github.com/quchenchen/epuber-dsh/issues) | Search first; add details or a reaction to an existing report. |
 
-A GitHub account is required to submit. Unsure which category fits? [Start here](https://github.com/techflag/workdsh/issues/new/choose). For backend account, permission or model-forwarding issues, report to [EpuberDSH Admin](https://github.com/techflag/workdsh-admin/issues). **Issues are public: do not upload passwords, tokens, API keys or confidential company material.**
+A GitHub account is required to submit. Unsure which category fits? [Start here](https://github.com/quchenchen/epuber-dsh/issues/new/choose). For backend account, permission or model-forwarding issues, report to [EpuberDSH Admin](https://github.com/techflag/workdsh-admin/issues). **Issues are public: do not upload passwords, tokens, API keys or confidential company material.**
 
 **A personal workspace with installable enterprise capabilities is a defining EpuberDSH feature.** Projects, the library, experts, skills, and connectors share the same implementation. Install Enterprise Connection and sign in to share text and files with `@` colleagues and use Collaboration; add company models through model settings. Independent business plugins can also reuse member authentication through `epuberdshEnterprise` to call company business APIs.
 
-The enterprise plugin is **not listed in a plugin marketplace**. [Download Enterprise Connection](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz), enter the downloaded file’s full path in “Plugins → Add plugin”, install and activate it, then connect through “Settings → Enterprise account”. [Installation and login](#enterprise-connection-download-install-and-sign-in) · [Business plugin authentication](#enterprise-authentication-that-independent-plugins-can-reuse) · [Separate admin backend](https://github.com/techflag/workdsh-admin)
+The enterprise plugin is **not listed in a plugin marketplace**. [Download Enterprise Connection](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz), enter the downloaded file’s full path in “Plugins → Add plugin”, install and activate it, then connect through “Settings → Enterprise account”. [Installation and login](#enterprise-connection-download-install-and-sign-in) · [Business plugin authentication](#enterprise-authentication-that-independent-plugins-can-reuse) · [Separate admin backend](https://github.com/techflag/workdsh-admin)
 
 ![EpuberDSH projects home with project templates and the complete desktop sidebar](apps/web/assets/screenshots/epuberdsh-projects-alpha8-dark.png)
 
@@ -161,9 +161,9 @@ Windows: C:\Users\your-name\Downloads\epuberdsh-enterprise-connection-0.1.0-alph
 
 Use your actual username and location. On macOS, select the file in Finder and press `Option + Command + C`; on Windows, right-click and choose Copy as path, removing surrounding quotes before pasting. Paste the full path into Plugins → Add plugin, install, then click Enable now. Do not enter only the package name or upload the archive to the admin backend.
 
-[Download this release's Enterprise Connection tgz](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz). Retain the original `.tgz` if your browser extracts downloads; an extracted folder path is not the archive path.
+[Download this release's Enterprise Connection tgz](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz). Retain the original `.tgz` if your browser extracts downloads; an extracted folder path is not the archive path.
 
-The Enterprise Connection package is delivered independently through our [GitHub Releases](https://github.com/techflag/workdsh/releases), without a third-party marketplace. Download `epuberdsh-enterprise-connection-<version>.tgz` and enter its full path in Add plugin. Starting with Desktop 2.0.6-alpha.5, local plugin archives are copied into the application’s account-specific cache; moving or deleting the original download after successful installation does not block later plugin installations. Release assets include the compatible DSH version manifest and `SHA256SUMS`.
+The Enterprise Connection package is delivered independently through our [GitHub Releases](https://github.com/quchenchen/epuber-dsh/releases), without a third-party marketplace. Download `epuberdsh-enterprise-connection-<version>.tgz` and enter its full path in Add plugin. Starting with Desktop 2.0.6-alpha.5, local plugin archives are copied into the application’s account-specific cache; moving or deleting the original download after successful installation does not block later plugin installations. Release assets include the compatible DSH version manifest and `SHA256SUMS`.
 
 In personal mode, open **Plugins → Add plugin**, enter the administrator-provided Enterprise Connection package path or installation address, verify the source and install, then click **Enable now** when installation finishes. One package provides account and collaboration plugins. Then open **Settings → Enterprise account → Connect enterprise**, enter the backend address and sign in. Installation uses the official progress and error feedback; no terminal command is required. Enterprise plugins are not yet published to a searchable catalog.
 
@@ -239,19 +239,17 @@ EpuberDSH Admin — organization overview:
 
 ## Download Desktop
 
-Desktop **3.0.0-alpha.3** is published as the Latest release (Alpha version). The [GitHub Release](https://github.com/techflag/workdsh/releases/tag/desktop-v3.0.0-alpha.3) provides these complete installers:
+Desktop **3.0.0-alpha.4** is published as a pre-release (Alpha). The [GitHub Release](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.4) provides these complete installers:
 
 | Platform | Download |
 | --- | --- |
-| Windows x64 | [EpuberDSH Setup.exe](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.3-x64-Setup.exe) |
-| macOS Apple Silicon | [EpuberDSH arm64.dmg](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.3-arm64.dmg) |
-| macOS Intel | [EpuberDSH x64.dmg](https://github.com/techflag/workdsh/releases/download/desktop-v3.0.0-alpha.3/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.3-x64.dmg) |
+| Windows x64 | [EpuberDSH Setup.exe](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.4-x64-Setup.exe) |
+| macOS Apple Silicon | [EpuberDSH arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.4-arm64.dmg) |
+| macOS Intel | [EpuberDSH x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.4-x64.dmg) |
 
-**Downloads in China (older mirror)**: the [Gitee 2.0.6-alpha.3 release](https://gitee.com/techflag/workdsh/releases/tag/desktop-v2.0.6-alpha.3) provides split archives for Windows x64 and macOS Apple Silicon. The current repository allows 100 MB per attachment and 1 GB total; download every part for your platform and its merge script, then follow the release instructions. The script verifies SHA256 before producing the installer. For Intel Mac or a complete single-file installer, use the GitHub links above. Enterprise plugin TGZ/ZIP files are also available directly on the Gitee release page.
+**Development and feedback**: GitHub is the sole development source and release channel. Report problems through [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues).
 
-**Development and feedback**: GitHub is the sole development source; Gitee mirrors source and release assets. Report problems through [Gitee Issues](https://gitee.com/techflag/workdsh/issues) or [GitHub Issues](https://github.com/techflag/workdsh/issues). See the [China distribution roadmap](https://gitee.com/techflag/workdsh/issues/IKJN8I), [cross-platform testing request](https://gitee.com/techflag/workdsh/issues/IKJN8J), and [business-plugin authentication example task](https://gitee.com/techflag/workdsh/issues/IKJN8K). Accepted Gitee code contributions enter GitHub through review before synchronization; there is no second product codebase.
-
-Desktop installers include Node.js, pnpm and Python runtimes by default, so users do not need to install them separately. This is an **Alpha release**: end-to-end project document references, expert execution, and different Office formats are still being validated. The macOS DMGs are unsigned; download updates from [Releases](https://github.com/techflag/workdsh/releases). Start with the [user guide](docs/user-guide.en.md) and [FAQ](docs/faq.en.md).
+Desktop installers include Node.js, pnpm and Python runtimes by default, so users do not need to install them separately. This is an **Alpha release**: end-to-end project document references, expert execution, and different Office formats are still being validated. The macOS DMGs are unsigned; download updates from [Releases](https://github.com/quchenchen/epuber-dsh/releases). Start with the [user guide](docs/user-guide.en.md) and [FAQ](docs/faq.en.md).
 
 The base Desktop package does not preinstall enterprise plugins. Install them separately to enable enterprise login. For existing downloads, available features are described in their corresponding release notes.
 
@@ -300,10 +298,10 @@ Set `EPUBERDSH_DEPLOYMENT_CONFIG` to this file. Packaging writes it to `epuberds
 
 ## Community and acknowledgements
 
-Thanks to the maintainers and contributors of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), the foundation of our runtime and plugin system; [Tencent SkillHub](https://github.com/Tencent/skillhub), whose public catalog API powers skill discovery; [@cocofhu/skillhub](https://github.com/cocofhu/skillhub), the bundled DSH SkillHub plugin; and [dsh-market](https://github.com/dsh-market/dsh-market) with the [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) catalog, which power community plugin discovery. WorkBuddy inspired the workspace design. The bundled skill-creator adaptation retains its [Apache-2.0 notice](packages/plugins/skills/resources/skills/skill-creator/NOTICE.md). Feedback and contributions: [GitHub Issues](https://github.com/techflag/workdsh/issues) · [Contributing](CONTRIBUTING.en.md)
+Thanks to the maintainers and contributors of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), the foundation of our runtime and plugin system; [Tencent SkillHub](https://github.com/Tencent/skillhub), whose public catalog API powers skill discovery; [@cocofhu/skillhub](https://github.com/cocofhu/skillhub), the bundled DSH SkillHub plugin; and [dsh-market](https://github.com/dsh-market/dsh-market) with the [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) catalog, which power community plugin discovery. WorkBuddy inspired the workspace design. The bundled skill-creator adaptation retains its [Apache-2.0 notice](packages/plugins/skills/resources/skills/skill-creator/NOTICE.md). Feedback and contributions: [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues) · [Contributing](CONTRIBUTING.en.md)
 
 EpuberDSH uses the [MIT License](LICENSE). It is an independent community project and is not affiliated with, partnered with, authorized by, or endorsed by DeepSeek or WorkBuddy. Those names appear only to describe technical origins, compatibility, and design references. Upstream contributors shown on GitHub are inherited from synchronized commit history; this does not imply that they maintain this repository.
 
 ## Star history
 
-[![EpuberDSH star history](https://api.star-history.com/chart?repos=techflag/workdsh&type=date)](https://www.star-history.com/?repos=techflag%2Fepuberdsh&type=date)
+[![EpuberDSH star history](https://api.star-history.com/chart?repos=quchenchen/epuber-dsh&type=date)](https://www.star-history.com/?repos=quchenchen%2Fepuber-dsh&type=date)

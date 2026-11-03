@@ -8,7 +8,7 @@
 
 ## 支持哪些平台？
 
-以 [GitHub Releases](https://github.com/techflag/workdsh/releases) 中实际附带的文件为准。当前打包目标是 Windows x64，以及分别提供的 macOS arm64、x64 版本；没有 Universal 或 Linux 安装包。
+以 [GitHub Releases](https://github.com/quchenchen/epuber-dsh/releases) 中实际附带的文件为准。当前打包目标是 Windows x64，以及分别提供的 macOS arm64、x64 版本；没有 Universal 或 Linux 安装包。
 
 ## 需要自己安装 Node.js、Python 或 DSH 吗？
 
@@ -24,4 +24,4 @@ DSH home 位于本机应用数据目录。资料库、专家、技能和 MCP/连
 
 ## 如何更新？
 
-当前版本不提供自动更新管理器。到 [Releases](https://github.com/techflag/workdsh/releases) 手动下载新安装包；升级前备份重要数据。问题可在 [GitHub Issues](https://github.com/techflag/workdsh/issues) 报告。
+当前版本不提供自动更新管理器。到 [Releases](https://github.com/quchenchen/epuber-dsh/releases) 手动下载新安装包；升级前备份重要数据。问题可在 [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues) 报告。
