@@ -1,5 +1,5 @@
 import { Button, Input, Textarea } from 'epuberdsh-ui';
-import { Icon, Modal, type IconName } from 'epuberdsh-ui';
+import { domainTone, Icon, Modal, type IconName } from 'epuberdsh-ui';
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
@@ -10,6 +10,7 @@ import type { SkillHubClient } from './skillhub.js';
 import { ImportSkillModal } from './ImportSkillModal.js';
 import { SkillHubPanel } from './SkillHubPanel.js';
 import { skillsActionsCss, skillsCss, skillsMarketCss } from './styles.js';
+import { skillsBrandCss } from './styles-brand.js';
 
 type SkillsPanelInjected = {
   toggleNavigation: () => void;
@@ -29,11 +30,14 @@ const ALL = '全部';
 function icon(kind: string) { return <Icon name={kind as IconName} />; }
 function messageOf(cause: unknown): string { return cause instanceof Error ? cause.message : '技能操作失败，请重试。'; }
 
-/** Stable brand tone for skills without a bundled marketplace icon. */
+/**
+ * Stable domain tone for skills without a bundled marketplace icon. Colour is
+ * semantic, not decorative: the same name always lands on the same business hue,
+ * so the tile reads as "which capability line is this" before the title does.
+ */
 function toneOf(name: string): { background: string; color: string } {
-  let hue = 0;
-  for (const char of name) hue = (hue * 31 + (char.codePointAt(0) ?? 0)) % 360;
-  return { background: `hsl(${hue} 36% 25%)`, color: `hsl(${hue} 84% 78%)` };
+  const tone = domainTone(name);
+  return { background: tone.tint, color: tone.color };
 }
 
 function SkillMark({ name, title, iconUrl, large }: { name: string; title?: string; iconUrl?: string; large?: boolean }) {
@@ -241,7 +245,7 @@ export function SkillsPanel({ toggleNavigation, management, skillHub, startSkill
     </div><p className="muted">{skill.localizedDescription ?? skill.description}</p>{skill.state === 'invalid' && <small className="diagnostic">需要修复 · {skill.diagnostics?.[0]?.message}{skill.manageable ? <Button variant="ghost" size="sm" className="diagnostic-fix" disabled={busy} onClick={() => void repairIdentity(skill)}>一键修复</Button> : null}</small>}
   </article>;
   return <section ref={panel} className="wd-skills" data-testid="workdsh-skills">
-    <style>{skillsCss + skillsActionsCss + skillsMarketCss}</style>
+    <style>{skillsCss + skillsActionsCss + skillsMarketCss + skillsBrandCss}</style>
     {view === 'installed' ? <>
       <div className="installed-back-row">
         <button className="nav-toggle" onClick={toggleNavigation} aria-label="切换导航">导航</button>

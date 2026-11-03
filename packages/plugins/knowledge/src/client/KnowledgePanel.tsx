@@ -15,6 +15,7 @@ import type { KnowledgeClient } from './management.js';
 import { connectionHostLabel, credentialSourceLabel } from './connection-label.js';
 import { wikiLinksToMarkdown } from './wiki-markdown.js';
 import { knowledgeCss } from './styles.js';
+import { knowledgeBrandCss } from './styles-brand.js';
 
 /**
  * Fence and footnote chrome for the official markdown renderer. A module-level
@@ -405,7 +406,7 @@ export function KnowledgePanel({ management, toggleNavigation }: Props) {
         : doc ? docDetailView : kb ? docListView : kbListView;
 
   return <section className="wd-knowledge">
-    <style>{knowledgeCss}</style>
+    <style>{knowledgeCss + knowledgeBrandCss}</style>
     {notice ? <div className="wd-knowledge-toast success" role="status">{notice}</div> : null}
     {error ? <div className="wd-knowledge-toast error" role="alert" data-testid="knowledge-error">{error}</div> : null}
     <aside className="wd-knowledge-sidebar">

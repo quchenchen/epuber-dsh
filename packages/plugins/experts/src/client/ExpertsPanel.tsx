@@ -13,6 +13,7 @@ import { expertDraftId } from '../domain/navigation.js';
 import { ExpertDraftEditor } from './ExpertDraftEditor.js';
 import { ImportExpertModal } from './ImportExportModals.js';
 import { expertsCss } from './styles.js';
+import { expertsBrandCss } from './styles-brand.js';
 
 type ExpertsPanelInjected = {
   toggleNavigation: () => void;
@@ -194,7 +195,7 @@ export function ExpertsPanel({ toggleNavigation, management, openCapability, has
   };
 
   return <section className="wd-experts" data-testid="workdsh-experts">
-    <style>{expertsCss}</style>
+    <style>{expertsCss + expertsBrandCss}</style>
     <header className="cap-header">
       <button className="nav-toggle" onClick={toggleNavigation} aria-label="切换导航">导航</button>
       {capabilityTabs.map(([key, label]) => {
