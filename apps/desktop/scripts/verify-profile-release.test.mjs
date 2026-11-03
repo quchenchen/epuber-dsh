@@ -101,9 +101,9 @@ function defaultProfile() {
 }
 
 test('Desktop ships the workbench platform with its default features and keeps business and enterprise plugins external', () => {
-  assert.deepEqual(PRODUCT_PACKAGES, ['epuberdsh-plugin-connectors', 'epuberdsh-plugin-experts', 'epuberdsh-plugin-library', 'epuberdsh-plugin-projects', 'epuberdsh-plugin-skills', 'epuberdsh-plugin-workbenches'])
+  assert.deepEqual(PRODUCT_PACKAGES, ['epuberdsh-plugin-connectors', 'epuberdsh-plugin-experts', 'epuberdsh-plugin-knowledge', 'epuberdsh-plugin-library', 'epuberdsh-plugin-projects', 'epuberdsh-plugin-skills', 'epuberdsh-plugin-workbenches'])
   assert.deepEqual(ENTERPRISE_PACKAGES, ['epuberdsh-provider-identity-enterprise', 'epuberdsh-plugin-enterprise-collaboration', 'epuberdsh-enterprise-connection'])
-  assert.equal(RELEASE_PACKAGES.length, 13)
+  assert.equal(RELEASE_PACKAGES.length, 14)
   assert.doesNotThrow(() => verifyDefaultProfile(defaultProfile()))
   for (const name of ['epuberdsh-plugin-office', 'epuberdsh-plugin-notifications', 'epuberdsh-plugin-quality-analysis', ...ENTERPRISE_PACKAGES]) {
     const profile = defaultProfile()
