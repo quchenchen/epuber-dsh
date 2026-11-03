@@ -1,0 +1,9 @@
+- insert:
+    - id: epuberdsh-access
+      name: epuberdsh-plugin-access
+    - id: epuberdsh-session-access
+      name: epuberdsh-plugin-access/session
+    - id: epuberdsh-tool-access
+      name: epuberdsh-plugin-access/tool
+      config:
+        autoBindPersonalSessions: true

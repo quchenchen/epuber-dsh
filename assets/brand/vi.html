@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{width:1400px;background:#fff;font-family:'Source Han Sans CN','Noto Sans Hans',sans-serif;color:#0B1220;padding:52px 60px 44px}
+  .hdr{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid #0B1220;padding-bottom:16px}
+  .hdr h1{font-size:26px;font-weight:900;letter-spacing:.5px}
+  .hdr .meta{font-family:'Inter',sans-serif;font-size:10px;letter-spacing:1.8px;color:#8A9099;text-align:right;line-height:1.9}
+  .sec{margin-top:34px}
+  .st{display:flex;align-items:baseline;gap:11px;margin-bottom:16px}
+  .st .num{font-family:'Inter',sans-serif;font-size:11px;font-weight:900;color:#0B6FE0;letter-spacing:1px}
+  .st .nm{font-size:14px;font-weight:900;letter-spacing:.6px}
+  .st .en{font-family:'Inter',sans-serif;font-size:9.5px;letter-spacing:1.6px;color:#A6ADB8;text-transform:uppercase}
+  .two{display:flex;gap:34px;align-items:flex-start}
+  .panel{border:1px solid #E8ECF2;border-radius:10px;padding:20px;background:#fff}
+  .panel.gray{background:#F7F8FA;border-color:#F0F3F7}
+  p,li{font-size:12px;line-height:1.95;color:#4A5260}
+  b{color:#0B1220}
+  .cap{font-family:'Inter',sans-serif;font-size:9.5px;color:#A6ADB8;margin-top:10px;letter-spacing:.4px}
+
+  .grid4{display:flex;gap:16px}
+  .cell{flex:1;text-align:center}
+  .cell .box{height:132px;border:1px solid #E8ECF2;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff}
+  .cell .box.dark{background:#121212;border-color:#121212}
+  .cell .k{font-family:'Inter',sans-serif;font-size:9.5px;color:#A6ADB8;margin-top:8px;letter-spacing:.3px}
+
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;font-size:11.5px;padding:8px 10px;border-bottom:1px solid #EDF0F4;vertical-align:top;line-height:1.7}
+  th{font-size:10px;font-weight:900;color:#8A9099;letter-spacing:.7px;background:#FAFBFC;border-bottom:1px solid #E8ECF2}
+  td.mono{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.2px}
+  .sw2{display:flex;gap:12px;flex-wrap:wrap}
+  .sw2 .s{width:118px}
+  .sw2 .c{height:44px;border-radius:7px;border:1px solid rgba(0,0,0,.06)}
+  .sw2 .n{font-family:'Inter',sans-serif;font-size:9.5px;font-weight:700;margin-top:6px}
+  .sw2 .v{font-family:'Inter',sans-serif;font-size:9.5px;color:#8A9099}
+  .bad{border-color:#F3D2D2 !important;background:#FFFBFB}
+  .bad .k{color:#B03636}
+  .warn{background:#FFF8EC;border:1px solid #F2DFC0;border-radius:8px;padding:13px 15px;font-size:11.5px;line-height:1.9;color:#6B5327;margin-top:14px}
+  .warn b{color:#8A6118}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div><h1>AI融媒中心 · 视觉识别规范</h1>
+    <div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;color:#8A9099;margin-top:7px">AI MEDIA CENTER — VISUAL IDENTITY v1.0</div>
+  </div>
+  <div class="meta">96 GRID / SINGLE INK<br>2026-10 · 全部数值由 build/brand.mjs 生成</div>
+</div>
+
+<!-- 01 构造 -->
+<div class="sec">
+  <div class="st"><span class="num">01</span><span class="nm">标志构造</span><span class="en">Construction</span></div>
+  <div class="two">
+    <div class="panel" style="flex:0 0 460px;padding:14px">
+      <svg viewBox="-24 -24 144 144" width="416" height="416">
+        <!-- 中轴 -->
+        <g stroke="#E8ECF2" stroke-width="0.4">
+          <line x1="0" y1="48" x2="96" y2="48"/><line x1="48" y1="0" x2="48" y2="96"/>
+        </g>
+        <!-- 六等分基准 -->
+        <g stroke="#F0C9C9" stroke-width="0.3" stroke-dasharray="1.4 2.4">
+          <line x1="48" y1="48" x2="48" y2="4"/><line x1="48" y1="48" x2="86.1" y2="26"/>
+          <line x1="48" y1="48" x2="86.1" y2="70"/><line x1="48" y1="48" x2="48" y2="92"/>
+          <line x1="48" y1="48" x2="9.9" y2="70"/><line x1="48" y1="48" x2="9.9" y2="26"/>
+        </g>
+        <!-- 半径构造圆 -->
+        <circle cx="48" cy="48" r="35" fill="none" stroke="#F0C9C9" stroke-width="0.4" stroke-dasharray="2 2"/>
+        <circle cx="48" cy="48" r="13.5" fill="none" stroke="#F0C9C9" stroke-width="0.4" stroke-dasharray="2 2"/>
+        <!-- 标志 -->
+        <g id="mark"></g>
+        <!-- 标注 -->
+        <g stroke="#B03636" stroke-width="0.35" fill="none">
+          <line x1="48" y1="48" x2="48" y2="13"/><line x1="48" y1="13" x2="48" y2="-6"/>
+          <line x1="60.5" y1="48" x2="76" y2="48"/>
+        </g>
+        <g font-family="Inter,sans-serif" font-size="4.6" fill="#B03636">
+          <text x="48" y="-10" text-anchor="middle">R 35</text>
+          <text x="78" y="49.6">r 13.5</text>
+        </g>
+        <text x="48" y="110" text-anchor="middle" font-family="Inter,sans-serif" font-size="4.4" fill="#8A9099">弧宽 6 · 每段跨 36° · 间隙 24°</text>
+      </svg>
+      <div class="cap">96 × 96 网格 · 横向中线为六等分基准 · 点划线为半径构造</div>
+    </div>
+    <div style="flex:1">
+      <p><b>读法。</b>六段弧环绕成环，六个断口＝六个内容源与分发渠道；中心实心三角＝集中播发。环是来源的广度，三角是出口的唯一。</p>
+      <table style="margin-top:14px">
+        <tr><th style="width:150px">要素</th><th>数值</th></tr>
+        <tr><td>网格</td><td class="mono">96 × 96，中心 48,48</td></tr>
+        <tr><td>外环半径</td><td class="mono">R = 35</td></tr>
+        <tr><td>弧段</td><td class="mono">6 段 · 每段跨 36°（±18°）· 间隙 24°</td></tr>
+        <tr><td>弧宽</td><td class="mono">6 · 圆头线端（round cap）</td></tr>
+        <tr><td>中心三角</td><td class="mono">外接 13.5 · 圆角 3.5 · 中心 x = 47</td></tr>
+        <tr><td>视觉外接</td><td class="mono">76 × 76（占网格 79%）</td></tr>
+        <tr><td>紧凑档 &lt;32px</td><td class="mono">弧宽 7.5 · 间隙 20° · 环半径 34 · 三角外接 15 · 中心 x 46</td></tr>
+        <tr><td>色彩</td><td class="mono">单色 #0B6FE0，无渐变、无描边、无阴影</td></tr>
+      </table>
+      <div class="warn"><b>三角中心 x = 47，不是 48。</b>三角指向右，视觉重心天然右偏；左移 1 单位后左右留白为 20 / 16，视觉上才居中。改回 48 会明显右沉。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 安全区 / 最小尺寸 -->
+<div class="sec">
+  <div class="st"><span class="num">02</span><span class="nm">安全区与最小尺寸</span><span class="en">Clear Space / Minimum Size</span></div>
+  <div class="two">
+    <div class="panel gray" style="flex:0 0 300px;text-align:center">
+      <svg viewBox="0 0 140 140" width="230" height="230">
+        <rect x="8" y="8" width="124" height="124" fill="none" stroke="#C9D2DE" stroke-width="0.6" stroke-dasharray="3 3"/>
+        <g transform="translate(26 26) scale(0.92)"><g id="m2"></g></g>
+        <line x1="8" y1="8" x2="26" y2="26" stroke="#B03636" stroke-width="0.6"/>
+        <text x="10" y="6" font-family="Inter,sans-serif" font-size="3.6" fill="#B03636">X</text>
+      </svg>
+      <div class="cap" style="text-align:left;margin-top:6px">安全区 X = 标志图形高度的 1/4<br>四周不得进入文字、图形、边框</div>
+    </div>
+    <div style="flex:1">
+      <div class="grid4">
+        <div class="cell"><div class="box"><img src="svg/mark.svg" width="96" height="96"></div><div class="k">96 · 首选</div></div>
+        <div class="cell"><div class="box"><img src="svg/mark.svg" width="64" height="64"></div><div class="k">64</div></div>
+        <div class="cell"><div class="box"><img src="svg/mark.svg" width="48" height="48"></div><div class="k">48</div></div>
+        <div class="cell"><div class="box"><img src="svg/mark-sm.svg" width="32" height="32"></div><div class="k">32 · 切档线</div></div>
+      </div>
+      <div class="grid4" style="margin-top:14px">
+        <div class="cell"><div class="box dark"><img src="svg/mark-sm-inverse.svg" width="32" height="32"></div><div class="k">32 深底 · 紧凑档</div></div>
+        <div class="cell"><div class="box"><img src="svg/mark-sm.svg" width="24" height="24"></div><div class="k">24 紧凑档 · 可辨</div></div>
+        <div class="cell"><div class="box"><img src="svg/mark-sm.svg" width="16" height="16"></div><div class="k">16 紧凑档 · 下限</div></div>
+        <div class="cell"><div class="box bad"><img src="svg/mark.svg" width="24" height="24"></div><div class="k">24 误用标准档 · 三角消失</div></div>
+      </div>
+      <div class="warn" style="margin-top:16px">
+        <b>32px 是「档位切换线」，不是禁用线。</b>同一套结构备两档几何：<br>
+        · <b>标准档</b>（弧宽 6、间隙 24°、三角外接 13.5）—— 用于 ≥32px。实测到 38px 三角才稳定可辨，33px 勉强。<br>
+        · <b>紧凑档</b>（弧宽 7.5、间隙 20°、三角外接 15）—— 用于 <32px。实测 22px 可辨、16px 为下限。<br>
+        两档互为光学补偿，不是两个标志：断口数量、环径、三角朝向完全一致，任何尺寸下都是同一个标。<br>
+        <b>低于 16px 停用标志，只用字标</b>（AI融媒中心 · 900 字重）。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 单色与反白 -->
+<div class="sec">
+  <div class="st"><span class="num">03</span><span class="nm">单色与反白</span><span class="en">Mono / Inverse</span></div>
+  <div class="grid4">
+    <div class="cell"><div class="box"><img src="svg/mark.svg" width="76" height="76"></div><div class="k">主色 #0B6FE0 · 首选</div></div>
+    <div class="cell"><div class="box"><img src="svg/mark-mono.svg" width="76" height="76"></div><div class="k">单色黑 · 印刷 / 传真</div></div>
+    <div class="cell"><div class="box dark"><img src="svg/mark-inverse.svg" width="76" height="76"></div><div class="k">反白 · 深底 / 照片上</div></div>
+    <div class="cell"><div class="box" style="background:#0B6FE0;border-color:#0B6FE0"><img src="svg/mark-inverse.svg" width="76" height="76"></div><div class="k">主色底反白 · 仅限角标</div></div>
+  </div>
+</div>
+
+<!-- 04 组合 -->
+<div class="sec">
+  <div class="st"><span class="num">04</span><span class="nm">组合规范</span><span class="en">Lockups</span></div>
+  <div class="two">
+    <div style="flex:1">
+      <div class="panel" style="display:flex;justify-content:center;padding:22px"><img src="svg/lockup-h.svg" width="336" height="96"></div>
+      <div class="cap">横版 · 最小宽度 120px · 标志与字标间距 = 标志宽度的 1/3</div>
+    </div>
+    <div style="flex:1">
+      <div class="panel dark" style="display:flex;justify-content:center;padding:22px;background:#121212;border-color:#121212"><img src="svg/lockup-h-dark.svg" width="336" height="96"></div>
+      <div class="cap">横版反白 · 深底或照片上用此版，不要在主色版上加描边</div>
+    </div>
+  </div>
+  <div class="two" style="margin-top:16px">
+    <div style="flex:1">
+      <div class="panel" style="display:flex;justify-content:center;padding:18px"><img src="svg/lockup-v.svg" width="168" height="137"></div>
+      <div class="cap">竖版 · 用于方图与物料正中</div>
+    </div>
+    <div style="flex:1">
+      <div class="panel" style="display:flex;justify-content:center;padding:18px;background:#121212;border-color:#121212"><img src="svg/lockup-v-dark.svg" width="168" height="137"></div>
+      <div class="cap">竖版反白</div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 色彩 -->
+<div class="sec">
+  <div class="st"><span class="num">05</span><span class="nm">色彩</span><span class="en">Color</span></div>
+  <div class="sw2">
+    <div class="s"><div class="c" style="background:#0B6FE0"></div><div class="n">brand-primary</div><div class="v">#0B6FE0</div></div>
+    <div class="s"><div class="c" style="background:#0A62C8"></div><div class="n">primary-hover</div><div class="v">#0A62C8</div></div>
+    <div class="s"><div class="c" style="background:#0852A8"></div><div class="n">primary-active</div><div class="v">#0852A8</div></div>
+    <div class="s"><div class="c" style="background:#E8F1FE"></div><div class="n">primary-subtle</div><div class="v">#E8F1FE</div></div>
+    <div class="s"><div class="c" style="background:#3D93FF"></div><div class="n">深底提亮</div><div class="v">#3D93FF</div></div>
+    <div class="s"><div class="c" style="background:#12D6B0"></div><div class="n">brand-accent</div><div class="v">#12D6B0</div></div>
+    <div class="s"><div class="c" style="background:#0B1220"></div><div class="n">text-primary</div><div class="v">#0B1220</div></div>
+    <div class="s"><div class="c" style="background:#5A6270"></div><div class="n">text-secondary</div><div class="v">#5A6270</div></div>
+    <div class="s"><div class="c" style="background:#E4E8EE"></div><div class="n">border-default</div><div class="v">#E4E8EE</div></div>
+  </div>
+  <div class="two" style="margin-top:16px">
+    <div style="flex:1"><p><b>主色只用于：</b>主按钮、选中态、链接、标志、关键数据强调。<br>
+      <b>辅色 #12D6B0 只用于：</b>AI 激活点、实时态、成功提示，不做面积填充。<br>
+      <b>面积配比：</b>中性 80% / 主色 15% / 辅色 5%。</p></div>
+    <div style="flex:1"><p><b>不要做渐变。</b>最早方案用 #13D6AA→#21A8ED 双色渐变，结果在浅底、深底、单色、反白四种场景各派生一个版本，同一个品牌出现五个标志。单色是硬约束。</p></div>
+  </div>
+</div>
+
+<!-- 06 字体 -->
+<div class="sec">
+  <div class="st"><span class="num">06</span><span class="nm">字体</span><span class="en">Typography</span></div>
+  <div class="two">
+    <div class="panel" style="flex:1">
+      <div style="font-size:34px;font-weight:900;letter-spacing:.5px">AI融媒中心</div>
+      <div style="font-family:'Inter',sans-serif;font-size:9.5px;letter-spacing:2.6px;color:#A6ADB8;margin-top:8px">SOURCE HAN SANS CN · HEAVY · 字标专用</div>
+      <div style="height:1px;background:#EDF0F4;margin:16px 0"></div>
+      <div style="font-size:13px;line-height:1.9;color:#4A5260">正文与界面文字统一使用 <b>思源黑体 CN</b>（Source Han Sans CN）。<br>Latin 与数字使用 <b>Inter</b>，字重跟随中文。</div>
+    </div>
+    <div class="panel" style="flex:1">
+      <table>
+        <tr><th style="width:110px">层级</th><th>字号 / 字重</th></tr>
+        <tr><td>字标</td><td class="mono">Heavy 900 · 组合内 35px</td></tr>
+        <tr><td>页面标题</td><td class="mono">Heavy 900 · 26px</td></tr>
+        <tr><td>小标题</td><td class="mono">Bold 700 · 14px</td></tr>
+        <tr><td>正文</td><td class="mono">Regular 400 · 13px / 行高 1.95</td></tr>
+        <tr><td>辅助</td><td class="mono">Regular 400 · 11px / #7A8290</td></tr>
+        <tr><td>英文标签</td><td class="mono">Inter Bold 700 · letter-spacing 1.6px</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 07 禁用 -->
+<div class="sec">
+  <div class="st"><span class="num">07</span><span class="nm">禁用</span><span class="en">Misuse</span></div>
+  <div class="grid4">
+    <div class="cell"><div class="box bad"><svg viewBox="0 0 96 96" width="80" height="80"><g transform="rotate(18 48 48)" id="r1"></g></svg></div><div class="k">不旋转 · 不做角度变体</div></div>
+    <div class="cell"><div class="box bad"><svg viewBox="0 0 96 96" width="80" height="80"><g id="r2"></g></svg></div><div class="k">不加渐变 / 不加描边</div></div>
+    <div class="cell"><div class="box bad"><svg viewBox="0 0 96 96" width="96" height="72" preserveAspectRatio="none"><g id="r3"></g></svg></div><div class="k">不拉伸变形</div></div>
+    <div class="cell"><div class="box bad"><svg viewBox="0 0 96 96" width="80" height="80"><g id="r4"></g></svg></div><div class="k">不改断口数（此图仅 3 段）</div></div>
+  </div>
+</div>
+
+<script>
+// 注入标志图元：从构建产物读取弧段参数，避免手册与品牌源不同步
+const R=35, C=48, W=6, SPAN=18;
+const A=[-90,-30,30,90,150,210];
+const p=(r,d)=>[+(C+r*Math.cos(d*Math.PI/180)).toFixed(2), +(C+r*Math.sin(d*Math.PI/180)).toFixed(2)];
+function ring(span=A.map(()=>SPAN), angles=A, w=W){
+  return angles.map((a,i)=>{const[x1,y1]=p(R,a-span[i]);const[x2,y2]=p(R,a+span[i]);
+    return `<path d="M${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2}" fill="none" stroke="#0B6FE0" stroke-width="${w}" stroke-linecap="round"/>`}).join('');
+}
+const TRI=(()=>{const t=[[47+13.5,48],...[-122,122].map(d=>[+(47+13.5*Math.cos(d*Math.PI/180)).toFixed(2), +(48+13.5*Math.sin(d*Math.PI/180)).toFixed(2)])];
+  return `M${t[0][0]} ${t[0][1]}L${t[1][0]} ${t[1][1]}L${t[2][0]} ${t[2][1]}Z`})();
+const tri=(c)=>`<path d="${TRI}" fill="${c}" stroke="${c}" stroke-width="7" stroke-linejoin="round"/>`;
+const full=(c='#0B6FE0')=>ring()+tri(c);
+
+document.getElementById('mark').innerHTML=full();
+document.getElementById('m2').innerHTML=full();
+document.getElementById('r1').innerHTML=full();
+document.getElementById('r2').innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13D6AA"/><stop offset="1" stop-color="#21A8ED"/></linearGradient></defs>${ring().replace(/#0B6FE0/g,'url(#g)')}${tri('url(#g)')}`;
+document.getElementById('r3').innerHTML=full();
+document.getElementById('r4').innerHTML=ring([10,10,10],[-90,30,150])+tri();
+</script>
+</body>
+</html>

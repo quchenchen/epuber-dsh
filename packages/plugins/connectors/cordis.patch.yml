@@ -1,0 +1,3 @@
+- insert:
+    - id: epuberdsh-connectors
+      name: epuberdsh-plugin-connectors

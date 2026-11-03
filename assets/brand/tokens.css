@@ -1,0 +1,42 @@
+/* AI融媒中心 · 应用配色 token。由 build/brand.mjs 生成，勿手改。 */
+:root {
+  --brand-primary: #0B6FE0;
+  --brand-primary-hover: #0A62C8;
+  --brand-primary-active: #0852A8;
+  --brand-primary-subtle: #E8F1FE;
+  --brand-accent: #12D6B0;
+  --bg-canvas: #FFFFFF;
+  --bg-surface: #F7F8FA;
+  --bg-raised: #FFFFFF;
+  --border-default: #E4E8EE;
+  --border-strong: #CBD3DE;
+  --text-primary: #0B1220;
+  --text-secondary: #5A6270;
+  --text-tertiary: #9AA3B0;
+  --state-success: #16A34A;
+  --state-warning: #D97706;
+  --state-danger: #DC2626;
+}
+
+[data-theme="dark"], .dark {
+  --brand-primary: #3D93FF;
+  --brand-primary-hover: #6BAEFF;
+  --brand-primary-active: #0B6FE0;
+  --brand-primary-subtle: #122A45;
+  --brand-accent: #2AE3C0;
+  --bg-canvas: #121212;
+  --bg-surface: #202020;
+  --bg-raised: #242424;
+  --border-default: #343434;
+  --border-strong: #4A4A4A;
+  --text-primary: #E7E7E7;
+  --text-secondary: #A5A5A5;
+  --text-tertiary: #6E6E6E;
+  --state-success: #3FB96B;
+  --state-warning: #E0A63F;
+  --state-danger: #F06161;
+}
+
+/* 面积配比：中性 80% / 主色 15% / 辅色 5%。
+   主色仅用于主按钮、选中态、链接、标志、关键数据。
+   辅色仅用于 AI 激活点、实时态、标志强调，不做大面积填充。 */

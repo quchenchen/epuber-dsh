@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">AI 融媒中心</title>
+  <desc id="desc">The six-source broadcast mark on a neutral rounded tile.</desc>
+  <rect x="12" y="12" width="296" height="296" rx="68" fill="#F7F8FA" stroke="#E1E4EA" stroke-width="4"/>
+  <g transform="translate(33.68 33.68) scale(0.99)">
+<g>
+  <path d="M99.16 39.23A93.33 93.33 0 0 1 156.84 39.23M190.45 58.64A93.33 93.33 0 0 1 219.29 108.59M219.29 147.41A93.33 93.33 0 0 1 190.45 197.36M156.84 216.77A93.33 93.33 0 0 1 99.16 216.77M65.55 197.36A93.33 93.33 0 0 1 36.71 147.41M36.71 108.59A93.33 93.33 0 0 1 65.55 58.64" fill="none" stroke="#0B6FE0" stroke-width="16" stroke-linecap="round"/>
+  <path d="M161.33 128L106.26 97.47L106.26 158.53Z" fill="#0B6FE0" stroke="#0B6FE0" stroke-width="18.67" stroke-linejoin="round"/>
+</g>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "package": "@deepseek-ai/dsh-client-ui-conversation",
+  "version": "0.2.2-alpha.2",
+  "file": "lib/client.js",
+  "originalSha256": "b43d3e2a95017c48c8629f4bf3531f0aba281c84731d64e5174c47561b6a595f",
+  "patchedSha256": "fbe110d830519f8866796cb8b87babecf8cb28038d06291568bdbba05f5c2964",
+  "replacements": [
+    [
+      "return renderSlot(\"main.conversation\", {});",
+      "const conversation = renderSlot(\"main.conversation\", {});\n\t\t\treturn renderSlot(\"epuberdsh.workbench.frame\", { conversation }, { fallback: conversation });"
+    ],
+    [
+      "children: { \"main.conversation\": {\n\t\t\t\t\t\tkind: \"single\",\n\t\t\t\t\t\tscope: \"session-maybe\"\n\t\t\t\t\t} }",
+      "children: { \"main.conversation\": { kind: \"single\", scope: \"session-maybe\" }, \"epuberdsh.workbench.frame\": { kind: \"single\", scope: \"root\" } }"
+    ]
+  ]
+}

@@ -1,0 +1,26 @@
+/** Carrier connection UI only; login and all product features remain in the Profile/server. */
+// Inline because the entry document allows no external resources; the compact
+// optical variant is the one that stays legible at this size.
+const BRAND_MARK = '<svg width="26" height="26" viewBox="0 0 256 256" aria-hidden="true" focusable="false"><path d="M96.99 42.8A90.67 90.67 0 0 1 159.01 42.8M186.28 58.55A90.67 90.67 0 0 1 217.29 112.26M217.29 143.74A90.67 90.67 0 0 1 186.28 197.45M159.01 213.2A90.67 90.67 0 0 1 96.99 213.2M69.72 197.45A90.67 90.67 0 0 1 38.71 143.74M38.71 112.26A90.67 90.67 0 0 1 69.72 58.55" fill="none" stroke="#0B6FE0" stroke-width="20" stroke-linecap="round"/><path d="M162.67 128L101.47 94.08L101.47 161.92Z" fill="#0B6FE0" stroke="#0B6FE0" stroke-width="21.33" stroke-linejoin="round"/></svg>'
+export function connectionEntryHtml(portal: string, managed: boolean = false, enterpriseAvailable = true): string {
+  const escaped = portal.replace(/[&<>"']/g, value => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[value]!)
+  return `<!doctype html><html lang="zh-CN"><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; form-action epuberdsh:; base-uri 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>EpuberDSH</title>
+<style>:root{color-scheme:light dark;--bg:#f5f7fa;--panel:#fff;--text:#171a20;--muted:#626b78;--border:#dce1e8}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;display:grid;min-height:100vh;place-items:center}main{width:min(440px,calc(100vw - 48px));padding:32px;background:var(--panel);border:1px solid var(--border);border-radius:16px}header{font-size:22px;font-weight:600;margin-bottom:24px;display:flex;align-items:center;gap:10px}h1{font-size:22px;margin:0 0 8px}p{color:var(--muted);margin:0 0 20px}a,button{display:block;width:100%;text-align:center;border-radius:8px;padding:10px 16px;font:inherit;text-decoration:none;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer}button{background:#0B6FE0;color:white;border-color:#0B6FE0;margin-top:12px}form{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}label{display:block;margin-bottom:8px}input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);font:inherit}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #3D93FF;outline-offset:2px}@media(prefers-color-scheme:dark){:root{--bg:#121212;--panel:#202020;--text:#e7e7e7;--muted:#a5a5a5;--border:#414141}}</style>
+<main><header>${BRAND_MARK}EpuberDSH</header><h1>选择使用方式</h1><p>官方 DSH 在本机运行。个人与企业使用独立空间。</p><a href="epuberdsh://personal">个人使用</a><form action="epuberdsh://enterprise" method="get">${managed ? `<label>企业后台</label><p>${escaped}</p>` : `<label for="portal">企业后台地址</label><input id="portal" name="portal" type="url" required placeholder="https://企业地址" value="${escaped}" autocomplete="url">`}${enterpriseAvailable ? `<button type="submit">企业登录</button>` : `<button type="button" disabled>请先安装企业账号插件</button><p>进入个人空间，在插件管理中安装企业插件，再从工作区菜单切换到企业登录。</p>`}</form></main></html>`
+}
+
+export function enterpriseLoginHtml(backend: string): string {
+  const base = connectionEntryHtml(backend)
+  const start = base.indexOf('<main>')
+  const escaped = backend.replace(/[&<>"']/g, value => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[value]!)
+  return base.slice(0, start).replace('form-action epuberdsh:', "form-action 'none'") + `<main><header>${BRAND_MARK}EpuberDSH</header><h1>登录企业 Desktop</h1><p>${escaped}</p><form id="enterprise-login"><label for="account">账号</label><input id="account" autocomplete="username" required maxlength="254"><label for="password" style="margin-top:16px">密码</label><input id="password" type="password" autocomplete="current-password" required maxlength="512"><button type="submit">登录并在本机运行</button></form><p id="status" role="status" style="margin-top:16px"></p><a href="epuberdsh://entry" style="margin-top:16px">返回使用方式</a></main></html>`
+}
+
+/** Trusted carrier loading surface; no remote content or credentials are embedded. */
+export function connectionLoadingHtml(message: string): string {
+  const base = connectionEntryHtml('')
+  const escaped = message.replace(/[&<>"']/g, value => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[value]!)
+  return base.slice(0, base.indexOf('<main>')) + `<style>main{animation:appear .16s ease-out}.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:#0B6FE0;border-radius:50%;animation:spin .8s linear infinite;margin:24px auto}@keyframes spin{to{transform:rotate(360deg)}}@keyframes appear{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){main,.spinner{animation:none}}</style><main aria-busy="true"><header>${BRAND_MARK}EpuberDSH</header><h1 role="status">${escaped}</h1><p>正在准备工作区并启动本机 DSH，请稍候。运行环境和内置插件已随安装包提供。</p><div class="spinner" aria-hidden="true"></div></main></html>`
+}

@@ -1,0 +1,439 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives';
+import { Button, Input, Select } from 'epuberdsh-ui';
+import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
+import type {
+  KnowledgeBase,
+  KnowledgeChunk,
+  KnowledgeDocument,
+  KnowledgePreview,
+  KnowledgeSearchHit,
+  KnowledgeSearchMode,
+  KnowledgeSettings,
+} from '../services/knowledge-service.js';
+import type { KnowledgeClient } from './management.js';
+import { connectionHostLabel, credentialSourceLabel } from './connection-label.js';
+import { wikiLinksToMarkdown } from './wiki-markdown.js';
+import { knowledgeCss } from './styles.js';
+import { knowledgeBrandCss } from './styles-brand.js';
+
+/**
+ * Fence and footnote chrome for the official markdown renderer. A module-level
+ * constant is deliberate: the renderer discards its streaming cache when the
+ * `labels` identity changes, so rebuilding it per render would defeat it.
+ */
+const markdownLabels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' };
+
+type Props = PropsRuntime<'main'> & InjectFace<{ management: KnowledgeClient; toggleNavigation: () => void }>;
+type View = 'kbs' | 'search' | 'settings';
+type SettingsForm = { baseUrl: string; apiKey: string; defaultKbId: string };
+
+const docsPageSize = 20;
+const chunksPageSize = 10;
+const message = (cause: unknown): string => cause instanceof Error ? cause.message : '知识库操作失败。';
+const formatBytes = (value: number | undefined): string => {
+  if (value === undefined) return '—';
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+};
+const formatTime = (value: string | undefined): string => {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('zh-CN', { hour12: false });
+};
+const modeLabel: Record<KnowledgeSearchMode, string> = { hybrid: '混合检索', semantic: '语义检索', keyword: '关键词检索' };
+const isProcessing = (document: KnowledgeDocument | undefined): boolean => document?.parseStatus === 'pending' || document?.parseStatus === 'processing';
+/**
+ * How a base can be searched, from its `capabilities`. A base built without
+ * vector/keyword indexing is not necessarily unsearchable: if wiki is on, the
+ * wiki index still answers, with derived pages instead of chunks. Absent
+ * capabilities means an older deployment — assume indexed rather than warn
+ * without evidence.
+ */
+/** Wiki page kinds are stored in English; the panel is Chinese. */
+const pageTypeLabel = (type: string | undefined): string => {
+  const labels: Readonly<Record<string, string>> = {
+    concept: '概念页', entity: '实体页', summary: '摘要页', index: '索引页', synthesis: '综述页', comparison: '对比页',
+  };
+  return type ? labels[type] ?? type : '';
+};
+
+const searchModeOf = (item: KnowledgeBase): 'inline' | 'wiki' | 'none' => {
+  if (item.capabilities === undefined || item.capabilities.vector || item.capabilities.keyword) return 'inline';
+  return item.capabilities.wiki ? 'wiki' : 'none';
+};
+
+export function KnowledgePanel({ management, toggleNavigation }: Props) {
+  const [view, setView] = useState<View>('kbs');
+  const [settings, setSettings] = useState<KnowledgeSettings>();
+  const [form, setForm] = useState<SettingsForm>({ baseUrl: '', apiKey: '', defaultKbId: '' });
+  const [kbs, setKbs] = useState<readonly KnowledgeBase[]>([]);
+  const [filter, setFilter] = useState('');
+  const [kb, setKb] = useState<KnowledgeBase>();
+  const [docs, setDocs] = useState<readonly KnowledgeDocument[]>([]);
+  const [docsPage, setDocsPage] = useState(1);
+  const [docsTotal, setDocsTotal] = useState<number>();
+  const [doc, setDoc] = useState<KnowledgeDocument>();
+  const [preview, setPreview] = useState<KnowledgePreview>();
+  const [chunks, setChunks] = useState<readonly KnowledgeChunk[]>([]);
+  const [chunkPage, setChunkPage] = useState(1);
+  const [chunkTotal, setChunkTotal] = useState<number>();
+  const [query, setQuery] = useState('');
+  const [mode, setMode] = useState<KnowledgeSearchMode>('hybrid');
+  const [hits, setHits] = useState<readonly KnowledgeSearchHit[]>([]);
+  /** Expanded wiki page bodies, keyed by slug; absent means "not opened yet". */
+  const [wikiBodies, setWikiBodies] = useState<Readonly<Record<string, string>>>({});
+  const [searched, setSearched] = useState(false);
+  const [searchNote, setSearchNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const generation = useRef(0);
+
+  const run = useCallback(async (task: () => Promise<void>) => {
+    const current = ++generation.current;
+    setBusy(true); setError('');
+    try { await task(); }
+    catch (cause) { if (current === generation.current) setError(message(cause)); }
+    finally { if (current === generation.current) setBusy(false); }
+  }, []);
+
+  const flash = useCallback((text: string) => {
+    setNotice(text);
+    window.setTimeout(() => setNotice(current => current === text ? '' : current), 3200);
+  }, []);
+
+  const loadSettings = useCallback(async () => {
+    const next = await management.settings();
+    setSettings(next);
+    setForm({ baseUrl: next.baseUrl, apiKey: '', defaultKbId: next.defaultKbId ?? '' });
+  }, [management]);
+
+  const loadKbs = useCallback(async () => {
+    try { setKbs(await management.listKbs()); } catch (cause) { setError(message(cause)); }
+  }, [management]);
+
+  useEffect(() => {
+    void run(async () => {
+      await loadSettings();
+      await loadKbs();
+    });
+  }, [run, loadSettings, loadKbs]);
+
+  const loadDocs = useCallback(async (kbId: string, page: number) => {
+    const result = await management.listDocuments(kbId, { page, pageSize: docsPageSize });
+    setDocs(result.items); setDocsPage(result.page); setDocsTotal(result.total);
+  }, [management]);
+
+  const loadChunks = useCallback(async (knowledgeId: string, page: number) => {
+    const result = await management.listChunks(knowledgeId, { page, pageSize: chunksPageSize });
+    setChunks(result.items); setChunkPage(result.page); setChunkTotal(result.total);
+  }, [management]);
+
+  // Refresh a document that is still being parsed and reload its preview once settled.
+  useEffect(() => {
+    const pendingInList = docs.some(isProcessing);
+    const pendingCurrent = isProcessing(doc);
+    if (!pendingInList && !pendingCurrent) return;
+    const timer = window.setInterval(() => {
+      if (kb) void management.listDocuments(kb.id, { page: docsPage, pageSize: docsPageSize }).then(result => { setDocs(result.items); setDocsTotal(result.total); }).catch(() => undefined);
+      if (doc) void management.getDocument(doc.id).then(next => {
+        if (next.id !== doc.id || next.parseStatus === doc.parseStatus) return;
+        setDoc(next);
+        if (next.parseStatus === 'completed') {
+          void management.getPreview(next.id).then(setPreview).catch(() => undefined);
+          void management.listChunks(next.id, { page: 1, pageSize: chunksPageSize }).then(result => { setChunks(result.items); setChunkPage(result.page); setChunkTotal(result.total); }).catch(() => undefined);
+          flash('解析完成。');
+        } else if (next.parseStatus === 'failed') flash('解析失败，请查看失败原因。');
+      }).catch(() => undefined);
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [docs, doc, kb, docsPage, management, flash]);
+
+  const openKb = (nextKb: KnowledgeBase) => {
+    setKb(nextKb); setDoc(undefined); setPreview(undefined); setHits([]); setSearched(false); setView('kbs');
+    setDocs([]); setDocsPage(1); setDocsTotal(undefined);
+    void run(async () => { await loadDocs(nextKb.id, 1); });
+  };
+
+  const openDoc = (nextDoc: KnowledgeDocument) => {
+    setDoc(nextDoc); setPreview(undefined); setChunks([]); setChunkPage(1); setChunkTotal(undefined);
+    void run(async () => {
+      const [nextPreview] = await Promise.all([
+        management.getPreview(nextDoc.id),
+        loadChunks(nextDoc.id, 1),
+      ]);
+      setPreview(nextPreview);
+    });
+  };
+
+  const openFromHit = (hit: KnowledgeSearchHit) => {
+    const target = kbs.find(item => item.id === hit.knowledgeBaseId) ?? kb;
+    if (target) setKb(target);
+    setView('kbs');
+    void run(async () => {
+      const nextDoc = await management.getDocument(hit.knowledgeId);
+      openDoc(nextDoc);
+    });
+  };
+
+  /**
+   * Wiki hits locate evidence, they do not quote it: the readable body lives on
+   * the page itself, so it is fetched on demand instead of being in the result.
+   */
+  const toggleWiki = (hit: KnowledgeSearchHit) => {
+    const slug = hit.wiki?.slug;
+    if (!slug) return;
+    if (wikiBodies[slug] !== undefined) {
+      setWikiBodies(current => { const next = { ...current }; delete next[slug]; return next; });
+      return;
+    }
+    void run(async () => {
+      const page = await management.readWiki(hit.knowledgeBaseId, slug);
+      // Keep the stored markdown, not the flattened text: headings, lists and
+      // wiki links are part of what makes the page readable.
+      setWikiBodies(current => ({ ...current, [slug]: page.content || '（该 wiki 页暂无正文）' }));
+    });
+  };
+
+  const stepDocs = (page: number) => {
+    if (!kb) return;
+    void run(async () => { await loadDocs(kb.id, page); });
+  };
+
+  const stepChunks = (page: number) => {
+    if (!doc) return;
+    void run(async () => { await loadChunks(doc.id, page); });
+  };
+
+  const search = () => {
+    const text = query.trim();
+    if (!text) { setError('请输入检索关键词。'); return; }
+    setSearched(true);
+    setSearchNote('');
+    void run(async () => {
+      const targets = kb ? [kb.id] : (settings?.defaultKbId ? [settings.defaultKbId] : kbs.slice(0, 1).map(item => item.id));
+      const nextHits = await management.search({ query: text, ...(targets.length ? { knowledgeBaseIds: targets } : {}), limit: 10, mode });
+      setHits(nextHits);
+      if (nextHits.length || !targets.length) return;
+      // Zero hits is a state, not an error: ask the Host why, so a base without
+      // an index is never presented as "no matching content".
+      const scope = await management.searchScope(targets).catch(() => []);
+      const blocked = scope.filter(row => !row.channels.length).map(row => `${row.name}：${row.reason ?? '不可检索'}`);
+      if (blocked.length) { setSearchNote(blocked.join('；')); return; }
+      const wikiOnly = scope.filter(row => !row.channels.includes('inline') && row.channels.includes('wiki'));
+      setSearchNote(wikiOnly.length
+        ? `${wikiOnly.map(row => row.name).join('、')} 只有 wiki 索引，wiki 按术语匹配；请改用术语（实体名/概念名）重试，自然语言问句通常不命中。`
+        : `检索范围内 ${targets.length} 个知识库可检索，但本次未命中；可换关键词或检索模式。`);
+    });
+  };
+
+  const saveSettings = () => {
+    void run(async () => {
+      const next = await management.updateSettings({
+        baseUrl: form.baseUrl.trim(),
+        defaultKbId: form.defaultKbId.trim() ? form.defaultKbId.trim() : null,
+        ...(form.apiKey.trim() ? { apiKey: form.apiKey.trim() } : {}),
+      });
+      setSettings(next);
+      setForm({ baseUrl: next.baseUrl, apiKey: '', defaultKbId: next.defaultKbId ?? '' });
+      flash('知识库连接设置已保存。');
+      await loadKbs();
+    });
+  };
+
+  const visibleKbs = filter.trim() ? kbs.filter(item => item.name.toLowerCase().includes(filter.trim().toLowerCase())) : kbs;
+  const docsHasNext = docsTotal !== undefined ? docsPage * docsPageSize < docsTotal : docs.length === docsPageSize;
+  const chunksHasNext = chunkTotal !== undefined ? chunkPage * chunksPageSize < chunkTotal : chunks.length === chunksPageSize;
+
+  const statusBadge = (value: KnowledgeDocument) => <span className={`wd-knowledge-badge ${value.parseStatus}`} data-testid="parse-status-badge">{value.parseStatusLabel}</span>;
+
+  const kbListView = <div className="wd-knowledge-body">
+    <div className="wd-knowledge-toolbar">
+      <div><h2>知识库</h2><small>来自 WeKnora 知识库服务 · 只读</small></div>
+    </div>
+    {kbs.length === 0
+      ? <div className="wd-knowledge-state">还没有可用的知识库。请检查连接设置与凭据。</div>
+      : <div className="wd-knowledge-kb-grid">{visibleKbs.map(item => <button key={item.id} type="button" className="wd-knowledge-kb-card" data-testid="kb-card" onClick={() => openKb(item)}>
+          <h3>{item.name}{searchModeOf(item) === 'none'
+            ? <span className="wd-knowledge-badge failed" data-testid="kb-unsearchable" title="未启用向量/关键词索引，也未启用 wiki，没有任何可用检索通道">不可检索</span>
+            : searchModeOf(item) === 'wiki'
+              ? <span className="wd-knowledge-badge" data-testid="kb-wiki-only" title="未启用向量/关键词索引，检索走 wiki 导览页；命中是派生摘要，引用需回原文">仅 wiki 检索</span>
+              : null}</h3>
+          <p>{item.description || '（无描述）'}</p>
+          <span className="wd-knowledge-kb-meta">
+            <span>{item.knowledgeCount} 篇文档</span>
+            {item.chunkCount ? <span>{item.chunkCount} 个分块</span> : null}
+            {item.updatedAt ? <span>更新于 {formatTime(item.updatedAt)}</span> : null}
+          </span>
+        </button>)}</div>}
+  </div>;
+
+  const docListView = <div className="wd-knowledge-body">
+    {kb ? <>
+      <div className="wd-knowledge-toolbar">
+        <div><h2>{kb.name}</h2><small>{docsTotal === undefined ? `${kb.knowledgeCount} 篇文档` : `当前共 ${docsTotal} 篇文档`}</small></div>
+        <div className="wd-knowledge-toolbar-actions">
+          <Button onClick={() => { setKb(undefined); setDocs([]); }}>返回知识库</Button>
+        </div>
+      </div>
+      {docs.length === 0
+        ? <div className="wd-knowledge-state">该知识库当前没有文档。文档的导入与删除请在 WeKnora 控制台完成。</div>
+        : <div className="wd-knowledge-list" data-testid="doc-list">{docs.map(item => <button key={item.id} type="button" className="wd-knowledge-doc" data-testid="doc-item" onClick={() => openDoc(item)}>
+            <span className="wd-knowledge-doc-main">
+              <strong>{item.title}</strong>
+              <small>{item.fileType?.toUpperCase() ?? '文件'} · {formatBytes(item.sizeBytes)} · 更新于 {formatTime(item.updatedAt)}</small>
+            </span>
+            {statusBadge(item)}
+          </button>)}</div>}
+      <div className="wd-knowledge-pager">
+        <Button disabled={busy || docsPage <= 1} onClick={() => stepDocs(docsPage - 1)}>上一页</Button>
+        <span>第 {docsPage} 页</span>
+        <Button disabled={busy || !docsHasNext} onClick={() => stepDocs(docsPage + 1)}>下一页</Button>
+      </div>
+    </> : <div className="wd-knowledge-state">请选择一个知识库。</div>}
+  </div>;
+
+  const docDetailView = doc ? <div className="wd-knowledge-body">
+    <div className="wd-knowledge-toolbar">
+      <div><h2>{doc.title}</h2><small>{doc.knowledgeBaseName ?? kb?.name ?? doc.knowledgeBaseId}</small></div>
+      <div className="wd-knowledge-toolbar-actions">
+        <Button onClick={() => { setDoc(undefined); setPreview(undefined); }}>返回文档列表</Button>
+      </div>
+    </div>
+    <div className="wd-knowledge-doc-detail">
+      <div className="wd-knowledge-meta">
+        {statusBadge(doc)}
+        <span>类型 {doc.fileType?.toUpperCase() ?? '—'}</span>
+        <span>大小 {formatBytes(doc.sizeBytes)}</span>
+        <span>更新 {formatTime(doc.updatedAt)}</span>
+        <span>knowledge_id {doc.id}</span>
+      </div>
+      {doc.errorMessage ? <div className="wd-knowledge-warning" role="note">解析失败原因：{doc.errorMessage}</div> : null}
+      {isProcessing(doc) ? <div className="wd-knowledge-hint" data-testid="processing-hint">解析中，页面每 4 秒自动刷新；解析完成后可查看分块与检索结果。</div> : null}
+      <section className="wd-knowledge-section">
+        <header><strong>预览文本</strong><small>{preview ? (preview.source === 'original' ? `原始文件前 ${formatBytes(preview.byteLength)}` : '由已解析分块拼接') : '加载中…'}</small></header>
+        <pre className="wd-knowledge-preview" data-testid="preview-text">{preview?.text?.trim() ? preview.text : (preview ? '（没有可预览的文本）' : '正在读取预览…')}</pre>
+      </section>
+      <section className="wd-knowledge-section">
+        <header><strong>分块列表</strong><small>{chunkTotal === undefined ? `第 ${chunkPage} 页` : `第 ${chunkPage} 页 · 共 ${chunkTotal} 块`}</small></header>
+        <div className="wd-knowledge-chunks" data-testid="chunk-list">
+          {chunks.length === 0 ? <div className="wd-knowledge-state">{isProcessing(doc) ? '解析完成后显示分块。' : '该文档没有解析出的分块。'}</div> : chunks.map(chunk => <div className="wd-knowledge-chunk" key={chunk.id} data-testid="chunk-item">
+            <b>#{chunk.chunkIndex} · {chunk.id}</b>
+            <p>{chunk.content}</p>
+          </div>)}
+        </div>
+      </section>
+      <div className="wd-knowledge-pager">
+        <Button disabled={busy || chunkPage <= 1} onClick={() => stepChunks(chunkPage - 1)}>上一页</Button>
+        <span>第 {chunkPage} 页</span>
+        <Button disabled={busy || !chunksHasNext} onClick={() => stepChunks(chunkPage + 1)}>下一页</Button>
+      </div>
+    </div>
+  </div> : null;
+
+  const searchView = <div className="wd-knowledge-body">
+    <div className="wd-knowledge-toolbar"><div><h2>检索</h2><small>{kb ? `当前知识库：${kb.name}` : '未限定知识库，使用默认知识库'}</small></div></div>
+    <form className="wd-knowledge-search-form" onSubmit={event => { event.preventDefault(); search(); }}>
+      <Input aria-label="检索关键词" data-testid="search-input" value={query} placeholder="输入自然语言问题或关键词，例如：新型电力系统 规划 目标" onChange={event => setQuery(event.currentTarget.value)} />
+      <Select aria-label="检索模式" data-testid="search-mode" value={mode} onChange={event => setMode(event.currentTarget.value as KnowledgeSearchMode)}>
+        <option value="hybrid">混合检索</option>
+        <option value="semantic">语义检索</option>
+        <option value="keyword">关键词检索</option>
+      </Select>
+      <Button type="submit" variant="primary" data-testid="search-submit" disabled={busy}>检索</Button>
+    </form>
+    <div className="wd-knowledge-search-mode"><span>模式：{modeLabel[mode]}</span><span>·</span><span>结果带 knowledge_title、相关度与原文片段</span></div>
+    {busy && !hits.length ? <div className="wd-knowledge-state">正在检索…</div> : null}
+    {searched && !busy && hits.length === 0 ? <div className="wd-knowledge-state" data-testid="search-empty">{searchNote ? `没有检索到匹配内容。${searchNote}` : '没有检索到匹配内容。'}</div> : null}
+    <div className="wd-knowledge-hits">{hits.map(hit => <article className="wd-knowledge-hit" key={hit.via === 'wiki' ? `wiki-${hit.wiki?.slug ?? hit.knowledgeTitle}` : `${hit.knowledgeId}-${hit.chunkId}`} data-testid="search-hit">
+      <div className="wd-knowledge-hit-head"><strong>{hit.knowledgeTitle}</strong>{hit.via === 'wiki'
+        ? <span className="wd-knowledge-badge" data-testid="hit-wiki">wiki 导览页</span>
+        : <span className="wd-knowledge-score" data-testid="hit-score">score {hit.score.toFixed(3)}</span>}</div>
+      <p>{hit.content.length > 420 ? `${hit.content.slice(0, 420)}…` : hit.content}</p>
+      <footer>
+        <span>{kb?.name ?? hit.knowledgeBaseId}</span>
+        {hit.via === 'wiki'
+          ? <><span>slug {hit.wiki?.slug ?? ''}</span><span>{pageTypeLabel(hit.wiki?.pageType)}</span>
+              <button type="button" data-testid="hit-wiki-open" onClick={() => toggleWiki(hit)}>
+                {wikiBodies[hit.wiki?.slug ?? ''] === undefined ? '读 wiki 页' : '收起 wiki 页'}
+              </button></>
+          : <><span>knowledge_id {hit.knowledgeId}</span><span>chunk_id {hit.chunkId}</span>
+              <button type="button" onClick={() => openFromHit(hit)}>打开文档</button></>}
+      </footer>
+      {hit.via === 'wiki' && wikiBodies[hit.wiki?.slug ?? ''] !== undefined
+        ? <div className="wd-knowledge-wiki-body" data-testid="hit-wiki-body">
+            <MarkdownText text={wikiLinksToMarkdown(wikiBodies[hit.wiki!.slug])} labels={markdownLabels} variant="compact" />
+          </div>
+        : null}
+    </article>)}</div>
+  </div>;
+
+  const settingsView = <div className="wd-knowledge-body">
+    <div className="wd-knowledge-toolbar"><div><h2>连接设置</h2><small>组织级配置，全体成员共用一套；API Key 只写不读，由 Host 凭据服务持有</small></div></div>
+    {settings && !settings.canEdit
+      ? <div className="wd-knowledge-state" data-testid="settings-readonly">
+          当前是{settings.role === 'member' ? '成员' : '未确认'}身份，连接设置由组织所有者或管理员统一维护，你无需配置即可直接使用。
+          {settings.updatedBy ? `最后修改人：${settings.updatedBy}。` : ''}如需更换服务地址或凭据，请联系管理员。
+        </div>
+      : null}
+    <fieldset className="wd-knowledge-form" disabled={!settings?.canEdit}>
+      <label>服务地址
+        <Input data-testid="settings-base-url" value={form.baseUrl} placeholder="http://127.0.0.1:18081" onChange={event => setForm({ ...form, baseUrl: event.currentTarget.value })} />
+        <small>WeKnora REST /api/v1 的部署地址，例如本机 http://127.0.0.1:18081。</small>
+      </label>
+      <label>默认知识库（可选）
+        <Select data-testid="settings-default-kb" value={form.defaultKbId} onChange={event => setForm({ ...form, defaultKbId: event.currentTarget.value })}>
+          <option value="">不设置默认知识库</option>
+          {kbs.map(item => <option key={item.id} value={item.id}>{item.name}（{item.knowledgeCount} 篇）</option>)}
+        </Select>
+        <small>未设置时，检索使用列表中的第一个知识库。</small>
+      </label>
+      <label>API Key
+        <Input data-testid="settings-api-key" type="password" value={form.apiKey} placeholder={settings?.apiKeyConfigured ? '已配置（留空则保持不变）' : '输入租户 API Key'} onChange={event => setForm({ ...form, apiKey: event.currentTarget.value })} />
+        <small>凭据引用 {settings?.apiKeyRef ?? 'WEKNORA_API_KEY'} · {settings ? (settings.apiKeyConfigured ? `已配置（${credentialSourceLabel(settings.apiKeySource)}）` : '未配置') : '读取中…'}。密钥只由 Host 凭据服务持有，不进插件存储、不写日志；未在本机保存时也可用同名环境变量提供。</small>
+      </label>
+      <div className="wd-knowledge-form-actions">
+        <Button variant="primary" data-testid="settings-save" disabled={busy || !settings?.canEdit} onClick={saveSettings}>保存设置</Button>
+        <span>{busy ? '保存中…' : ''}</span>
+      </div>
+    </fieldset>
+  </div>;
+
+  const content = view === 'settings' ? settingsView
+    : view === 'search' ? searchView
+        : doc ? docDetailView : kb ? docListView : kbListView;
+
+  return <section className="wd-knowledge">
+    <style>{knowledgeCss + knowledgeBrandCss}</style>
+    {notice ? <div className="wd-knowledge-toast success" role="status">{notice}</div> : null}
+    {error ? <div className="wd-knowledge-toast error" role="alert" data-testid="knowledge-error">{error}</div> : null}
+    <aside className="wd-knowledge-sidebar">
+      <header><button type="button" className="wd-knowledge-nav-toggle" aria-label="展开导航" onClick={toggleNavigation}>☰</button><h1>知识库</h1></header>
+      <nav className="wd-knowledge-nav">
+        <button type="button" className={view === 'kbs' ? 'active' : ''} data-testid="nav-kbs" onClick={() => { setView('kbs'); setKb(undefined); setDoc(undefined); }}>▤ <span>知识库</span></button>
+        <button type="button" className={view === 'search' ? 'active' : ''} data-testid="nav-search" onClick={() => setView('search')}>⌕ <span>检索</span></button>
+        <button type="button" className={view === 'settings' ? 'active' : ''} data-testid="nav-settings" onClick={() => setView('settings')}>⚙ <span>设置</span></button>
+      </nav>
+      <div className="wd-knowledge-section-title"><span>知识库</span></div>
+      <div className="wd-knowledge-filter"><Input aria-label="筛选知识库" value={filter} placeholder="筛选知识库…" onChange={event => setFilter(event.currentTarget.value)} /></div>
+      <div className="wd-knowledge-kbs">
+        {visibleKbs.map(item => <button type="button" key={item.id} className={`wd-knowledge-kb${kb?.id === item.id ? ' active' : ''}`} data-testid="kb-item" onClick={() => openKb(item)}>
+          <span className="wd-knowledge-kb-glyph">▤</span>
+          <span className="wd-knowledge-kb-name">{item.name}</span>
+          <span className="wd-knowledge-kb-count">{item.knowledgeCount}</span>
+        </button>)}
+      </div>
+      <footer className="wd-knowledge-conn" data-state={settings ? (settings.apiKeyConfigured ? 'ready' : 'missing') : 'pending'}>
+        <span className="wd-knowledge-conn-mode">WeKnora · 只读</span>
+        {settings
+          ? settings.apiKeyConfigured
+            ? <span className="wd-knowledge-conn-meta" title={settings.baseUrl} data-testid="conn-credential">{connectionHostLabel(settings.baseUrl)} · 凭据已配置</span>
+            : <button type="button" className="wd-knowledge-conn-meta action" title={settings.baseUrl} data-testid="conn-credential" onClick={() => setView('settings')}>{connectionHostLabel(settings.baseUrl)} · <span className="wd-knowledge-conn-action">去配置凭据</span></button>
+          : <span className="wd-knowledge-conn-meta">连接设置读取中…</span>}
+      </footer>
+    </aside>
+    <main className="wd-knowledge-content">{content}</main>
+  </section>;
+}
