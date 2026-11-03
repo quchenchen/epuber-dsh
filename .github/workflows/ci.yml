@@ -205,6 +205,12 @@ jobs:
       - name: Package Windows through the single release script
         timeout-minutes: 60
         run: node scripts/package-desktop-release.mjs --source=local
+      # win-unpacked never exercises the compressed payload a user receives.
+      # This installs the NSIS package and starts the installed runtime, which
+      # is the only place a Profile that depends on links can break.
+      - name: Verify the installed package starts
+        timeout-minutes: 30
+        run: node apps/desktop/scripts/verify-windows-installed-runtime.mjs
       - name: Report unpacked Windows footprint
         run: node apps/desktop/scripts/report-package-footprint.mjs apps/desktop/dist/win-unpacked apps/desktop/dist/windows-footprint.json
       - name: Upload Windows footprint report

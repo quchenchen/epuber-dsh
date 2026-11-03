@@ -402,10 +402,10 @@ meaningless here unless you say which step.
 ### 12.3 Installing locally (macOS, works today)
 
 ```bash
-hdiutil attach -nobrowse apps/desktop/dist/mac-smoke/x64/EpuberDSH-3.0.0-alpha.4-x64.dmg
-xattr -dr com.apple.quarantine "/Volumes/EpuberDSH 3.0.0-alpha.4/EpuberDSH.app"
-cp -R "/Volumes/EpuberDSH 3.0.0-alpha.4/EpuberDSH.app" /Applications/
-hdiutil detach "/Volumes/EpuberDSH 3.0.0-alpha.4"
+hdiutil attach -nobrowse apps/desktop/dist/mac-smoke/x64/EpuberDSH-3.0.0-alpha.5-x64.dmg
+xattr -dr com.apple.quarantine "/Volumes/EpuberDSH 3.0.0-alpha.5/EpuberDSH.app"
+cp -R "/Volumes/EpuberDSH 3.0.0-alpha.5/EpuberDSH.app" /Applications/
+hdiutil detach "/Volumes/EpuberDSH 3.0.0-alpha.5"
 ```
 
 Re-signing with an in-house self-signed certificate changes nothing for Gatekeeper; it only puts an

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Prepare a portable official runtime from verified, explicitly selected archives. */
 import { spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
@@ -20,7 +20,11 @@ if (!existsSync(manifestFile)) throw new Error('Pack built current EpuberDSH sou
 const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
 verifyProfileRelease(manifest, DSH_VERSION, RELEASE_PACKAGES)
 verifyReleaseArchives(manifest, release)
-const marker = JSON.stringify({ harness: DSH_VERSION, pnpm: OFFICIAL_PNPM_VERSION, layout: 'workbench-platform-external-enterprise-v7', architecture, release: manifest })
+// v8: Windows ships a hoisted (link-free) Profile. 7-Zip dereferences pnpm's
+// symlinks when it builds the NSIS payload and drops the sibling links a
+// package resolves its dependencies through, so the installed runtime was
+// complete on disk yet unresolvable.
+const marker = JSON.stringify({ harness: DSH_VERSION, pnpm: OFFICIAL_PNPM_VERSION, layout: 'workbench-platform-external-enterprise-v8', architecture, release: manifest })
 const markerPath = join(profile, '.epuberdsh-desktop-release.json')
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'))
 function run(command, args, options = {}) {
@@ -28,6 +32,32 @@ function run(command, args, options = {}) {
   if (result.error) throw result.error
   if (result.status !== 0) throw new Error(`${command} exited with ${result.status}`)
 }
+/**
+ * Windows is the only platform whose installer repacks the app through 7-Zip.
+ * 7-Zip stores a symlinked package as a copy of that package alone, so the
+ * sibling links it resolves its dependencies through are gone once installed:
+ * the tree looks complete but `Cannot find package '@deepseek-ai/cosmokit'`
+ * appears at startup. The Windows Profile therefore uses a hoisted linker, and
+ * this guard refuses to ship any layout that still depends on links.
+ */
+function assertWindowsProfileIsLinkFree() {
+  if (process.platform !== 'win32') return
+  const links = []
+  const walk = directory => {
+    for (const entry of readdirSync(directory)) {
+      // Executable shims are never imported by the runtime, and the package
+      // manager expresses them as links on some platforms and .cmd on others.
+      if (entry === '.bin') continue
+      const path = join(directory, entry)
+      const stat = lstatSync(path)
+      if (stat.isSymbolicLink()) links.push(path)
+      else if (stat.isDirectory()) walk(path)
+    }
+  }
+  walk(join(profile, 'node_modules'))
+  if (links.length) throw new Error('Windows runtime Profile must not contain links; found ' + links.length + ', e.g. ' + links.slice(0, 3).join(', '))
+}
+
 function verifyInstalled() {
   const base = readJson(join(profile, 'package.json'))
   verifyDefaultProfile(base)
@@ -79,6 +109,7 @@ function verifyInstalled() {
     if (existsSync(join(profile, 'node_modules', name)) || config.stdout.includes('name: ' + name)) throw new Error('External feature was bundled by default: ' + name)
   }
   run(process.execPath, [join(desktopRoot, 'scripts/verify-product-plugin-inventory.mjs'), output])
+  assertWindowsProfileIsLinkFree()
 }
 let prepared = false
 try { prepared = readFileSync(markerPath, 'utf8').trim() === marker; if (prepared) verifyInstalled() } catch { prepared = false }
@@ -106,7 +137,11 @@ if (!prepared) {
       dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', ...PRODUCT_PACKAGES, ...Object.keys(CATALOG_PACKAGES)] } } }
     writeFileSync(join(profile, 'package.json'), JSON.stringify(pkg, null, 2) + '\n')
     const overrides = Object.entries(manifest.runtimeOverrides ?? {}).map(([name, version]) => `  ${JSON.stringify(name)}: ${JSON.stringify(version)}`).join('\n')
-    writeFileSync(join(profile, 'pnpm-workspace.yaml'), 'autoInstallPeers: true\nstrictPeerDependencies: false\n' + runtimeArchitectureYaml(architecture) + 'overrides:\n' + overrides + '\n')
+    // Windows keeps this Profile link-free: the NSIS payload cannot carry
+    // pnpm's symlink graph, and a hoisted tree also keeps the deepest files
+    // inside the 260-character limit of a per-user install location.
+    const linker = process.platform === 'win32' ? 'nodeLinker: hoisted\n' : ''
+    writeFileSync(join(profile, 'pnpm-workspace.yaml'), linker + 'autoInstallPeers: true\nstrictPeerDependencies: false\n' + runtimeArchitectureYaml(architecture) + 'overrides:\n' + overrides + '\n')
     run(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['--yes', `pnpm@${OFFICIAL_PNPM_VERSION}`, '--dir', profile, 'install', '--prod', '--ignore-scripts'], { shell: process.platform === 'win32' })
     // Promote mandatory official peers into this installation's single root
     // graph, so CLI, Config Editor and Agent providers share module instances.

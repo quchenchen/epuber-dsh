@@ -4,7 +4,7 @@
 <p align="center">Built for media and content teams on DeepSeek Harness's open plugin system: personal use out of the box, company models and collaboration once the enterprise backend is connected.</p>
 <p align="center"><a href="#download-desktop">Download Desktop</a> · <a href="#one-chain-from-topic-to-publish">Content chain</a> · <a href="#built-in-skills">Built-in skills</a> · <a href="#personal-and-enterprise">Personal and enterprise</a> · <a href="docs/user-guide.en.md">User guide</a> · <a href="README.zh-CN.md">简体中文</a></p>
 
-[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.4-0B6FE0)](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.4) [![GitHub stars](https://img.shields.io/github/stars/quchenchen/epuber-dsh?label=stars)](https://github.com/quchenchen/epuber-dsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.5-0B6FE0)](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.5) [![GitHub stars](https://img.shields.io/github/stars/quchenchen/epuber-dsh?label=stars)](https://github.com/quchenchen/epuber-dsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [![GitHub Actions](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml)
 
@@ -67,19 +67,19 @@ The same feature plugins, two ways to use them:
 
 Enterprise features are enabled by the **Enterprise Connection plugin** on demand; the base installer does not preinstall it. It provides company sign-in, `@`-mentioning colleagues with shared text and files, sent and received records in Collaboration, and company model APIs in the model settings (real supplier keys stay in the admin backend). Independent business plugins can inject `epuberdshEnterprise` to call company APIs with the current member login, without reading or storing tokens.
 
-The enterprise plugin is not listed in a plugin marketplace: [download the Enterprise Connection package](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz), enter the downloaded file's full path in Plugins → Add plugin, install and enable it, then enter the backend address and account under Settings → Enterprise account.
+The enterprise plugin is not listed in a plugin marketplace: [download the Enterprise Connection package](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz), enter the downloaded file's full path in Plugins → Add plugin, install and enable it, then enter the backend address and account under Settings → Enterprise account.
 
 The enterprise backend is developed and deployed independently in **[techflag/workdsh-admin](https://github.com/techflag/workdsh-admin)**: company accounts, organization permissions, collaboration data, member-authorized conversation auditing and model forwarding all come from it. Desktop keeps personal and enterprise data and credentials in separate spaces; collaboration is installed on demand and stays inactive in personal mode.
 
 ## Download Desktop
 
-Desktop **3.0.0-alpha.4** is published as a pre-release (Alpha). The [GitHub Release](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.4) provides these complete installers:
+Desktop **3.0.0-alpha.5** is published as a pre-release (Alpha). The [GitHub Release](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.5) provides these complete installers:
 
 | Platform | Download |
 | --- | --- |
-| Windows x64 | [Setup.exe installer](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.4-x64-Setup.exe) |
-| macOS Apple Silicon | [arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.4-arm64.dmg) |
-| macOS Intel | [x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.4/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.4-x64.dmg) |
+| Windows x64 | [Setup.exe installer](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.5-x64-Setup.exe) |
+| macOS Apple Silicon | [arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.5-arm64.dmg) |
+| macOS Intel | [x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.5-x64.dmg) |
 
 Installers bundle Node.js, pnpm and Python, so no separate runtime is needed. This is an **Alpha release**: project document references, expert execution and end-to-end Office formatting are still being validated. macOS DMGs are unsigned; right-click → Open on first launch. Asset names carry the build platform prefix, and `SHA256SUMS` lets you verify each download.
 
