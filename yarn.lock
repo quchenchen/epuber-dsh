@@ -1915,6 +1915,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"epuberdsh-desktop-workspace@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "epuberdsh-desktop-workspace@workspace:."
+  dependenciesMeta:
+    electron:
+      built: true
+    esbuild:
+      built: true
+  languageName: unknown
+  linkType: soft
+
 "err-code@npm:^2.0.2":
   version: 2.0.3
   resolution: "err-code@npm:2.0.3"
@@ -4163,17 +4174,6 @@ __metadata:
   checksum: 10c0/1cde0b01b827d2cf4cb11db962f3958b9175d5d9e7ac7361d1a7b0e2dc6069a263e69118bd974c4f6d0a890ef4eedfe34cf3d5167ec14203dbc9a18620537054
   languageName: node
   linkType: hard
-
-"epuberdsh-desktop-workspace@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "epuberdsh-desktop-workspace@workspace:."
-  dependenciesMeta:
-    electron:
-      built: true
-    esbuild:
-      built: true
-  languageName: unknown
-  linkType: soft
 
 "wrap-ansi@npm:^7.0.0":
   version: 7.0.0
