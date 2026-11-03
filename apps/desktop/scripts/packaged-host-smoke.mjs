@@ -5,6 +5,7 @@ import { PRODUCT_PACKAGES } from './epuberdsh-package-boundary.mjs'
 export const PRODUCT_SERVICES = Object.freeze({
   'epuberdsh-plugin-connectors': 'epuberdshConnectors',
   'epuberdsh-plugin-experts': 'epuberdshExperts',
+  'epuberdsh-plugin-knowledge': 'epuberdshKnowledge',
   'epuberdsh-plugin-library': 'epuberdshLibrary',
   'epuberdsh-plugin-projects': 'epuberdshProjects',
   'epuberdsh-plugin-skills': 'epuberdshSkills',

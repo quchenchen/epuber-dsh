@@ -3,6 +3,7 @@
 export const PRODUCT_PACKAGES = Object.freeze([
   'epuberdsh-plugin-connectors',
   'epuberdsh-plugin-experts',
+  'epuberdsh-plugin-knowledge',
   'epuberdsh-plugin-library',
   'epuberdsh-plugin-projects',
   'epuberdsh-plugin-skills',
@@ -31,6 +32,7 @@ export const RELEASE_PACKAGES = Object.freeze([
   'epuberdsh-plugin-access',
   'epuberdsh-plugin-skills',
   'epuberdsh-plugin-experts',
+  'epuberdsh-plugin-knowledge',
   'epuberdsh-plugin-connectors',
   'epuberdsh-plugin-library',
   'epuberdsh-bundle',
@@ -47,6 +49,7 @@ export const PACKAGE_DIRECTORIES = Object.freeze({
   'epuberdsh-plugin-access': '../../packages/plugins/access',
   'epuberdsh-plugin-skills': '../../packages/plugins/skills',
   'epuberdsh-plugin-experts': '../../packages/plugins/experts',
+  'epuberdsh-plugin-knowledge': '../../packages/plugins/knowledge',
   'epuberdsh-plugin-connectors': '../../packages/plugins/connectors',
   'epuberdsh-plugin-library': '../../packages/plugins/library',
   'epuberdsh-bundle': '../../packages/bundle',
