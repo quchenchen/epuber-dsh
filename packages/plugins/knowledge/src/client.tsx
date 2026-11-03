@@ -108,7 +108,7 @@ export function apply(ctx: Context): void {
   }, KnowledgePicker));
 
   const source: InputTriggerSource = {
-    trigger: '@', name: 'epuberdsh-knowledge', order: 26, showGroupTitle: true,
+    trigger: '@', name: 'epuberdsh-knowledge', order: 26, showGroupTitle: false,
     candidates: async (_session, request) => {
       const kbs = await management.listKbs().catch(() => [] as readonly KnowledgeBase[]);
       const query = request.query.trim().toLowerCase();
@@ -119,6 +119,9 @@ export function apply(ctx: Context): void {
           label: kb.name,
           description: `知识库 · ${kb.knowledgeCount} 篇文档`,
           icon: KnowledgeCandidateIcon,
+          // The menu names an unmapped source by its raw id; a section heading
+          // suppresses that row and keeps the group titled in Chinese.
+          section: '知识库',
           value: encodeRef({ kbId: kb.id, name: kb.name }),
         }));
     },
