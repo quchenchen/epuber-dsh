@@ -8,4 +8,6 @@
 
 [插件生态倡议书](plugin-ecosystem.md)描述长期方向；当前没有独立的社区标准或在线市场运行包。
 
+界面配色只有一处定义，接入新面板、改色与回滚的流程见[品牌配色与升级策略](brand-theme.md)。
+
 根目录的 [`README.md`](../README.md) 是默认英文产品入口，[`README.zh-CN.md`](../README.zh-CN.md) 是中文入口。各 `.i18n.yaml` 记录相应双语文件的 Git blob hash，修改文档时应同步更新两种语言和记录。
