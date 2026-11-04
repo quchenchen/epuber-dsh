@@ -4,7 +4,7 @@
 <p align="center">面向融媒与内容团队，基于 DeepSeek Harness 的开放插件体系运行：个人开箱可用，接入企业后台后共享公司模型与协作。</p>
 <p align="center"><a href="#下载桌面版">下载桌面版</a> · <a href="#一条链从选题到发布">内容生产链</a> · <a href="#内置技能">内置技能</a> · <a href="#个人与企业">个人与企业</a> · <a href="docs/user-guide.md">使用指南</a> · <a href="README.md">English</a></p>
 
-[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.5-0B6FE0)](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.5) [![GitHub stars](https://img.shields.io/github/stars/quchenchen/epuber-dsh?label=stars)](https://github.com/quchenchen/epuber-dsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Desktop release](https://img.shields.io/badge/Desktop-3.0.0--alpha.6-0B6FE0)](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.6) [![GitHub stars](https://img.shields.io/github/stars/quchenchen/epuber-dsh?label=stars)](https://github.com/quchenchen/epuber-dsh) [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [![GitHub Actions](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/quchenchen/epuber-dsh/actions/workflows/ci.yml)
 
@@ -67,19 +67,19 @@
 
 企业功能由**企业连接插件**按需启用，基础桌面包不预装：公司账号登录、`@` 同事分享正文与文件、在协作里查看收发记录，以及在模型设置中接入公司内部模型 API（真实供应商密钥由管理后台保管）。独立业务插件可以注入 `epuberdshEnterprise` 复用成员登录调用公司接口，不读取或保存 Token。
 
-企业插件未上架插件市场：[下载企业连接包](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz)，在「插件 → 添加插件」填写下载文件的完整路径，安装并启用，再到「设置 → 企业账号」填写后台地址与账号。
+企业插件未上架插件市场：[下载企业连接包](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.6/epuberdsh-enterprise-connection-0.1.0-alpha.2.tgz)，在「插件 → 添加插件」填写下载文件的完整路径，安装并启用，再到「设置 → 企业账号」填写后台地址与账号。
 
 企业后台在 **[techflag/workdsh-admin](https://github.com/techflag/workdsh-admin)** 独立开发和部署：公司账号、组织权限、协作数据、成员授权的会话审计与模型转发都由后台提供。Desktop 的个人与企业空间分别保存数据与凭据；企业协作按需安装，个人模式不启用。
 
 ## 下载桌面版
 
-桌面安装包 **3.0.0-alpha.5** 已发布，为预发布（Alpha）版本。[GitHub Release](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.5) 提供以下完整安装包：
+桌面安装包 **3.0.0-alpha.6** 已发布，为预发布（Alpha）版本。[GitHub Release](https://github.com/quchenchen/epuber-dsh/releases/tag/desktop-v3.0.0-alpha.6) 提供以下完整安装包：
 
 | 平台 | 下载 |
 | --- | --- |
-| Windows x64 | [安装包 Setup.exe](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.5-x64-Setup.exe) |
-| macOS Apple Silicon | [arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.5-arm64.dmg) |
-| macOS Intel | [x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.5/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.5-x64.dmg) |
+| Windows x64 | [安装包 Setup.exe](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.6/dsh-plugin-desktop-windows-x64--EpuberDSH-3.0.0-alpha.6-x64-Setup.exe) |
+| macOS Apple Silicon | [arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.6/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.6-arm64.dmg) |
+| macOS Intel | [x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.6/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.6-x64.dmg) |
 
 安装包默认内置 Node.js、pnpm 与 Python，无需另装运行时。当前为 **Alpha 版**：项目资料引用、专家执行与不同 Office 格式的端到端体验仍在验收中；macOS DMG 未签名，首次打开需右键 → 打开。附件名称带构建平台前缀，下载后可按 `SHA256SUMS` 核对完整性。
 
