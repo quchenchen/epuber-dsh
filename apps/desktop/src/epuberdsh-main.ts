@@ -4,10 +4,12 @@ import {composeInstalledEnterprisePlugins,installedEnterprisePlugins} from './en
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron'
 import { spawn, type ChildProcess } from 'node:child_process'
 import {
+  appendFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
@@ -22,6 +24,7 @@ import { createRuntimeOutputRedactor, redactRuntimeOutput, runtimeFailureDetail,
 import { cleanOwnedProcessTree, stopOwnedProcess, trackOwnedProcess } from './owned-process.ts'
 import { prepareRuntimePort, runtimePortConflict } from './runtime-port.ts'
 import { runOfficialCommand } from './official-command.ts'
+import { secondInstanceAction, shouldQuitWithoutWindows } from './window-policy.ts'
 
 const PROFILE_NAME = 'epuberdsh'
 const READY_PATTERN = /dsh web:\s+(http:\/\/127\.0\.0\.1:\d+\/?\?token=[^\s]+)/u
@@ -34,6 +37,26 @@ let switching = false
 let quitRequested = false
 let returnRequested = false
 let installer: ChildProcess | undefined
+let emptyWindowTimer: ReturnType<typeof setTimeout> | undefined
+
+/** Append one bounded lifecycle line; diagnostics must never break a launch. */
+function recordLifecycle(event: string): void {
+  try {
+    const directory = join(app.getPath('userData'), 'logs')
+    mkdirSync(directory, { recursive: true })
+    const path = join(directory, 'desktop-lifecycle.log')
+    if (existsSync(path) && statSync(path).size > 262_144) rmSync(path, { force: true })
+    appendFileSync(path, `${new Date().toISOString()} ${event}\n`, { mode: 0o600 })
+  } catch { /* a diagnostic must never block the lifecycle */ }
+}
+
+function cancelEmptyWindowQuit(): void {
+  if (emptyWindowTimer !== undefined) { clearTimeout(emptyWindowTimer); emptyWindowTimer = undefined }
+}
+
+function hasLiveWindow(): boolean {
+  return window !== undefined && !window.isDestroyed()
+}
 const enterpriseWindows = new Set<BrowserWindow>()
 let enterprisePortal = process.env.EPUBERDSH_ENTERPRISE_PORTAL ?? ''
 let managedBackend: string | undefined
@@ -117,6 +140,8 @@ function startBrowserWorker(request: { port: number, profile: string }): void {
 }
 
 function openWindow(url: string, connection: DesktopConnection = { mode: 'personal' }, carrier = false): void {
+  // A transition replaces its window quickly; never quit out from under it.
+  cancelEmptyWindowQuit()
   const previous = window
   const previousEntrySurface = entrySurface
   const icon = fileURLToPath(new URL('../build/app-icon.png', import.meta.url))
@@ -204,10 +229,17 @@ function runtimeEnvironment(home: string): NodeJS.ProcessEnv {
 async function officialCommand(home: string, args: string[], timeoutMs = 240_000): Promise<void> {
   const executable = bundledNodeExecutable()
   const launcher = officialLauncher(bundledProfileDirectory(), home, executable, join(bundledPrimaryRuntime(), 'dependencies', 'pnpm', 'bin', 'pnpm.cjs'))
-  await runOfficialCommand({ executable, launcher, args, home, env: runtimeEnvironment(home), timeoutMs,
-    logDirectory: join(app.getPath('userData'), 'logs'), cancelled: () => quitRequested,
-    onProcess: child => { installer = child },
-  })
+  let child: ChildProcess | undefined
+  try {
+    await runOfficialCommand({ executable, launcher, args, home, env: runtimeEnvironment(home), timeoutMs,
+      logDirectory: join(app.getPath('userData'), 'logs'), cancelled: () => quitRequested,
+      onProcess: spawned => { child = spawned; installer = spawned },
+    })
+  } finally {
+    // Never leave a finished package-manager run looking like a live install:
+    // a stale handle suppressed recovery paths long after the command ended.
+    if (installer === child) installer = undefined
+  }
 }
 
 async function prepareProfile(home: string): Promise<{ profile: string, existingHome: boolean }> {
@@ -495,11 +527,31 @@ if (desktopUserData) {
 }
 app.setName('EpuberDSH')
 if (!app.requestSingleInstanceLock()) {
+  // Leaves a trace when a launch looks like it did nothing at all.
+  recordLifecycle('launch: another instance owns the single-instance lock')
   app.quit()
 } else {
   app.on('second-instance', () => {
+    const action = secondInstanceAction({
+      hasWindow: hasLiveWindow(),
+      quitting,
+      switching,
+      runtimeStarting,
+      installing: installer !== undefined,
+    })
+    recordLifecycle(`second-instance: ${action}`)
+    if (action === 'ignore') return
+    if (action === 'wait') return
+    if (action === 'relaunch') {
+      // The running process owns the lock but has no window to show, so the
+      // user's click would otherwise do nothing at all.
+      app.relaunch()
+      app.quit()
+      return
+    }
     if (window === undefined) return
     if (window.isMinimized()) window.restore()
+    window.show()
     window.focus()
   })
   app.on('before-quit', event => {
@@ -510,22 +562,39 @@ if (!app.requestSingleInstanceLock()) {
       if (installer) void stopOwnedProcess(installer).catch(() => dialog.showErrorBox('进程清理失败', '插件安装进程停止尚未确认，请稍后检查。'))
       return
     }
+    cancelEmptyWindowQuit()
     switching = true
     void leaveWorkspace().then(() => {
       quitting = true
       app.quit()
     }).catch(error => {
-      dialog.showErrorBox('暂时无法退出', error instanceof Error ? error.message : '请稍后重试')
+      const message = error instanceof Error ? error.message : '请稍后重试'
+      recordLifecycle(`quit: teardown failed: ${message}`)
+      // Staying alive here is what turns one failed cleanup into an invisible
+      // process that swallows every later launch. Report, then leave anyway.
+      dialog.showErrorBox('本机进程清理未确认', `${message}\n\n应用将退出。若下次启动提示端口被占用，请在任务管理器结束残留的 node 进程。`)
+      quitting = true
+      stopRuntime()
+      app.quit()
     }).finally(() => { switching = false })
   })
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin' && !switching) app.quit()
+    if (process.platform === 'darwin') return
+    // Closing the last window during a transition briefly has zero windows.
+    // Wait for the next one, then quit instead of hiding a windowless process.
+    cancelEmptyWindowQuit()
+    emptyWindowTimer = setTimeout(() => {
+      emptyWindowTimer = undefined
+      if (!shouldQuitWithoutWindows(process.platform, { hasWindow: hasLiveWindow(), quitting })) return
+      recordLifecycle('window-all-closed: every window is gone, quitting')
+      app.quit()
+    }, 2_000)
   })
   app.on('activate', () => {
     // The entry closes before the official Host is ready. Activating the app
     // during that window must not relaunch and cancel the pending workspace.
     if (switching || runtimeStarting || installer || quitting || quitRequested) return
-    if (window === undefined) {
+    if (!hasLiveWindow()) {
       // A healthy runtime always owns a window. Relaunching keeps the profile
       // lifecycle simple after the last macOS window was closed.
       app.relaunch()
