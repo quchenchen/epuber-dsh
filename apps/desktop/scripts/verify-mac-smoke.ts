@@ -7,6 +7,11 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {verifyOfficialRuntimeProvenance} from './official-runtime-provenance.mjs'
 
+/** A short blocking pause; detach retries run inside a synchronous verification. */
+function waitBeforeRetry(milliseconds: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds)
+}
+
 /** Injectable filesystem and command boundaries for smoke verification. */
 export interface MacSmokeVerificationOptions {
   /** Directory containing exactly one smoke DMG. */
@@ -154,11 +159,22 @@ export function verifyMacSmoke(
 
   const cleanupFailures: unknown[] = []
   if (mounted) {
-    try {
-      options.run('hdiutil', ['detach', mountPoint])
-    } catch (cause) {
-      cleanupFailures.push(cause)
+    // Spotlight and other indexers reopen the mounted volume right after it is
+    // read, so a single detach intermittently fails with "Resource busy" on CI.
+    // Retry briefly and force as the last resort: the image is read-only and
+    // about to be discarded, so a forced detach loses nothing.
+    let detachFailure: unknown
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        options.run('hdiutil', attempt === 3 ? ['detach', mountPoint, '-force'] : ['detach', mountPoint])
+        detachFailure = undefined
+        break
+      } catch (cause) {
+        detachFailure = cause
+        waitBeforeRetry(500)
+      }
     }
+    if (detachFailure !== undefined) cleanupFailures.push(detachFailure)
   }
   try {
     options.removeMountPoint(mountPoint)
