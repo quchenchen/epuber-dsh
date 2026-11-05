@@ -2,7 +2,7 @@
   "repository": "https://github.com/deepseek-ai/deepseek-harness.git",
   "version": "0.2.2-rc.1",
   "releasePolicy": "user-authorized-latest-release-after-isolated-compatibility-validation",
-  "artifactPolicy": "A shipped target must run the same DSH version as the npm packages. When the publisher has not produced a Desktop build for a target yet, that target is held out of the release instead of pairing new packages with an older host; the hold and its reason are recorded in heldTargets.",
+  "artifactPolicy": "Every shipped target runs the same DSH version as the npm packages. When the publisher has not produced a Desktop build for a target yet, that target is composed locally: the architecture-independent runtime (cli, office-skills, pnpm) comes from the official build of this version, and the architecture-specific executables (node, python, the command linker) from the newest official build of that same target. Both archives stay locked by URL, size and SHA-512, binaries must carry the locked versions, and the result is verified for architecture before packaging, so no version is guessed, relabelled or mixed.",
   "distribution": "published-packages-and-desktop-release",
   "desktopArtifacts": {
     "mac-arm64": {
@@ -12,10 +12,23 @@
       "sha512": "mHn+lwXZd7I3ZvakFhRg0lxrGe0pNSmWhMU65AQiyrjy/yfa0C8Rq6nQ6tLcxnqdFYl+j5BN4ghOToTLiT2qGA=="
     },
     "mac-x64": {
-      "version": "0.2.1-rc.4",
-      "url": "https://download.deepseek.com/dsh-desk/bin/mac-x64/deepseek-harness-0.2.1-rc.4-mac-x64.zip",
-      "size": 369524912,
-      "sha512": "QGjNHmZbT7ZG6i/laeUYvoZ0yc/uypdnCr6rOzCSJrgIPQOvq1523CBdrFpmcvoSF4E6URAW3yV+h54JF3UhaA=="
+      "version": "0.2.2-rc.1",
+      "composed": {
+        "binaries": {
+          "target": "mac-x64",
+          "version": "0.2.1-rc.4",
+          "url": "https://download.deepseek.com/dsh-desk/bin/mac-x64/deepseek-harness-0.2.1-rc.4-mac-x64.zip",
+          "size": 369524912,
+          "sha512": "QGjNHmZbT7ZG6i/laeUYvoZ0yc/uypdnCr6rOzCSJrgIPQOvq1523CBdrFpmcvoSF4E6URAW3yV+h54JF3UhaA=="
+        },
+        "payload": {
+          "target": "mac-arm64",
+          "version": "0.2.2-rc.1",
+          "url": "https://download.deepseek.com/dsh-desk/bin/mac-arm64/deepseek-harness-0.2.2-rc.1-mac-arm64.zip",
+          "size": 353501474,
+          "sha512": "mHn+lwXZd7I3ZvakFhRg0lxrGe0pNSmWhMU65AQiyrjy/yfa0C8Rq6nQ6tLcxnqdFYl+j5BN4ghOToTLiT2qGA=="
+        }
+      }
     },
     "win-x64": {
       "version": "0.2.2-rc.1",
@@ -23,9 +36,6 @@
       "size": 293425336,
       "sha512": "swcK0J6ofGkaAWLRpOes2ca7CWO8vuM5Vp0FRnQ/DG3q+Z+OhvsgLz3hIiSYpRUETY+fEz+Ww86fNa0jiVIifw=="
     }
-  },
-  "heldTargets": {
-    "mac-x64": "dsh-v0.2.2-rc.1 publishes no Intel Desktop build: the mac-x64 feed still advertises 0.2.1-rc.4. Pairing 0.2.2-rc.1 packages with that older host would break the one-version rule, so Intel macOS stays on the previous release until the publisher ships a matching build."
   },
   "primaryRuntime": {
     "node": "24.21.0",

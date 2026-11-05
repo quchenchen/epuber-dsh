@@ -383,10 +383,10 @@ spctl -a -vv apps/desktop/dist/mac/EpuberDSH.app                        # → re
 ### 12.3 装到本机（mac，可用）
 
 ```bash
-hdiutil attach -nobrowse apps/desktop/dist/mac-smoke/x64/EpuberDSH-3.0.0-alpha.7-x64.dmg
-xattr -dr com.apple.quarantine "/Volumes/EpuberDSH 3.0.0-alpha.7/EpuberDSH.app"
-cp -R "/Volumes/EpuberDSH 3.0.0-alpha.7/EpuberDSH.app" /Applications/
-hdiutil detach "/Volumes/EpuberDSH 3.0.0-alpha.7"
+hdiutil attach -nobrowse apps/desktop/dist/mac-smoke/x64/EpuberDSH-3.0.0-alpha.8-x64.dmg
+xattr -dr com.apple.quarantine "/Volumes/EpuberDSH 3.0.0-alpha.8/EpuberDSH.app"
+cp -R "/Volumes/EpuberDSH 3.0.0-alpha.8/EpuberDSH.app" /Applications/
+hdiutil detach "/Volumes/EpuberDSH 3.0.0-alpha.8"
 ```
 
 团队内部分发想更省事，可以自己用同一张自签证书把 app 重签一遍（ad-hoc 换自签，Gatekeeper 仍不认，

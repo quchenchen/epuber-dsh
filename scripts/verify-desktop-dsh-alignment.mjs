@@ -10,24 +10,22 @@ const upstream = readJson('upstream.json')
 const problems = []
 if (upstream.desktopArtifactVersion !== undefined) problems.push('Binary artifact versions must be explicitly locked per target, not hidden behind a global desktopArtifactVersion')
 if (upstream.version !== DSH_VERSION || upstream.distribution !== 'published-packages-and-desktop-release') problems.push('Desktop must consume the locked official release version')
-for (const target of ['mac-arm64', 'mac-x64', 'win-x64']) {
-  try {officialDesktopArtifact(target,upstream)} catch {problems.push('Missing or invalid explicit official binary source lock: ' + target)}
-}
-// One version everywhere: a shipped target must run the same DSH build as the
-// npm packages it composes. A target whose official Desktop build has not been
-// published yet is held out of the release, with a written reason, rather than
-// pairing new packages with an older host.
+// One version everywhere: a shipped target runs exactly the DSH build its npm
+// packages are. A target the publisher has not built yet is composed from
+// official components of that same version, never held back and never paired
+// with an older host.
 const targets = ['mac-arm64', 'mac-x64', 'win-x64']
-const heldTargets = upstream.heldTargets ?? {}
-for (const [target, reason] of Object.entries(heldTargets)) {
-  if (!targets.includes(target)) problems.push('Held target is not a Desktop target: ' + target)
-  if (typeof reason !== 'string' || reason.trim().length < 40) problems.push('Held target needs a written reason: ' + target)
-}
+const resolved = []
 for (const target of targets) {
-  const artifactVersion = upstream.desktopArtifacts?.[target]?.version
-  if (artifactVersion !== undefined && artifactVersion !== upstream.version && heldTargets[target] === undefined) {
-    problems.push(`Target ${target} would pair DSH ${upstream.version} packages with a ${artifactVersion} host; publish a matching build or hold the target explicitly`)
-  }
+  try { resolved.push([target, officialDesktopArtifact(target, upstream)]) }
+  catch (error) { problems.push(error instanceof Error ? error.message : String(error)) }
+}
+for (const [target, artifact] of resolved) {
+  if (artifact.version !== upstream.version) problems.push(`Target ${target} would ship DSH ${upstream.version} packages on a ${artifact.version} runtime`)
+  if (!artifact.composed) continue
+  const [binaries, payload] = artifact.sources
+  if (payload.version !== upstream.version) problems.push(`Target ${target} must compose its runtime payload from ${upstream.version}, not ${payload.version}`)
+  if (binaries.target !== target) problems.push(`Target ${target} must take its architecture binaries from ${target}, not ${binaries.target}`)
 }
 for (const workspace of ['apps/desktop']) {
   const manifest = readJson(`${workspace}/package.json`)
@@ -47,5 +45,9 @@ if (problems.length) {
   console.error(`Desktop DSH version alignment failed:\n${problems.join('\n')}`)
   process.exitCode = 1
 } else {
-  console.log(`Desktop has one npm DSH version ${DSH_VERSION}; binary sources: `+targets.map(target=>target+'='+upstream.desktopArtifacts[target].version+(heldTargets[target] === undefined ? '' : ' (held)')).join(', '))
+  console.log(`Desktop has one npm DSH version ${DSH_VERSION}; runtime sources: ` + resolved.map(([target, artifact]) =>
+    artifact.composed
+      ? `${target}=${artifact.version} (composed: payload ${artifact.sources[1].version} + ${target} binaries ${artifact.sources[0].version})`
+      : `${target}=${artifact.version} (official)`
+  ).join(', '))
 }

@@ -1,8 +1,17 @@
-export interface OfficialDesktopArtifact {version:string;url:string;size:number;sha512:string}
+export interface OfficialArchivedSource {target:string;version:string;url:string;size:number;sha512:string}
+export interface OfficialDesktopArtifactEntry {
+ version:string
+ url?:string
+ size?:number
+ sha512?:string
+ composed?:{binaries:OfficialArchivedSource;payload:OfficialArchivedSource}
+}
+export interface OfficialArtifactSource extends OfficialArchivedSource {role:'official'|'binaries'|'payload'}
+export interface OfficialDesktopArtifact {version:string;composed:boolean;sources:OfficialArtifactSource[]}
 export interface OfficialRuntimeLock {
  version:string
  distribution:string
- desktopArtifacts:Record<string,OfficialDesktopArtifact>
+ desktopArtifacts:Record<string,OfficialDesktopArtifactEntry>
  primaryRuntime:{node:string;pnpm:string;python:string}
 }
 export interface OfficialRuntimeProvenance {

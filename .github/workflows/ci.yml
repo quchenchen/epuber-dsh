@@ -232,9 +232,10 @@ jobs:
 
   # Per-architecture macOS packaging smoke on a real macOS runner: the signed
   # release is built manually on a credentialed machine, so an unsigned DMG
-  # here catches Apple Silicon packaging regressions before a manual release.
-  # Intel is held out while upstream publishes no matching Desktop build for
-  # it (upstream.json heldTargets); the packaging script refuses that target.
+  # here catches Intel and Apple Silicon packaging regressions before a manual
+  # release. Intel composes its runtime from official components of the same
+  # DSH version (upstream.json composed entries), and this job is what proves
+  # the composed runtime starts on the real architecture.
   # No signing secrets ever reach this job.
   desktop-macos:
     needs: changes
@@ -244,7 +245,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [arm64]
+        arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v6
         with:
