@@ -68,14 +68,14 @@ export const hostDependencyBaseline = { '@deepseek-ai/cordis': '4.0.4',
   '@deepseek-ai/dsh-fs': '0.2.0-rc.2', /* 共 11 个 dsh 包钉在 0.2.0-rc.2 */ };
 ```
 
-`runtime-compatibility.ts` 在每次写操作前重新校验，不匹配即 `local writes are disabled`。我们锁的是 `0.2.2-alpha.2`（cordis 4.0.5），**它的插件直接装会被拒写**。
+`runtime-compatibility.ts` 在每次写操作前重新校验，不匹配即 `local writes are disabled`。我们锁的是 `0.2.2-rc.1`（cordis 4.0.5），**它的插件直接装会被拒写**。
 
 三个可选做法：
 
 | 方案 | 做法 | 优点 | 风险 |
 |---|---|---|---|
 | **A. 只用 CLI** | `skillhub install --agent dsh` 落盘到 `~/.dsh/skills` 或 `.dsh/skills`，不装它的插件 | 立刻可用，零改造；dsh 监听技能根，热刷新 | 没有 UI，成员要会命令行 |
-| **B. Fork 插件放宽范围** | 把 `supportedDshVersions` 与 baseline 扩到 `0.2.2-alpha.2`，跑它的测试 | 体验完整（技能中心、启停、诊断） | 每次 DSH 升级都要跟；上游合不回 |
+| **B. Fork 插件放宽范围** | 把 `supportedDshVersions` 与 baseline 扩到 `0.2.2-rc.1`，跑它的测试 | 体验完整（技能中心、启停、诊断） | 每次 DSH 升级都要跟；上游合不回 |
 | **C. 自写薄消费插件** | 用它的 REST API，落盘逻辑我们自己写进 Profile 插件 | 升级解耦，只依赖 HTTP 契约 | 要自己实现安装/升级/卸载/诊断 |
 
 推荐顺序：**先 A 验证端到端，再按需要的体验选 B 或 C**。A 是为了拿到事实，不是为了长期方案。
@@ -134,7 +134,7 @@ export const hostDependencyBaseline = { '@deepseek-ai/cordis': '4.0.4',
 
 ## 4. 验收（可测，不靠感觉）
 
-1. **可用**：在 `0.2.2-alpha.2` 宿主上安装一个技能包，技能系统能发现并调用（方案 A 先跑通）。
+1. **可用**：在 `0.2.2-rc.1` 宿主上安装一个技能包，技能系统能发现并调用（方案 A 先跑通）。
 2. **隔离**：部门 A 的成员在搜索与列表里看不到部门 B 命名空间的包。
 3. **治理**：提交 → 审核 → 上架 → 下架全链路走通，审计日志能查到每次操作人。
 4. **版本**：装 v1，发布 v2 后客户端能识别升级，且可回退到 v1。
@@ -182,7 +182,7 @@ export const hostDependencyBaseline = { '@deepseek-ai/cordis': '4.0.4',
 
 ### 由此确定的集成事实
 
-- 一期**不需要**它的 DSH 插件（版本门禁卡 `0.2.2-alpha.2`），CLI 路径已验证可用。
+- 一期**不需要**它的 DSH 插件（版本门禁卡 `0.2.2-rc.1`），CLI 路径已验证可用。
 - 技能落地位置由 `--agent dsh --scope user|project` 决定，与运行时扫描根一致，**无需改动运行时**。
 
 ---

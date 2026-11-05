@@ -6,7 +6,7 @@
  * SDK is also loaded from bundled, non-file module URLs where no package
  * manifest can be resolved. `tests/cordis-support.test.mjs` keeps it equal to
  * the published `peerDependencies` entry, which is what consumers install. */
-export const CORDIS_PEER_RANGE = '~4.0.6-alpha.1';
+export const CORDIS_PEER_RANGE = '~4.1.0';
 
 export function cordisPeerRange(): string {
   return CORDIS_PEER_RANGE;

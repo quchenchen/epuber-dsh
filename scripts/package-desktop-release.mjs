@@ -20,6 +20,14 @@ if (platform !== 'darwin' && platform !== 'win32') {
   throw new Error(`Desktop installer packaging requires macOS or Windows; found ${platform}`)
 }
 const corepack = platform === 'win32' ? 'corepack.cmd' : 'corepack'
+// A held target has no official host at this DSH version, so any installer
+// produced here would mix versions. Local debugging on such a machine can opt
+// out explicitly; releases must never do it implicitly.
+const upstream = JSON.parse(readFileSync(join(root, 'upstream.json'), 'utf8'))
+const target = platform === 'win32'
+  ? 'win-x64'
+  : `mac-${process.env.EPUBERDSH_MAC_ARCH ?? (process.arch === 'arm64' ? 'arm64' : 'x64')}`
+const heldReason = upstream.heldTargets?.[target]
 
 function run(label, command, commandArgs, { cwd = root, env = process.env } = {}) {
   console.log(`\n==> ${label}`)
@@ -39,6 +47,9 @@ const { verifyProfileRelease, verifyReleaseArchives } = await import('../apps/de
 run('Check Desktop packaging', corepack, ['yarn', 'workspace', 'dsh-plugin-desktop', platform === 'win32' ? 'check:win-package' : 'check:mac-package'])
 
 const version = JSON.parse(readFileSync(join(webRoot, 'package.json'), 'utf8')).version
+if (heldReason !== undefined && process.env.EPUBERDSH_ALLOW_HELD_TARGET !== '1') {
+  throw new Error(`Refusing to package the held target ${target}: ${heldReason}\nSet EPUBERDSH_ALLOW_HELD_TARGET=1 only for local debugging; such a build must not be released.`)
+}
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
 const releaseDirectory = join(root, 'apps/desktop', 'build', `epuberdsh-profile-release-${source}-${commit.slice(0, 12)}-${Date.now()}`)
 if (source === 'local') {

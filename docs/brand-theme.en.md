@@ -298,7 +298,7 @@ Host signal is a fake switch.
    Unifying them requires `:root` overrides over areas this repository cannot verify — a separate task.
 2. **No dark mode**: tokens are named for "swap neutrals only", but there is no theme signal source.
 3. **The new experts / knowledge composition has no full-screen visual acceptance**: the local preview
-   runtime (0.2.2-alpha.2) does not match the version this repo expects (0.1.7-rc.2), so a real preview
+   runtime (0.2.2-rc.1) does not match the version this repo expects (0.1.7-rc.2), so a real preview
    needs `preview:install`. Those two panels were checked at the CSS level (rules match, values come from
    tokens), not pixel by pixel. **Run `preview:install` before the next upgrade to close this gap.**
 4. **One screen verified ≠ app-wide proof**: skills / connectors / projects have full-screen screenshots;

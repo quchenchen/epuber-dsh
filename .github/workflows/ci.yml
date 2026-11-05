@@ -232,8 +232,10 @@ jobs:
 
   # Per-architecture macOS packaging smoke on a real macOS runner: the signed
   # release is built manually on a credentialed machine, so an unsigned DMG
-  # here catches Intel and Apple Silicon packaging regressions before a manual
-  # release. No signing secrets ever reach this job.
+  # here catches Apple Silicon packaging regressions before a manual release.
+  # Intel is held out while upstream publishes no matching Desktop build for
+  # it (upstream.json heldTargets); the packaging script refuses that target.
+  # No signing secrets ever reach this job.
   desktop-macos:
     needs: changes
     if: needs.changes.outputs.desktop == 'true'
@@ -242,7 +244,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, arm64]
+        arch: [arm64]
     steps:
       - uses: actions/checkout@v6
         with:

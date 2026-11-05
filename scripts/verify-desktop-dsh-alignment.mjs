@@ -13,6 +13,22 @@ if (upstream.version !== DSH_VERSION || upstream.distribution !== 'published-pac
 for (const target of ['mac-arm64', 'mac-x64', 'win-x64']) {
   try {officialDesktopArtifact(target,upstream)} catch {problems.push('Missing or invalid explicit official binary source lock: ' + target)}
 }
+// One version everywhere: a shipped target must run the same DSH build as the
+// npm packages it composes. A target whose official Desktop build has not been
+// published yet is held out of the release, with a written reason, rather than
+// pairing new packages with an older host.
+const targets = ['mac-arm64', 'mac-x64', 'win-x64']
+const heldTargets = upstream.heldTargets ?? {}
+for (const [target, reason] of Object.entries(heldTargets)) {
+  if (!targets.includes(target)) problems.push('Held target is not a Desktop target: ' + target)
+  if (typeof reason !== 'string' || reason.trim().length < 40) problems.push('Held target needs a written reason: ' + target)
+}
+for (const target of targets) {
+  const artifactVersion = upstream.desktopArtifacts?.[target]?.version
+  if (artifactVersion !== undefined && artifactVersion !== upstream.version && heldTargets[target] === undefined) {
+    problems.push(`Target ${target} would pair DSH ${upstream.version} packages with a ${artifactVersion} host; publish a matching build or hold the target explicitly`)
+  }
+}
 for (const workspace of ['apps/desktop']) {
   const manifest = readJson(`${workspace}/package.json`)
   for (const field of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
@@ -31,5 +47,5 @@ if (problems.length) {
   console.error(`Desktop DSH version alignment failed:\n${problems.join('\n')}`)
   process.exitCode = 1
 } else {
-  console.log(`Desktop has one npm DSH version ${DSH_VERSION}; binary sources: `+['mac-arm64','mac-x64','win-x64'].map(target=>target+'='+upstream.desktopArtifacts[target].version).join(', '))
+  console.log(`Desktop has one npm DSH version ${DSH_VERSION}; binary sources: `+targets.map(target=>target+'='+upstream.desktopArtifacts[target].version+(heldTargets[target] === undefined ? '' : ' (held)')).join(', '))
 }
