@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { copyOfficialRuntime, prepareOfficialRelease } from './official-desktop-release.mjs'
@@ -26,6 +26,10 @@ if (!existsSync(profileMarker) || JSON.parse(readFileSync(profileMarker, 'utf8')
 await ensureNativeWorkbenchFrame(profile)
 await verifyNativeWorkbenchFrame(profile)
 const released = await prepareOfficialRelease(desktopRoot, target)
+// Older preparations copied the CLI tree to <output>/runtime; the shell reads
+// the command manager from the release cache and never from the installer, so
+// drop the obsolete copy instead of shipping dead files inside the package.
+rmSync(join(output, 'runtime'), { recursive: true, force: true })
 for (const name of ['primary-runtime', 'office-skills']) copyOfficialRuntime(join(released, 'runtime', name), join(output, name))
 const manifestPath = join(output, 'primary-runtime', 'runtime.json')
 if (!existsSync(manifestPath) || !existsSync(join(output, 'office-skills'))) {

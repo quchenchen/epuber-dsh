@@ -57,6 +57,6 @@ corepack yarn check:desktop-dsh-alignment
 
 `upstream.json` 按用户明确要求，将 Desktop 与 Web 实际使用的 Host、Client 和 SDK npm 包统一固定为官方 **DSH 0.2.2-rc.1**。产品构建使用已发布包，不导入或编译官方源码。既有应用与 Profile 的实际版本需单独核验；版本一致性、Desktop 检查与打包运行时验收全部通过后才能宣布升级完成，Web 预览证据不能代替。默认选择经过验证的官方稳定版。
 
-官方 Desktop 归档单独提供 Node、pnpm、Python、Office 资源和预编译命令工具，每个目标记录实际归档版本、URL、大小和 SHA-512。上游按分支分别发版，最新构建不一定对应最高版本号：`dsh-v0.2.1-rc.5` 是 0.2.1 分支的热修，版本号低于本仓库使用的 `0.2.2-rc.1` npm 包。因此每个目标各自固定在它最新发布的归档上——Intel 为 `0.2.1-rc.4`，Apple Silicon 与 Windows 为 `0.2.1-rc.5`——并保留原始运行时元数据。这不会降级 DSH npm 包，也不启用自动回退。
+官方 Desktop 归档单独提供 Node、pnpm、Python、Office 资源和预编译命令工具。每个目标记录它由哪些归档构建而来，以及这些归档的 URL、大小与 SHA-512；要发布的目标一律运行本版 DSH。官方尚未发布该版本构建的目标（`0.2.2-rc.1` 的 Intel macOS）不再暂缓，也不与新包配旧宿主，而是用两个锁定归档组合：与架构无关的载荷（Office 技能、pnpm、CLI 资源）取自 `0.2.2-rc.1` 构建，架构可执行文件（Node、Python）取自该目标最新的官方构建。组合结果逐个读取可执行文件 CPU 类型校验，载荷摘要写入 `runtime.json` 并在每次复用缓存时重算比对，来源记录写明两个归档。全程不自动回退；官方一旦发布同版本构建，优先使用官方产物而不是组合。
 
 外壳源码与打包脚本位于本目录，共享 EpuberDSH 功能源码位于仓库 `packages/`。官方 DSH 通过已发布包接入，不检出其源码。企业管理与模型转发由独立的 EpuberDSH Admin 仓库负责。参见 [Desktop 归属](../../docs/desktop-boundaries.md)。
