@@ -1,5 +1,5 @@
 # Bilingual-pair consistency record: the git blob hash of each side as of the last
 # confirmed-consistent state. Both languages carry equal authority. Update both files
 # and re-record their hashes with git hash-object after editing either side.
-brand-theme.md: d2098a5e6e1bcc3aa454e16295757463d68be752
-brand-theme.en.md: 82f63394955e4b45787a7340a011d26320de58b9
+brand-theme.md: b1d002141adcc05855f7cbab40299e03f59c213d
+brand-theme.en.md: b53a9fc93e5e404a1ef8ab764c6bea08e22102aa
