@@ -81,7 +81,7 @@
 | macOS Apple Silicon | [arm64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.8/dsh-plugin-desktop-macos-arm64--EpuberDSH-3.0.0-alpha.8-arm64.dmg) |
 | macOS Intel | [x64.dmg](https://github.com/quchenchen/epuber-dsh/releases/download/desktop-v3.0.0-alpha.8/dsh-plugin-desktop-macos-x64--EpuberDSH-3.0.0-alpha.8-x64.dmg) |
 
-安装包默认内置 Node.js、pnpm 与 Python，无需另装运行时。**Intel Mac 的运行时由同一 DSH 版本的官方组件组合而成**——官方尚未发布该版本的 Intel 构建：与架构无关的部分（CLI 资源、Office 技能、pnpm）取自 `0.2.2-rc.1` 的 Apple Silicon 构建，Intel 可执行文件（Node 24.21.0 与 Python 3.12.14）取自最新的官方 Intel 构建，该构建携带的正是这两个版本。两个归档都以体积与 SHA-512 锁定，组装结果在打包前会检查是否混入其他机器的可执行文件，来源记录写明它由哪两个构建组合而来。当前为 **Alpha 版**：项目资料引用、专家执行与不同 Office 格式的端到端体验仍在验收中；macOS DMG 未签名，首次打开需右键 → 打开。附件名称带构建平台前缀，下载后可按 `SHA256SUMS` 核对完整性。
+安装包默认内置 Node.js、pnpm 与 Python，无需另装运行时。**Intel Mac 的运行时由同一 DSH 版本的官方组件组合而成**——官方尚未发布该版本的 Intel 构建：与架构无关的部分（Office 技能、pnpm、`dsh` 命令管理器）取自 `0.2.2-rc.1` 的 Apple Silicon 构建，Intel 可执行文件（Node 24.21.0、Python 3.12.14 与用于安装 `dsh` 命令的链接器）取自最新的官方 Intel 构建，该构建携带的正是这些版本。两个归档都以体积与 SHA-512 锁定，组装结果在打包前会检查是否混入其他机器的可执行文件，来源记录写明它由哪两个构建组合而来。当前为 **Alpha 版**：项目资料引用、专家执行与不同 Office 格式的端到端体验仍在验收中；macOS DMG 未签名，首次打开需右键 → 打开。附件名称带构建平台前缀，下载后可按 `SHA256SUMS` 核对完整性。
 
 **开发与反馈**：GitHub 是唯一主开发仓库与发行渠道，问题请提到 [GitHub Issues](https://github.com/quchenchen/epuber-dsh/issues)。公司账号、权限或模型转发的后台问题到 [EpuberDSH Admin](https://github.com/techflag/workdsh-admin/issues)。**Issue 是公开的，请勿上传密码、Token、API Key 或公司敏感资料。**
 

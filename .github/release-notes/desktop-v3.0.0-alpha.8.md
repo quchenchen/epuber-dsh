@@ -8,12 +8,10 @@
 
 | 部分 | 来源 | 理由 |
 | --- | --- | --- |
-| CLI 资源、Office 技能、pnpm | `0.2.2-rc.1` Apple Silicon 构建 | 纯 JavaScript 与数据，与架构无关，必须与本版 DSH 一致 |
-| Node 24.21.0、Python 3.12.14 | `0.2.1-rc.4` Intel 构建 | 机器码，只能取同架构构建；该构建携带的版本与本版锁定的 `primaryRuntime` 完全一致 |
+| CLI 命令管理器、Office 技能、pnpm | `0.2.2-rc.1` Apple Silicon 构建 | 纯 JavaScript 与数据，与架构无关，必须与本版 DSH 一致 |
+| Node 24.21.0、Python 3.12.14、`cli/link-entry` | `0.2.1-rc.4` Intel 构建 | 机器码，只能取同架构构建；Node/Python 版本与本版锁定的 `primaryRuntime` 完全一致；`link-entry` 只负责把 `dsh` 命令链接到 `/usr/local/bin`，行为与 DSH 版本无关 |
 
-所有 DSH 代码都来自 `0.2.2-rc.1`，Intel 侧只补机器码，因此不存在两套 DSH 版本并存。
-
-官方运行时里还有一个 `cli/link-entry` 原生链接器（用于安装 `dsh` 命令），官方同样只提供各架构版本；它随发行缓存一起准备，取自 Intel 构建。当前外壳并不安装该命令，这个文件不进安装包，本次也顺手清掉了安装包里更早残留的一份旧 CLI 目录。
+所有 DSH 代码都来自 `0.2.2-rc.1`，Intel 侧只补机器码，因此不存在两套 DSH 版本并存。安装包内 `runtime/cli/` 的命令管理器来自本版，`link-entry` 来自 Intel 构建；两者协作完成 `dsh` 命令安装，`bin/dsh` 启动器仍指向随包的 Node。
 
 ## 机制上的保证
 
